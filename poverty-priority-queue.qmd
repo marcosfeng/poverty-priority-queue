@@ -1,0 +1,75 @@
+---
+title: "Poverty and Priority Queueing"
+author: "Marcos Gallo"
+date: "2023/02/28"
+format:
+  pdf:
+    toc: true
+    number-sections: true
+    colorlinks: true
+---
+
+# Task Prioritization
+
+```{r}
+
+
+```
+
+## Relating to Poverty
+
+## Relating to Anxiety
+
+## Interactions
+
+# The Experiment
+
+## Data
+
+### Demographics
+
+### Measures of Poverty
+
+#### Income
+
+#### Composite Measure (PCA)
+
+### Behavioral Variables
+
+#### Choice
+
+#### Reaction Time
+
+### Accuracy
+
+## Results
+
+### Trade-off Decisions
+
+Accuracy in trade-off decisions as a function of income and anxiety
+
+Multiple regression models to test the same hypotheses with different measures of income.
+
+Percent of urgent choices (vs. important) as a function of income and anxiety.
+
+### Reaction Time
+
+### Accuracy
+
+Distribution of accuracy
+
+#### Accuracy, Anxiety, and Income
+
+#### Note on Deterministic Choices
+
+### Other Poverty Measures
+
+# Recommendations
+
+## Redesign
+
+### Probabilistic Choice
+
+### Flexible Queue Size
+
+# Appendix

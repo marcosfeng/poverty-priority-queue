@@ -11,8 +11,14 @@ format:
 
 # Task Prioritization
 
-```{r}
+```{r init, include=FALSE}
 
+library(stringi)
+library(stringr)
+library(dplyr)
+library(tidyr)
+library(readr)
+library(latticeExtra)
 
 ```
 
@@ -24,7 +30,31 @@ format:
 
 # The Experiment
 
+## Structure
+
+### Simulation
+
+```{r dyn-pro-simulation-results}
+#| fig-cap: Percentage of Urgent Choices
+
+urgency_ratio_grid <- read_csv("urgency-ratio-grid.csv") 
+urgency_ratio_grid <- urgency_ratio_grid %>%
+  rename(gamma = `...1`) %>%
+  pivot_longer(!gamma, names_to = "cost", values_to = "urgent") %>%
+  mutate(cost = as.numeric(cost))
+
+levelplot(urgent ~ cost * gamma, urgency_ratio_grid, 
+          panel = panel.levelplot.points, cex = 0
+    ) + 
+    latticeExtra::layer_(panel.2dsmoother(..., n = 200))
+
+```
+
 ## Data
+
+```{r}
+
+```
 
 ### Demographics
 
@@ -73,3 +103,534 @@ Distribution of accuracy
 ### Flexible Queue Size
 
 # Appendix
+
+## Dynamic Programming Simulation Code
+
+```{r dyn-pro-simulation, eval=FALSE, include=TRUE}
+
+############################################################
+## Marcos Gallo
+## Dynamic Programming Ice Cream Experiment
+#############################################################
+
+library(stringi)
+library(stringr)
+library(dplyr)
+
+#Importance
+imp <- c(1,2)
+#Cost
+cost1 = 0
+cost2_grid <- seq(from = 0.1, to = 0.9, by = 0.05)
+#Discounting
+gamma_grid <- seq(from = 0.8, to = 1, by = 0.025)
+#Choices
+tasks <- c("HHU",
+            "HH0",
+            "HLU",
+            "HL0",
+            "LHU",
+            "LH0",
+            "LLU",
+            "LL0")
+tasks <- as.data.frame(tasks)
+# Urgency Ratios
+ratios <- c()
+
+for (gamma in gamma_grid) {
+  print(gamma)
+  for (cost2 in cost2_grid) {
+    # Add values
+    tasks$value  <- c(imp[2]-cost2,
+                      imp[2]-cost2,
+                      imp[2]-cost1,
+                      imp[2]-cost1,
+                      imp[1]-cost2,
+                      imp[1]-cost2,
+                      imp[1]-cost1,
+                      imp[1]-cost1)
+    #Look up values
+    r_choice <- tasks$value
+    names(r_choice) <- tasks$tasks
+    ## Use unname(r_choice["HH0"]) for example
+    
+    # States
+    S <- as.data.frame(t(combn(tasks$tasks,2)))
+    for (chr in tasks$tasks) {
+      # Add states with two of the same task
+      S <- rbind(S,c(chr,chr))
+      # Add states with only one task transition to one task
+      S <- rbind(S,c(chr,NA))
+      # Add states with only one task transitioning to two tasks
+      S <- rbind(S,c(chr,"TR"))
+    }
+    
+    #Choice|States
+    ## 1st column is choice.
+    ## 1st+2nd columns are the state
+    ch <- expand.grid(tasks$tasks,tasks$tasks)
+    # Fix factor levels for next step
+    levels(ch$Var2)
+    levels(ch$Var2) = c("HHU", "HH0", "HLU", "HL0", "LHU", "LH0", "LLU", "LL0", "TR")
+    for (chr in tasks$tasks) {
+      ch <- rbind(ch,c(chr,NA))
+      ch <- rbind(ch,c(chr,"TR"))
+    }
+    
+    # Transition Probabilities
+    choices <- paste(ch$Var1,ch$Var2,sep = "x")
+    states <- paste(S$V1,S$V2,sep = "x")
+    transitions <- expand.grid(choices,states)
+    # Remaining task (last 3 characters) is in the next state, but no NA
+    transitions$prob <- NA
+    ## Non-urgent tasks:
+    ## Note this is also transitioning to NA and TR states. Fix it in line 91 and __
+    transitions[str_detect(str = str_sub(transitions$Var1,-3), pattern = "0"),]$prob <- 
+      str_detect(str = transitions[str_detect(str = str_sub(transitions$Var1,-3), pattern = "0"),]$Var2,
+                 pattern = str_sub(transitions[str_detect(str = str_sub(transitions$Var1,-3), pattern = "0"),]$Var1,-3))
+    ## Urgent tasks: 
+    ### If HXU -> LXU
+    transitions[str_detect(str = str_sub(transitions$Var1,-1), pattern = "U") & 
+                  str_detect(str = str_sub(transitions$Var1,start = -3, end = -3), pattern = "H"),]$prob <-
+      str_detect(str = transitions[str_detect(str = str_sub(transitions$Var1,-1), pattern = "U") & 
+                                     str_detect(str = str_sub(transitions$Var1,start = -3, end = -3), pattern = "H"),]$Var2,
+                 pattern = paste("L",
+                                 str_sub(transitions[str_detect(str = str_sub(transitions$Var1,-1), pattern = "U") & 
+                                                       str_detect(str = str_sub(transitions$Var1,start = -3, end = -3), pattern = "H"),]$Var1,
+                                         start = -2,
+                                         end = -2),"U",sep = ""))
+    ### If LXU -> NA
+    ## first change all transitions to false
+    transitions[str_detect(str = str_sub(transitions$Var2,-3), pattern = "NA"),]$prob <- FALSE
+    # Now calculate other transitions
+    transitions[str_detect(str = str_sub(transitions$Var1,-1), pattern = "U") & 
+                  str_detect(str = str_sub(transitions$Var1,start = -3, end = -3), pattern = "L"),]$prob <-
+      str_detect(str = transitions[str_detect(str = str_sub(transitions$Var1,-1), pattern = "U") & 
+                                     str_detect(str = str_sub(transitions$Var1,start = -3, end = -3), pattern = "L"),]$Var2,
+                 pattern = "NA")
+    
+    ## Single task with transition to single task:
+    transitions[str_detect(str = transitions$Var1, pattern = "NA"),]$prob <-
+      str_detect(str = transitions[str_detect(str = transitions$Var1, pattern = "NA"),]$Var2,
+                 pattern = "TR")
+    ## Single task with transition to single task:
+    transitions[str_detect(str = transitions$Var1, pattern = "TR"),]$prob <- 0
+    
+    #Transforming them into probabilities by dividing by 8
+    transitions$prob <- as.numeric(transitions$prob)
+    transitions$prob <- transitions$prob / 8
+    
+    ## Single task with transition to single task:
+    transitions[str_detect(str = transitions$Var1, pattern = "TR") &
+                  str_length(transitions$Var2) == 7,]$prob <- 1/36
+    
+    ##################################################
+    ################# Simulation
+    ##################################################
+    
+    # Backwards induction
+    ## Determine number of loops
+    rounds = 20
+    ## Create column with values of each choice for each round
+    col_names <- paste("rd", c(1:rounds), sep = "")
+    ch[col_names] <- NA
+    ## Last round:
+    ### fill in column in "ch" with the values
+    for(choice in tasks$tasks) {
+      ### first column is choice: find in tasks table the value of that choice
+      ch[ch$Var1 == choice,rounds+2] <- tasks[tasks$tasks == choice,]$value
+    }
+    ### Multiply by discount factor^round
+    ch[,rounds+2] <- ch[,rounds+2]*gamma^(rounds-1)
+    
+    
+    ## Create state values for each round
+    S[col_names] <- NA
+    ### for each state in "S" choose the highest value in "ch" and create another column with the values
+    best_option <- function(round, choice_matrix = ch, state_matrix = S, label_matrix = label){
+      for(row in c(1:nrow(state_matrix))) {
+        if (is.na(state_matrix[row,]$V2)) {
+          state_matrix[row,round + 2] <- choice_matrix[choice_matrix$Var1 == state_matrix[row,]$V1 &
+                                                         is.na(choice_matrix$Var2),round +2]
+          label_matrix[row,round + 2] <- as.character(choice_matrix[choice_matrix$Var1 == state_matrix[row,]$V1 & 
+                                                                      is.na(choice_matrix$Var2), 1])
+        } else if (as.character(state_matrix[row,]$V2) == "TR") {
+          state_matrix[row,round + 2] <- na.exclude(choice_matrix[choice_matrix$Var1 == state_matrix[row,]$V1 &
+                                                                    choice_matrix$Var2 == state_matrix[row,]$V2,round + 2])
+          label_matrix[row,round + 2] <- as.character(choice_matrix[choice_matrix$Var1 == state_matrix[row,]$V1 &
+                                                                      is.na(choice_matrix$Var2), 1])
+        } else {
+          choice1 <- choice_matrix[choice_matrix$Var1 == state_matrix[row,]$V1 &
+                                     choice_matrix$Var2 == state_matrix[row,]$V2 &
+                                     !is.na(choice_matrix$Var2) &
+                                     as.character(choice_matrix$Var2) != "TR",round +2]
+          choice2 <- choice_matrix[choice_matrix$Var1 == state_matrix[row,]$V2 &
+                                     choice_matrix$Var2 == state_matrix[row,]$V1 &
+                                     !is.na(choice_matrix$Var2) &
+                                     as.character(choice_matrix$Var2) != "TR",round +2]
+          if (choice1 > choice2) {
+            state_matrix[row,round + 2] <- choice1
+            # ### save choices: change the suboptimal choices to NA
+            # choice_matrix[choice_matrix$Var1 == state_matrix[row,]$V2 &
+            #                 choice_matrix$Var2 == state_matrix[row,]$V1 &
+            #                 !is.na(choice_matrix$Var2) &
+            #                 as.character(choice_matrix$Var2) != "TR",round +2] <- NA
+            label_matrix[row,round + 2] <- as.character(na.exclude(choice_matrix[choice_matrix$Var1 == state_matrix[row,]$V1 &
+                                                                        choice_matrix$Var2 == state_matrix[row,]$V2, 1]))
+          } else if (choice1 < choice2) {
+            state_matrix[row,round + 2] <- choice2
+            # ### save choices: change the suboptimal choices to NA
+            # choice_matrix[choice_matrix$Var1 == state_matrix[row,]$V1 &
+            #                 choice_matrix$Var2 == state_matrix[row,]$V2 &
+            #                 !is.na(choice_matrix$Var2) &
+            #                 as.character(choice_matrix$Var2) != "TR",round +2] <- NA
+            label_matrix[row,round + 2] <- as.character(na.exclude(choice_matrix[choice_matrix$Var1 == state_matrix[row,]$V2 &
+                                                                        choice_matrix$Var2 == state_matrix[row,]$V1, 1]))
+          } else if (choice2 == choice1){
+            state_matrix[row,round + 2] <- choice1
+            label_matrix[row,round + 2] <- "either"
+          }
+        }
+      }
+      return(list(state_matrix,choice_matrix,label_matrix))
+    }
+    
+    label <- S
+    new_states_choices <- best_option(rounds)
+    S <- new_states_choices[[1]]
+    ch <- new_states_choices[[2]]
+    label <- new_states_choices[[3]]
+    ## second to last round to first round
+    ### loop through the choices|states in "S"
+    ### For each choice|state, calculate the the expected value
+    
+    # We need to change "transitions" for simplicity of search
+    transitions$choice <- substr(transitions$Var1, 1, 3)
+    transitions$non_choice <- substr(transitions$Var1, 5, 7)
+    transitions[transitions$non_choice == "NA",]$non_choice <- NA
+    transitions$state2_1 <- substr(transitions$Var2, 1, 3)
+    transitions$state2_2 <- substr(transitions$Var2, 5, 7)
+    transitions[transitions$state2_2 == "NA",]$state2_2 <- NA
+    
+    for(i in c(1:(rounds-1))){
+      values <- S[,c(1,2,(rounds+3-i))]
+      for(row in c(1:nrow(ch))){
+        #### create probability vector P [44x1] from "transitions"
+        if(!is.na(ch[row,2])) {
+          prob_weight <- 
+            transitions[ch[row,1] == transitions$choice &
+                          ch[row,2] == transitions$non_choice &
+                          !is.na(ch[row,2]) &
+                          !is.na(transitions$non_choice),]
+        } else if(is.na(ch[row,2])) {
+          prob_weight <- 
+            transitions[ch[row,1] == transitions$choice &
+                          is.na(ch[row,2]) &
+                          is.na(transitions$non_choice),]
+        }
+        
+        #### Make sure "S" is in the same order [1x44]
+        prob_weight <- merge(x = prob_weight,
+                             y = values,
+                             by.x = c("state2_1", "state2_2"),
+                             by.y = c("V1", "V2"))
+        prob_weight$weighted_value <- prob_weight$prob * values[,c(length(values))]
+        ### Multiply by discount factor^round
+        ch[row,rounds+2-i] <- gamma^(rounds-1-i)*tasks[tasks$tasks == ch[row,1],]$value + sum(prob_weight$weighted_value)
+      }
+      new_states_choices <- best_option(rounds-i)
+      S <- new_states_choices[[1]]
+      ch <- new_states_choices[[2]]
+      label <- new_states_choices[[3]]
+    }
+    urgency <- apply(label[,-c(1:2)], 2, function(X) substr(X, nchar(X), nchar(X)))
+    ratios <- append(ratios, table(urgency)["U"]/sum(table(urgency)))
+  }
+}
+
+ratios_grid <- matrix(ratios,
+                      nrow = length(gamma_grid),
+                      ncol = length(cost2_grid),
+                      dimnames = list(gamma_grid,
+                                      cost2_grid))
+
+### Export labels
+write.csv(ratios_grid,"./urgency-ratio-grid.csv")
+
+```
+
+## Bayesian Model for Cost Estimation
+
+### Model
+
+```{stan cost-model, eval=FALSE, include=TRUE, output.var="my_model"}
+data {
+  int<lower=1> N;
+  int<lower=1> T;
+  int<lower=2> nOpt;
+  int<lower=1, upper=T> Tsubj[N];
+  int<lower=0, upper=nOpt> choice[N, T]; //left or right?
+  int<lower=0, upper=80> opt_st[N, T]; //option-state: an easy way to map the choices for choice prob calculation
+  int value_lookup[80];
+  int state_lookup[52, nOpt];
+  matrix<lower=0, upper = 1>[80, 52] prob_weight;
+  int<lower=0, upper=80> counterpart[80];
+  // real outcome[N, T];  // no lower and upper bounds
+}
+transformed data {
+  vector[nOpt] initV;  // initial values for EV
+  initV = rep_vector(0.0, nOpt);
+}
+parameters {
+// Declare all parameters as vectors for vectorizing
+  // Hyper(group)-parameters
+  vector[2] mu_pr;
+  vector<lower=0>[2] sigma;
+
+  // Subject-level parameters (for transformation from hyper to subj parameter)
+  vector[N] costL;  // cost_low
+  vector[N] costH;    // cost_high
+}
+model {
+  // Hyperparameters
+  mu_pr  ~ normal(0, 5); //weakly informative priors
+  sigma ~ gamma(2,0.1); //weakly informative priors
+
+  // individual parameters
+  for (i in 1:N) {
+    //tau[i]   = Phi_approx(mu_pr[1]  + sigma[1]  * tau_pr[i]); //approx Normal CDF + noise
+    costL[i] ~ normal(mu_pr[1], sigma[1]);
+    costH[i] ~ normal(mu_pr[2], sigma[2]);
+  }
+
+  // subject loop and trial loop
+  for (i in 1:N) {
+    vector[nOpt] ev; // expected value
+    vector[4] value; // vector of value option, lookup table
+    matrix[80, Tsubj[i]] ch; 
+    matrix[52, Tsubj[i]] st;
+    int round_back; // backwards counter for induction
+    real weighted_value;
+    
+    ev = initV;
+
+    // Declaring values for each option, lookup table (make it loop later)
+    value[1] = 2 - costH[i];
+    value[2] = 1 - costH[i];
+    value[3] = 1 - costL[i];
+    value[4] = 2 - costL[i];
+
+
+    // Backwards induction
+    //  fill in column in "ch" with the values
+    for(option in 1:80) {
+      // first column is choice: find in tasks table the value of that choice
+      // lookup is a vector that tells you which cost correspondends to each choice
+      ch[option, Tsubj[i]] = value[value_lookup[option]];
+    }
+    //    Create state values for each round
+    // state_lookup tells you which choice|state maps onto which state
+    // for each state in "S" choose the highest value in "ch" and create another column with the values
+    for(state in 1:52) {
+      if (ch[state_lookup[state,1], Tsubj[i]] >= ch[state_lookup[state,2], Tsubj[i]]) {
+        st[state, Tsubj[i]] = ch[state_lookup[state,1], Tsubj[i]];
+      } else if (ch[state_lookup[state,1], Tsubj[i]] < ch[state_lookup[state,2], Tsubj[i]]) {
+        st[state, Tsubj[i]] = ch[state_lookup[state,2], Tsubj[i]];
+      }
+    }
+        // compute action probabilities
+        ev[1] = ch[opt_st[i, Tsubj[i]], Tsubj[i]];
+        ev[2] = ch[counterpart[opt_st[i, Tsubj[i]]], Tsubj[i]];
+        choice[i, Tsubj[i]] ~ categorical_logit(ev);
+        
+        for (t in 1:(Tsubj[i]-1)) {
+          round_back = Tsubj[i] - t;
+          for(option in 1:80) {
+            // use action probabilities
+            weighted_value = dot_product(prob_weight[option], col(st, (round_back + 1)) );
+            ch[option, round_back] = value[value_lookup[option]] + weighted_value;
+          }
+          for(state in 1:52) {
+            if (ch[state_lookup[state,1], round_back] >= ch[state_lookup[state,2], round_back]) {
+              st[state, round_back] = ch[state_lookup[state,1], round_back];
+            } else if (ch[state_lookup[state,1], round_back] < ch[state_lookup[state,2], round_back]) {
+              st[state, round_back] = ch[state_lookup[state,2], round_back];
+            }
+          }
+          // compute action probabilities
+          ev[1] = ch[opt_st[i, round_back], round_back];
+          ev[2] = ch[counterpart[opt_st[i, round_back]], round_back];
+          choice[i, round_back] ~ categorical_logit(ev);
+        }
+  }
+  
+}
+```
+
+### Estimation
+
+```{r cost-model, eval=FALSE, include=TRUE}
+##### Bayesian model prediction
+## Marcos Gallo
+library("rstan")
+library("tidyverse")
+
+### ATTENTION
+## Requires some data from Dynamic_Programming.R
+
+setwd("/Users/marcosgallo/Documents/Marcos PhD Files/Poverty/PrioQ-exp-results/")
+load("cooked/prolific1.Rdata")
+data <- pilot1[!is.na(pilot1$participant),]
+
+data <- data %>%
+  group_by(participant) %>%
+  mutate(COUNTER = row_number())
+Tsubj <- data %>%
+  group_by(participant) %>%
+  summarize(n = n())
+
+source("Dynamic_Programming.R")
+# create choice[N,T]
+data$choice_bin <- 1
+data[data$choice == "R",]$choice_bin <- 2
+choice <- data %>%
+  select(participant, COUNTER, choice_bin) %>%
+  group_by(COUNTER) %>%
+  spread(COUNTER, choice_bin)
+# Take NAs out
+choice[is.na(choice)] <- 0
+
+# option-state: an easy way to map the choices for choice prob calculation
+ch_opt_translation <- ch[,c(1:2)]
+ch_opt_translation$index <- c(1:length(ch_opt_translation$Var1))
+ch_opt_translation$i1 <- NA
+ch_opt_translation$e1 <- NA
+ch_opt_translation$i2 <- NA
+ch_opt_translation$e2 <- NA
+
+ch_opt_translation$u1 <- grepl("U", ch_opt_translation$Var1)
+ch_opt_translation$u2 <- grepl("U", ch_opt_translation$Var2)
+ch_opt_translation[is.na(ch_opt_translation$Var2), ]$u2 <- NA
+ch_opt_translation$u1 <- as.numeric(ch_opt_translation$u1) + 1
+ch_opt_translation$u2 <- as.numeric(ch_opt_translation$u2) + 1
+
+ch_opt_translation$i1 <- ifelse(substring(ch_opt_translation$Var1, 1, 1) == "H", 2, 1)
+ch_opt_translation$i2 <- ifelse(substring(ch_opt_translation$Var2, 1, 1) == "H", 2, 1)
+ch_opt_translation[is.na(ch_opt_translation$Var2), ]$i2 <- NA
+
+ch_opt_translation$e1 <- ifelse(substring(ch_opt_translation$Var1, 2, 2) == "H", 2, 1)
+ch_opt_translation$e2 <- ifelse(substring(ch_opt_translation$Var2, 2, 2) == "H", 2, 1)
+ch_opt_translation[is.na(ch_opt_translation$Var2), ]$e2 <- NA
+
+ch_opt_translation[grepl("TR", ch_opt_translation$Var2), ]$i2 <- 
+  ch_opt_translation[grepl("TR", ch_opt_translation$Var2), ]$i1
+ch_opt_translation[grepl("TR", ch_opt_translation$Var2), ]$e2 <- 
+  ch_opt_translation[grepl("TR", ch_opt_translation$Var2), ]$e1
+ch_opt_translation[grepl("TR", ch_opt_translation$Var2), ]$u2 <- 
+  ch_opt_translation[grepl("TR", ch_opt_translation$Var2), ]$u1
+
+ch_opt_translation[grepl("TR", ch_opt_translation$Var2), ]$i1 <- NA
+ch_opt_translation[grepl("TR", ch_opt_translation$Var2), ]$e1 <- NA
+ch_opt_translation[grepl("TR", ch_opt_translation$Var2), ]$u1 <- NA
+
+data <- merge(x = data,
+              y = ch_opt_translation[,-c(1:2)],
+              by = c("u1", "u2", "e1", "e2", "i1", "i2"))
+
+opt_st <- data %>%
+  select(participant, COUNTER, index) %>%
+  group_by(COUNTER) %>%
+  spread(COUNTER, index)
+# Take NAs out
+opt_st[is.na(opt_st)] <- 0
+
+ch_opt_translation$value <- 0
+ch_opt_translation[grepl("HH", ch_opt_translation$Var1),]$value = 1
+ch_opt_translation[grepl("LH", ch_opt_translation$Var1),]$value = 2
+ch_opt_translation[grepl("LL", ch_opt_translation$Var1),]$value = 3
+ch_opt_translation[grepl("HL", ch_opt_translation$Var1),]$value = 4
+
+
+S$st_index <- c(1:nrow(S))
+S <- merge(x = S,
+           y = ch_opt_translation[,c(1:3)],
+           by.x = c("V1", "V2"),
+           by.y = c("Var1", "Var2"))
+ch_opt_translation$index2 <- ch_opt_translation$index
+S <- merge(x = S, 
+           y = ch_opt_translation[,c(1:2,11)],
+           by.x = c("V2", "V1"),
+           by.y = c("Var1", "Var2"),
+           all.x = TRUE)
+state_lookup <- S %>%
+  select(st_index, index, index2)
+# Take NAs out
+state_lookup[is.na(state_lookup$index2),]$index2 <- state_lookup[is.na(state_lookup$index2),]$index
+# Order state_lookup
+state_lookup <- state_lookup %>%
+  arrange(order_by = st_index)
+
+prob_weight <- merge(x = transitions,
+                      y = ch_opt_translation[,c(1:3)],
+                      by.x = c("choice", "non_choice"),
+                      by.y = c("Var1", "Var2"))
+prob_weight <- merge(x = prob_weight,
+                     y = ch_opt_translation[,c(1:2,11)],
+                     by.x = c("state2_1", "state2_2"),
+                     by.y = c("Var1", "Var2"))
+
+## Create an easy way to map choices to states
+choice_state <- as.data.frame(c(1:80))
+choice_state <- merge(x = choice_state,
+                      y = state_lookup[,-c(3)],
+                      by.x = c("c(1:80)"),
+                      by.y = c("index"),
+                      all.x = TRUE)
+choice_state <- merge(x = choice_state,
+                      y = state_lookup[,-c(2)],
+                      by.x = c("c(1:80)"),
+                      by.y = c("index2"),
+                      all.x = TRUE)
+choice_state$st_index <- choice_state$st_index.x
+choice_state[is.na(choice_state$st_index.x),]$st_index <- choice_state[is.na(choice_state$st_index.x),]$st_index.y
+choice_state <- choice_state %>%
+  select(`c(1:80)`, st_index)
+prob_weight <- merge(x=prob_weight,
+                     y=choice_state,
+                     by.x = "index2",
+                     by.y= "c(1:80)")
+prob_weight <- prob_weight %>%
+  select(index, st_index, prob)
+
+prob_weight <- prob_weight %>%
+  group_by(index) %>%
+  spread(st_index, prob)
+
+## Counterpart choice|states
+counterpart <- merge(x = choice_state, y = state_lookup[,-c(1)], by.x = "c(1:80)", by.y = "index", all.x = TRUE)
+counterpart <- merge(x = counterpart, y = state_lookup[,-c(1)], by.x = "c(1:80)", by.y = "index2", all.x = TRUE)
+counterpart$index_ALL <- counterpart$index
+counterpart[is.na(counterpart$index),]$index_ALL <- counterpart[is.na(counterpart$index),]$index2
+counterpart <- counterpart %>%
+  select(index_ALL)
+
+model_data <- list( N = length(unique(data$participant)), #number of part
+                    T = max(data$COUNTER), # number of max rounds
+                    nOpt = 2,
+                    Tsubj = Tsubj$n, # number of round
+                    choice = choice[,c(-1)],
+                    opt_st = opt_st[,c(-1)],
+                    value_lookup = ch_opt_translation$value,
+                    state_lookup = state_lookup[,c(-1)],
+                    prob_weight = prob_weight[,c(-1)],
+                    counterpart = counterpart$index_ALL) # transition probabilities
+# save(model_data, ch_opt_translation, file = "cooked/prolific1StanData.Rdata")
+
+# my_model <- stan_model(file = "recipes/hier-bayes-simple.stan", verbose = TRUE)
+Prolific1_Stan_results <- sampling(object = my_model, data = model_data,
+                                   iter = 1000,
+                                   chains = 1,
+                                   cores = 3)
+# save(Prolific1_Stan_results, file = "cooked/Prolific1StanResults.Rdata")
+
+```

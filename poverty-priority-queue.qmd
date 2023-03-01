@@ -11,7 +11,7 @@ format:
 
 # Task Prioritization
 
-```{r init, include=FALSE}
+```{r init, warning=FALSE, include=FALSE}
 
 library(stringi)
 library(stringr)
@@ -22,15 +22,49 @@ library(latticeExtra)
 
 ```
 
+## Priority Queuing
+
+K: Explain with equations.
+
+### Urgency and Importance
+
+M: Explain (with equation for different weighting for warmth and competence)
+
+#### Simulation
+
+Simmer package:
+
+```{r simmer-simulation}
+#| fig-cap: Probability of Survival by Urgency Weight 
+
+
+
+```
+
+```{r simmer-burstiness}
+#| fig-cap: Burstiness by Urgency Weight 
+
+
+
+```
+
 ## Relating to Poverty
+
+K: role strain...
 
 ## Relating to Anxiety
 
+M: proposal?
+
 ## Interactions
+
+M: proposal?
 
 # The Experiment
 
 ## Structure
+
+K:
 
 ### Simulation
 
@@ -56,11 +90,19 @@ levelplot(urgent ~ cost * gamma, urgency_ratio_grid,
 
 ```
 
+K:
+
 ### Demographics
+
+K:
 
 ### Measures of Poverty
 
-#### Income
+M: 2022 Report
+
+#### Self-Reported Income
+
+#### ZIP code Measures
 
 #### Composite Measure (PCA)
 
@@ -68,9 +110,17 @@ levelplot(urgent ~ cost * gamma, urgency_ratio_grid,
 
 #### Choice
 
+K: "Difficult Choices"
+
 #### Reaction Time
 
+M:
+
 ### Accuracy
+
+M: Report
+
+K: explanation + histogram
 
 ## Results
 
@@ -92,30 +142,213 @@ Distribution of accuracy
 
 #### Note on Deterministic Choices
 
+K: preliminary model. Continuous -\>
+
+K
+
 ### Other Poverty Measures
 
 # Recommendations
+
+## Power Analysis
+
+IRB
 
 ## Redesign
 
 ### Probabilistic Choice
 
+IRB
+
 ### Flexible Queue Size
+
+IRB
+
+### Comprehensive Measures of Poverty
+
+IRB
+
+## Population
+
+### Online Sample
+
+Pros and cons.
+
+### Homeless
+
+M: Look Sera's studies
+
+IRB: Justification
+
+### Other Low SES Cohorts
+
+M: Proposal
 
 # Appendix
 
-## Dynamic Programming Simulation Code
+## Priority Queuing Simulation
+
+## Dynamic Programming Simulation
+
+## Bayesian Model for Cost Estimation
+
+### Model
+
+### Estimation
+
+## Code
+
+### Priority Queuing Simulation
+
+```{r pri-q-simulation, eval=FALSE, include=TRUE}
+
+library(simmer)
+library(simmer.plot)
+library(tidyverse)
+library(latex2exp)
+#library(dplyr)
+#library(data.table)
+set.seed(1234)
+
+# Parameters
+lambda <- 5
+mu <- 5
+t_simul <- 150 #Calibrated to optimize simulation time (prob_continue ≈ 0)
+n_simul <- 100
+scale = 100 # The scale on alpha to transfer runif(0,1) to something with more variance
+
+weights <- seq(0, 1, by = 0.01)
+arri <- list()
+attr <- list()
+total <- list()
+
+# Simulations with simmer
+for (w in 1:length(weights)) {
+  env <- simmer("poverty")
+  
+  person <- trajectory("Poor's Trajectory") %>%
+    set_attribute(keys = "urgency", function()
+      runif(1, 0, 1)) %>%
+    set_attribute(keys = "importance", function()
+      runif(1, 0, 1)) %>%
+    set_attribute(keys = "weight", weights[w]) %>%
+    set_prioritization(function() {
+      prio <-
+        10000 * (
+          get_attribute(env, "weight") * get_attribute(env, "urgency") +
+            (1 - get_attribute(env, "weight")) * get_attribute(env, "importance")
+        )
+      c(prio, NA, NA)
+    }) %>%
+    # log_(function() {
+    #   paste("Priority is: ", get_prioritization(env)[1])
+    # }) %>%
+    seize("person", amount = 1) %>%
+    timeout(function()
+      rexp(1, mu)) %>%
+    release("person", amount = 1)
+  
+  env <-
+    simmer() %>%
+    add_resource("person", capacity = 1) %>%
+    add_generator("Task", person, function()
+      rexp(1, lambda), mon = 2)
+  
+  # env %>% run(until = t_simul)
+  
+  envs <- lapply(1:n_simul, function(i) {
+    env %>%
+      run(until = t_simul) %>%
+      wrap()
+  })
+  
+  ## Change Variables before
+  arri[[w]] <- get_mon_arrivals(envs, ongoing = TRUE)
+  attr[[w]] <- get_mon_attributes(envs)
+  
+  # Merge
+  total[[w]] <-
+    inner_join(arri[[w]], attr[[w]][attr[[w]]$key == "urgency", c(2, 4, 5)], by = c("name", "replication"))
+  total[[w]] <-
+    total[[w]] %>%
+    rename(urgency = value)
+  total[[w]] <-
+    total[[w]][order(total[[w]]$replication, total[[w]]$start_time, decreasing = FALSE), ]
+  row.names(total[[w]]) <- NULL
+  total[[w]] <-
+    inner_join(total[[w]], attr[[w]][attr[[w]]$key == "importance", c(2, 4, 5)], by = c("name", "replication"))
+  total[[w]] <-
+    total[[w]] %>%
+    rename(importance = value)
+  total[[w]] <-
+    total[[w]][order(total[[w]]$replication, total[[w]]$start_time, decreasing = FALSE), ]
+  row.names(total[[w]]) <- NULL
+  total[[w]]$waiting_time <-
+    total[[w]]$end_time - total[[w]]$start_time - total[[w]]$activity_time
+
+    # Take care of precision problems yielding negative wait times.
+  if (nrow(total[[w]][total[[w]]$waiting_time < 0 &
+                      !is.na(total[[w]]$waiting_time), ]) > 0) {
+    total[[w]][total[[w]]$waiting_time < 0 &
+                 !is.na(total[[w]]$waiting_time), ]$waiting_time <- 0
+  }
+
+  #Weibull distribution with monomial function
+  alpha = (scale - scale * as.numeric(total[[w]]$urgency)) #for now
+  beta = 1
+  total[[w]]$prob_fail <-
+    1 - exp(-1 * (total[[w]]$waiting_time / alpha) ^ (beta))
+
+  # Get probability of survival
+  total[[w]] <- total[[w]] %>%
+    mutate(prob_continue = (1 - prob_fail)) %>%
+    group_by(replication) %>%
+    mutate(prob_continue = lag(cumprod(prob_continue), k=1, default=1))
+
+  cat('Simulation', w, 'of', length(weights), '\n')
+}
+
+sigma_list <- lapply(X = total, function(X)   sd(X[!is.na(X$waiting_time), ]$waiting_time))
+mu_list    <- lapply(X = total, function(X) mean(X[!is.na(X$waiting_time), ]$waiting_time))
+
+lag_time <- lapply(X = total, function(X) X %>%
+                     filter(!is.na(waiting_time)) %>%
+                     group_by(replication) %>%
+                     mutate(waiting_time_lag = lag(waiting_time, default = 0)) %>%
+                     dplyr::select(waiting_time, waiting_time_lag) %>%
+                     cor())
+memory   <- lapply(X = lag_time, function(X) X[2,3])
+
+
+# Burstiness -------------------------------------------------------------
+burstiness <- data.frame(weights) %>%
+  mutate(sigma = unlist(sigma_list)) %>%
+  mutate(mu = unlist(mu_list)) %>%
+  mutate(B = (sigma - mu) / (sigma + mu)) %>%
+  mutate(M = unlist(memory))
+
+
+# Probability of Survival -------------------------------------------------
+prob_survival <- lapply(X = total,
+                        function(X) X %>%
+                          group_by(name) %>%
+                          summarise(mean_survival = mean(prob_continue),
+                                    mean_time = mean(end_time)) %>%
+                          rename(task = name) %>%
+                          mutate(task = readr::parse_number(task))
+                          )
+names(prob_survival) <- weights
+survival <- prob_survival %>%
+  bind_rows(.id = "weight")
+
+```
+
+### Dynamic Programming Simulation
 
 ```{r dyn-pro-simulation, eval=FALSE, include=TRUE}
 
-############################################################
-## Marcos Gallo
-## Dynamic Programming Ice Cream Experiment
-#############################################################
-
 library(stringi)
 library(stringr)
-library(dplyr)
 
 #Importance
 imp <- c(1,2)
@@ -359,9 +592,9 @@ write.csv(ratios_grid,"./urgency-ratio-grid.csv")
 
 ```
 
-## Bayesian Model for Cost Estimation
+### Bayesian Model for Cost Estimation
 
-### Model
+#### Model
 
 ```{stan cost-model, eval=FALSE, include=TRUE, output.var="my_model"}
 data {
@@ -467,21 +700,12 @@ model {
 }
 ```
 
-### Estimation
+#### Model Data
 
-```{r cost-model, eval=FALSE, include=TRUE}
-##### Bayesian model prediction
-## Marcos Gallo
-library("rstan")
-library("tidyverse")
-
-### ATTENTION
-## Requires some data from Dynamic_Programming.R
-
-setwd("/Users/marcosgallo/Documents/Marcos PhD Files/Poverty/PrioQ-exp-results/")
-load("cooked/prolific1.Rdata")
+```{r cost-model-data, eval=FALSE, include=TRUE}
+# Data Wrangling ----------------------------------------------------------
+load("prolific1.Rdata")
 data <- pilot1[!is.na(pilot1$participant),]
-
 data <- data %>%
   group_by(participant) %>%
   mutate(COUNTER = row_number())
@@ -489,8 +713,84 @@ Tsubj <- data %>%
   group_by(participant) %>%
   summarize(n = n())
 
-source("Dynamic_Programming.R")
-# create choice[N,T]
+# Creating Choice set ----------------------------------------------------------
+choices <- c("HHU", "HH0", "HLU", "HL0", "LHU", "LH0", "LLU", "LL0")
+ch <- expand.grid(choices, choices)
+# Fix factor levels for next step
+levels(ch$Var2) = append(choices, "TR")
+for (chr in choices) {
+  ch <- rbind(ch,c(chr,NA))
+  ch <- rbind(ch,c(chr,"TR"))
+}
+
+# Creating State set ----------------------------------------------------------
+S <- as.data.frame(t(combn(choices,2)))
+for (chr in choices) {
+  # Add states with two of the same task
+  S <- rbind(S,c(chr,chr))
+  # Add states with only one task transition to one task
+  S <- rbind(S,c(chr,NA))
+  # Add states with only one task transitioning to two tasks
+  S <- rbind(S,c(chr,"TR"))
+}
+
+# Create Transition Set ----------------------------------------------------------
+# Transition Probabilities
+choices <- paste(ch$Var1,ch$Var2,sep = "x")
+states <- paste(S$V1,S$V2,sep = "x")
+transitions <- expand.grid(choices,states)
+# Remaining task (last 3 characters) is in the next state, but no NA
+transitions$prob <- NA
+## Non-urgent tasks:
+## Note this is also transitioning to NA and TR states. Fix it in line 91 and __
+transitions[str_detect(str = str_sub(transitions$Var1,-3), pattern = "0"),]$prob <- 
+  str_detect(str = transitions[str_detect(str = str_sub(transitions$Var1,-3), pattern = "0"),]$Var2,
+             pattern = str_sub(transitions[str_detect(str = str_sub(transitions$Var1,-3), pattern = "0"),]$Var1,-3))
+## Urgent tasks: 
+### If HXU -> LXU
+transitions[str_detect(str = str_sub(transitions$Var1,-1), pattern = "U") & 
+              str_detect(str = str_sub(transitions$Var1,start = -3, end = -3), pattern = "H"),]$prob <-
+  str_detect(str = transitions[str_detect(str = str_sub(transitions$Var1,-1), pattern = "U") & 
+                                 str_detect(str = str_sub(transitions$Var1,start = -3, end = -3), pattern = "H"),]$Var2,
+             pattern = paste("L",
+                             str_sub(transitions[str_detect(str = str_sub(transitions$Var1,-1), pattern = "U") & 
+                                                   str_detect(str = str_sub(transitions$Var1,start = -3, end = -3), pattern = "H"),]$Var1,
+                                     start = -2,
+                                     end = -2),"U",sep = ""))
+### If LXU -> NA
+## first change all transitions to false
+transitions[str_detect(str = str_sub(transitions$Var2,-3), pattern = "NA"),]$prob <- FALSE
+# Now calculate other transitions
+transitions[str_detect(str = str_sub(transitions$Var1,-1), pattern = "U") & 
+              str_detect(str = str_sub(transitions$Var1,start = -3, end = -3), pattern = "L"),]$prob <-
+  str_detect(str = transitions[str_detect(str = str_sub(transitions$Var1,-1), pattern = "U") & 
+                                 str_detect(str = str_sub(transitions$Var1,start = -3, end = -3), pattern = "L"),]$Var2,
+             pattern = "NA")
+
+## Single task with transition to single task:
+transitions[str_detect(str = transitions$Var1, pattern = "NA"),]$prob <-
+  str_detect(str = transitions[str_detect(str = transitions$Var1, pattern = "NA"),]$Var2,
+             pattern = "TR")
+## Single task with transition to single task:
+transitions[str_detect(str = transitions$Var1, pattern = "TR"),]$prob <- 0
+
+#Transforming them into probabilities by dividing by 8
+transitions$prob <- as.numeric(transitions$prob)
+transitions$prob <- transitions$prob / 8
+
+## Single task with transition to single task:
+transitions[str_detect(str = transitions$Var1, pattern = "TR") &
+              str_length(transitions$Var2) == 7,]$prob <- 1/36
+# We need to change "transitions" for simplicity of search
+transitions$choice <- substr(transitions$Var1, 1, 3)
+transitions$non_choice <- substr(transitions$Var1, 5, 7)
+transitions[transitions$non_choice == "NA",]$non_choice <- NA
+transitions$state2_1 <- substr(transitions$Var2, 1, 3)
+transitions$state2_2 <- substr(transitions$Var2, 5, 7)
+transitions[transitions$state2_2 == "NA",]$state2_2 <- NA
+
+
+# create choice[N,T] ----------------------------------------------------------
 data$choice_bin <- 1
 data[data$choice == "R",]$choice_bin <- 2
 choice <- data %>%
@@ -500,7 +800,9 @@ choice <- data %>%
 # Take NAs out
 choice[is.na(choice)] <- 0
 
-# option-state: an easy way to map the choices for choice prob calculation
+
+# Option-State ------------------------------------------------------------
+## an easy way to map the choices for choice prob calculation
 ch_opt_translation <- ch[,c(1:2)]
 ch_opt_translation$index <- c(1:length(ch_opt_translation$Var1))
 ch_opt_translation$i1 <- NA
@@ -579,7 +881,8 @@ prob_weight <- merge(x = prob_weight,
                      by.x = c("state2_1", "state2_2"),
                      by.y = c("Var1", "Var2"))
 
-## Create an easy way to map choices to states
+
+# Map Choices to States ---------------------------------------------------
 choice_state <- as.data.frame(c(1:80))
 choice_state <- merge(x = choice_state,
                       y = state_lookup[,-c(3)],
@@ -606,7 +909,8 @@ prob_weight <- prob_weight %>%
   group_by(index) %>%
   spread(st_index, prob)
 
-## Counterpart choice|states
+
+# Counterpart choice|states -----------------------------------------------
 counterpart <- merge(x = choice_state, y = state_lookup[,-c(1)], by.x = "c(1:80)", by.y = "index", all.x = TRUE)
 counterpart <- merge(x = counterpart, y = state_lookup[,-c(1)], by.x = "c(1:80)", by.y = "index2", all.x = TRUE)
 counterpart$index_ALL <- counterpart$index
@@ -624,13 +928,18 @@ model_data <- list( N = length(unique(data$participant)), #number of part
                     state_lookup = state_lookup[,c(-1)],
                     prob_weight = prob_weight[,c(-1)],
                     counterpart = counterpart$index_ALL) # transition probabilities
-# save(model_data, ch_opt_translation, file = "cooked/prolific1StanData.Rdata")
 
+```
+
+#### Estimation
+
+```{r cost-model-estimation, eval=FALSE, include=TRUE}
+
+load("prolific1StanData.Rdata")
 # my_model <- stan_model(file = "recipes/hier-bayes-simple.stan", verbose = TRUE)
 Prolific1_Stan_results <- sampling(object = my_model, data = model_data,
                                    iter = 1000,
                                    chains = 1,
                                    cores = 3)
-# save(Prolific1_Stan_results, file = "cooked/Prolific1StanResults.Rdata")
 
 ```

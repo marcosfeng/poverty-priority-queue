@@ -18,6 +18,7 @@ library(stringr)
 library(dplyr)
 library(tidyr)
 library(readr)
+library(ggplot2)
 library(latticeExtra)
 
 ```
@@ -37,14 +38,32 @@ Simmer package:
 ```{r simmer-simulation}
 #| fig-cap: Probability of Survival by Urgency Weight 
 
+urgency_survival_grid <- read_csv("urgency-survival-grid.csv") %>%
+  rename(time = mean_time) %>%
+  filter(time < 25) # Anything greater is close to 0
 
+levelplot(mean_survival ~ time * weight, urgency_survival_grid, 
+          panel = panel.levelplot.points, cex = 0
+    ) + 
+    latticeExtra::layer_(panel.2dsmoother(..., n = 200))
 
 ```
 
 ```{r simmer-burstiness}
 #| fig-cap: Burstiness by Urgency Weight 
 
+urgency_burstiness_grid <- read_csv("urgency-burstiness-grid.csv") 
 
+library(viridis)
+ggplot(urgency_burstiness_grid,
+       aes(x = M, y = B)) +
+  geom_jitter(aes(color = weights),
+              size = 1,
+              alpha = 0.8) +
+  labs(color = "Urgency Weight") +
+  scale_color_viridis(option = "D") +
+  geom_hline(yintercept = 0) +
+  geom_hline(xintercept = 0)
 
 ```
 
@@ -126,6 +145,21 @@ K: explanation + histogram
 
 ### Trade-off Decisions
 
+```{r trade-off-results}
+#| label: trade-off-results
+#| fig-cap: "Choice proportions by income and anxiety"
+#| fig-subcap:
+#|   - "Mturk, Income"
+#|   - "Mturk, Anxiety"
+#|   - "Prolific, Income"
+#|   - "Prolific, Anxiety"
+#| layout-ncol: 2
+#| column: page-right
+
+
+
+```
+
 Accuracy in trade-off decisions as a function of income and anxiety
 
 Multiple regression models to test the same hypotheses with different measures of income.
@@ -184,7 +218,7 @@ IRB: Justification
 
 M: Proposal
 
-# Appendix
+# Appendix {.unnumbered}
 
 ## Priority Queuing Simulation
 
@@ -214,10 +248,10 @@ set.seed(1234)
 lambda <- 5
 mu <- 5
 t_simul <- 150 #Calibrated to optimize simulation time (prob_continue ≈ 0)
-n_simul <- 100
+n_simul <- 2
 scale = 100 # The scale on alpha to transfer runif(0,1) to something with more variance
 
-weights <- seq(0, 1, by = 0.01)
+weights <- seq(0, 1, by = 0.001)
 arri <- list()
 attr <- list()
 total <- list()
@@ -310,7 +344,6 @@ for (w in 1:length(weights)) {
 
 sigma_list <- lapply(X = total, function(X)   sd(X[!is.na(X$waiting_time), ]$waiting_time))
 mu_list    <- lapply(X = total, function(X) mean(X[!is.na(X$waiting_time), ]$waiting_time))
-
 lag_time <- lapply(X = total, function(X) X %>%
                      filter(!is.na(waiting_time)) %>%
                      group_by(replication) %>%
@@ -326,7 +359,6 @@ burstiness <- data.frame(weights) %>%
   mutate(mu = unlist(mu_list)) %>%
   mutate(B = (sigma - mu) / (sigma + mu)) %>%
   mutate(M = unlist(memory))
-
 
 # Probability of Survival -------------------------------------------------
 prob_survival <- lapply(X = total,
@@ -704,7 +736,7 @@ model {
 
 ```{r cost-model-data, eval=FALSE, include=TRUE}
 # Data Wrangling ----------------------------------------------------------
-load("prolific1.Rdata")
+load("Prolific-pilot1.Rdata")
 data <- pilot1[!is.na(pilot1$participant),]
 data <- data %>%
   group_by(participant) %>%

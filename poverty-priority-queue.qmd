@@ -21,22 +21,32 @@ library(tidyr)
 library(readr)
 library(ggplot2)
 library(latticeExtra)
+library(rstan)
 
+load("./joint_pilot.Rdata")
+load("./prolific1StanData.Rdata")
+load("./MTurk_sample_nolimit2.Rdata")
 ```
 
 ::: {.callout-important icon="false"}
-## Abstract
+## ¶Abstract
 
 Pre-existing literature suggests that relative material scarcity -- particularly wealth inequality -- is a significant contributing factor in dictating how people behave. We characterize irrational decision-making across impoverished groups by examining two distinct paradigms: (1) effects of inefficiency in time allocation and (2) influences of stereotyping on intersocial processes (ie. collaboration).
 
 We experimentally model time allocation in low SES groups by administering an artificial priority queue where agents must attend to tasks with differing levels of effort, urgency and value. Observations suggest that individuals from low SES groups prioritize urgent tasks while agents from high SES groups prioritize high value tasks. Alternatively, we model intersocial collaboration by examining distribution of rewards during coalition games across agents of varying socioeconomic groups.
 :::
 
-Although income-based measures have long been the standard for assessing poverty, countless studies have since determined that purchasing power and standard of living are not accurately measured by such a metric. Rather, relative deprivation and state-trait anxiety measures are often more accurate empirical measurements of an individual's socioeconomic status (SES). In response to the evolving standards for what constitutes "poverty," we seek to establish an understanding of how relative-poverty can be self-perpetuating through poor time allocation.
+Poverty is a multi-dimensional problem, and behavioral scientists have focused on the effects of the environment on the decision-making process across socio-economic levels (Bertrand et al., 2004). Their underlying assumption is that humans share the same underlying biology and psychology, and that "poverty" causes significant changes in people's environments and, in turn, their decisions. For example, living in poverty often means having a limited set of options in life (from choosing what to have for dinner to which occupation to pursue), and it increases the number of demands in terms of time and mental resources (Banerjee & Duflo, 2012). This lack of control over choices leads to a chronic state of vigilance and stress (Chemin et al., 2013).
 
-Poverty traps are described as a self-perpetuating phenomena that arises when an economy is caught within a cycle that suffers from persistent undevelopment. Alternatively, we model poverty traps as an equilibrium which favors disutils over iterative cycles. To determine causal relationships between such outcomes and the behavior of low SES (type 1) agents, we examine cases of suboptimality that are distinct from high SES (type 2) agents.
+In this paper, we focus on the trade-offs between urgency and importance in day-to-day decisions. It is hypothesized that, in the mass of to-dos and responsibilities, those with limited resources have to leave specific tasks undone. Consequently, we argue that they may not have time to complete all tasks or the necessary money and, as a result, must decide what to prioritize in their lives. Although one could theoretically calculate the most optimal course of action, it is improbable that individuals would take this actuarial approach. Instead, we argue that they are more likely to use heuristics or intuition to decide what problem to address, where to spend money, and what to leave undone. Such heuristics, however, are prone to fail under particular circumstances.
 
-To assess self-reinforcing behavior intrinsic to poverty traps, we classify and compare the choice behavior of type 1 agents in regards to their time allocation. Priority Queues, models for arranging and attending to tasks, are a tangible mechanism for capturing the choices and inter-event time agents require in regards to decision-making for daily tasks. Using the pre-existing literature surrounding poverty, we experimentally build an artificial priority queue, using a utility $u(e, u, i)$ parameterized by "effort," "urgency" and "importance."
+We argue that, under the strain faced by the poor, a series of behaviors and physiological phenomena arise. Making "urgent versus important" trade-offs causes stress and anxiety levels to increase and shift attention towards specific features of a choice. We propose that an environment of poverty shifts the weight placed on the urgency of a task (e.g., estimating that urgent tasks will "come back to bite" much faster than others and estimating that nonurgent opportunities are unlikely to disappear or change). This urgency mindset may increase stress and anxiety levels, leading the poor to spend significant portions of their income on tobacco, alcohol, and lotteries (Banerjee & Duflo, 2007; Blalock et al., 2007; Haisley et al., 2008; World Health Organization, 2021). Individuals in low socio-economic groups tend to save too little (Shurtleff, 2009) frequently borrow at exorbitant interest rates (Banerjee & Duflo, 2007; Skiba & Tobacman, 2008), and limit preventive healthcare services (Lusardi et al., 2010).
+
+## Poverty Traps
+
+We argue that the poor are caught in an "urgency trap," where neglect of nonurgent tasks may cause an increase of urgency in the future. For example, not undergoing regular medical check-ups may increase susceptibility to unexpected illnesses.
+
+This phenomenon is closely related to the theory of poverty traps. This framework defines a self-perpetuating phenomena that arise when an economy is caught within a cycle that suffers from persistent undevelopment. In this paper, we model poverty traps as an equilibrium which favors disutility over iterative cycles. To determine causal relationships between such outcomes and the behavior of low SES (type 1) agents, we examine cases of suboptimality that are distinct from high SES (type 2) agents. To assess self-reinforcing behavior intrinsic to poverty traps, we classify and compare the choice behavior of type 1 agents in regards to their time allocation.
 
 ## Priority Queuing
 
@@ -61,15 +71,42 @@ One set of literature describes priority queues as a double-sided matching marke
 
 ### Urgency and Importance
 
-The Eisenhower Matrix, a simple tool for determining optimal long-term decisions, is a simplification of how individuals determine their queue for attending to daily tasks. These matrices use dimensions of urgency (time scarcity) and importance (expected value maximization) as primary motivations for which tasks require completion. However, this model is limited. As discussed in @sec-poverty, the literature speculates the influence of effort costs in decision-making - thereby suggesting Eisenhower Matrices should be modified to account for the added parameter.
+Although some scientists have proposed a "Scarcity" view of poverty (Mullainathan & Shafir, 2014), their conclusions have not withstood the scrutiny of science, leaving the causes and mechanisms of these phenomena largely unexplained (O'Donnell et al., 2021). We seek a more rigorous understanding of how relative-poverty can be self-perpetuating through poor time allocation. We explain prioritization of day-to-day tasks as an attempt to balance two requirements: (1) maximize life satisfaction given one's limited resources, and (2) minimize the potentially harmful effects of leaving tasks undone change with time. We call the former requirement "importance" and the latter "urgency" (Bratterud et al., 2020).
 
-M: Explain (with equation for different weighting for warmth and competence)
+The Eisenhower Matrix (see @app-eisenhower for details), a simple tool for determining optimal long-term decisions, is a simplification of how individuals determine their queue for attending to daily tasks. This framework uses dimensions of urgency (time scarcity) and importance (expected value maximization) as primary motivations for which tasks require completion. We intend to characterize the mapping between urgency $U$ and importance $I$ , namely $\{ U,I \} \mapsto \mathbb{R}$. As discussed in @sec-poverty, the literature speculates the influence of effort costs in decision-making - thereby suggesting Eisenhower Matrices should be modified to account for the added parameter.
 
 #### Simulation
 
-Simmer package:
+Priority Queues models are a tangible mechanism for capturing the choices and inter-event time agents require in regards to decision-making for daily tasks. Using the pre-existing literature surrounding poverty, we simulate an artificial priority queue, using a priority function
 
-```{r simmer-simulation}
+$$
+\text{Priority} = \alpha U + (1- \alpha) I
+$$ {#eq-prio}
+
+where $U, I, \alpha$ are "urgency," "importance," and the urgency weight, respectively.
+
+Our first step is to run a discrete-event simulation (DES) to uncover the relationship between $\alpha$ , probability of survival, and burstiness measures. DES is a technique for modelling stochastic, dynamic and discretely evolving systems. In this framework, consider:
+
+1.  An individual who is able to finish any job
+
+2.  A ready supply of jobs with no prospect of any shortages
+
+3.  Jobs are allocated a priority when they arrive in the queue according to @eq-prio
+
+4.  The time taken to complete a job is variable but independent of the task
+
+We define the completion time for the different activities as random draws from an exponential distribution with $\lambda = 5$. Likewise, the interarrival times for tasks are from an exponential distribution of $\lambda = 5$. Each incoming task receives $U, I \sim Unif(0,1)$ and a priority according to @eq-prio. Tasks are completed in the order of priority.
+
+Importantly, each task contains a survival rate as a function of its importance. The higher the urgency, the more likely the task is to fail (or die off). This feature internalizes the fact that urgent tasks may bring imminent negative consequences. The survival probability of a task is given by a Weibull distribution with a monomial function:
+
+$$
+\Pr (\text{survival}|\alpha = s(1+U),\beta=1) = 1 - e^{(-t/\alpha)^\beta}
+$$ where $t$ is the wait time, and $s$ is a scaling parameter (in the following simulations calibrated to be 100). As such, each task contains a survival probability, which is then accumulated throughout the ask, such that the cumulative survival rate of later tasks are smaller than those of earlier ones.
+
+By simulating this queue, we can graph a heatmap with the relationship of the weight of urgency on the priority function ($\alpha$) and cumulative survival rate:
+
+```{r}
+#| label: simmer-simulation
 #| fig-cap: "Probability of Survival by Urgency Weight"
 
 urgency_survival_grid <- read_csv("urgency-survival-grid.csv") %>%
@@ -82,33 +119,39 @@ levelplot(mean_survival ~ time * weight, urgency_survival_grid,
 
 ```
 
-```{r simmer-burstiness}
+@simmer-simulation shows that those with higher urgency weights are more likely to survive longer in the queue. <!--# How does SV relate to the weight? (tradeoff: important tasks vs. risk of survival) -->
+
+Further, with interevent times, we can calculate the burstiness and memory as a function of urgency weights.
+
+```{r}
+#| label: simmer-burstiness
 #| fig-cap: "Burstiness by Urgency Weight"
 
 urgency_burstiness_grid <- read_csv("urgency-burstiness-grid.csv") 
 
 library(viridis)
-ggplot(urgency_burstiness_grid,
-       aes(x = M, y = B)) +
+plt_bursty <-
+  ggplot(urgency_burstiness_grid,
+         aes(x = M, y = B)) +
   geom_jitter(aes(color = weights),
               size = 1,
               alpha = 0.8) +
-  geom_hline(yintercept = 0) +
-  geom_hline(xintercept = 0) +
   labs(color = "Urgency Weight") +
   scale_color_viridis(option = "D")
 
+plt_bursty +
+  geom_hline(yintercept = 0) +
+  geom_vline(xintercept = 0)
+
 ```
+
+@simmer-burstiness shows that the surviving tasks are indeed around the area of bursty phenomena as reported in the literature. However, there does not seem to be a relationship between urgency weighting and burstiness.
 
 ## Relating to Poverty {#sec-poverty}
 
 The literature suggests that the persistence of generational poverty is propagated by countless environmental, physical and psychological factors known as "Poverty Traps" (Barrett et al 2016). Though the dynamics of these negative feedback loops are heavily researched, the commonly invoked mechanism suggests that these traps exist due to a country, person or economy being unable to accumulate enough capital for incomes to rise. However, more recent literature suggests that investing additional capital within an environment will not raise the long-term steady-state income level (Kraay et al 2014) - contradicting the commonly held position. Many studies also investigate whether S-shaped curves, a great predicator of temporally dynamic relationships between income and assets, are indicative of poverty traps. However, this type of analysis has frequently yielded incorrect assessments of poverty-trapping due to a proclivity for numerical errors that such an approach poses. Given the misleading nature of many theoretical approaches to characterize poverty traps, the limited strain of literature addressing this topic has recently begun veering in the direction of seeking behavioral prescriptions.
 
-Our analysis of poverty traps will discuss two potential causes for poverty traps: behaviors which are self-reinforcing, and those which are exacerbated by extraneous factors.
-
-In order to synthesize the literature surrounding this topic, we will answer the following question:
-
--   How does the implementation of priority queuing within members of low socioeconomic groups represent distinct facets of poverty traps?
+Our analysis of poverty traps will explore how self-reinforcing behaviors in priority queues represent distinct facets of poverty traps.
 
 ### Irrationality of Time Allocation
 
@@ -116,7 +159,9 @@ A particular facet of "poverty traps" can be attributed to the inefficiency of d
 
 ### Role Strain
 
-Role strain, the "effort" dimension or subjective value individuals attribute to completing arbitrary tasks, is observed to be higher among the poor (Hopper et al 2020). Introduced in Moore's seminal paper on Role Strain, he adopts an argument that society and culture expand energy, rather than consume it. Adding tasks to already demanding circumstances will only add role strain, while adding an extra participant to assist with tasks will instead diminish the strain. A hypothesized cause of poverty traps is the proclivity for the impoverished to over-commit to high urgency tasks, thereby neglecting or under-commiting to high effort or high importance tasks. Goode concurs with this assessment, claiming that conflicts among task choices typically arise through role conflict (when two roles have demands which are mutually exclusive) or role overload (when an individual is too resource scarce to meet the demands of multiple roles). The latter holds more weightage in our research goals, an assertion we further investigate.
+Role strain, the "effort" dimension or subjective value individuals attribute to completing arbitrary tasks, is observed to be higher among the poor (Hopper et al 2020). Formulated in 1960 by Columbia sociologist William Goode, this theory argues that individuals cannot meet all role demands, and through a series of role decisions and bargains, they strive to adjust these demands. In this process, they allocate scarce resources\--role energies, time, emotions, goods\--among the role obligations they have to fulfill. In other words, individuals seek to minimize their perceived role strain (the cognitive and emotional effort of carrying out their duties).
+
+Adding tasks to already demanding circumstances will only add to role strain, while adding an extra participant to assist with tasks will instead diminish the strain. A hypothesized cause of poverty traps is the proclivity for the impoverished to over-commit to high urgency tasks, thereby neglecting or under-commiting to high effort or high importance tasks. Goode concurs with this assessment, claiming that conflicts among task choices typically arise through role conflict (when two roles have demands which are mutually exclusive) or role overload (when an individual is too resource scarce to meet the demands of multiple roles). The latter holds more weight in our research goals, an assertion we further investigate.
 
 ### Scarcity
 
@@ -128,15 +173,23 @@ The cognitive fatigue that such tasks cause individuals to endure can become ove
 
 ## Relating to Anxiety
 
-M: proposal?
+In this study, we propose that the behavioral deviations brought by overweighting urgency are mediated by affect. Specifically, it is through stress or anxiety that these shifts occur. Previously, Morris and Coley (2004, <https://psycnet.apa.org/record/2004-18349-003>) examined correlates of role strain among mothers. They find a variety of factors that increase the "strain" in this population. By extension, we propose three channels though which role strain may increase the urgency bias, as follows:
 
-## Interactions
-
-M: proposal?
+```{mermaid}
+flowchart Role Strain
+  A[Income] --> B{Role Strain}
+  C[Social Support] --> B
+  D[Education] --> B
+  E[Health Insurance] --> B
+  F[Gov't Welfare] --> B
+  B --> G(Subjective Ratings of Strain)
+  B --> H(Stress and Anxiety)
+  B --> I(Urgency Bias)
+  G --> I
+  H --> I
+```
 
 # The Experiment
-
--   We devised a theoretical model for how we expect rational decision-making to mainfest in our priority queuing experiement such that frequency of deviations from rationality can be monitored.
 
 In practical applications, we can imagine an icecream parlor as a paragon example of Priority Queuing in which tasks require are imbued with varying degrees of effort, urgency and value. Effort is a tangible variable and can be measured by complexity of icecream created: additional toppings, or additional flavors. We imagine importance as the monetary value, or utility, reaped from completing a task. Urgency can be measured by customers who are impatient. We imagine such participants as having a finite time until they leave the queue and both the value and effort variable associated with their task becomes dismissed.
 
@@ -158,7 +211,7 @@ We should note that specific task situations require minimal cognition. If an in
 
 ### Simulation
 
-To formalize the optimal, or rational, set of behavior for maximizing rewards over long-term exposure in a queue - we developed a closed-form model of this behavior. We initially hypothesized that this decision-making process could be summarized by a simple subjective-value function, where every individual determines the priority or preference $\succeq_q$ by the subjective value utility representation. We thus developed a stochastic model, as follows:
+We devised a theoretical model for how we expect rational decision-making to manifest in our priority queuing experiment such that frequency of deviations from rationality can be monitored. To formalize the optimal, or rational, set of behavior for maximizing rewards over long-term exposure in a queue, we developed a closed-form model. We hypothesize that this decision-making process can be summarized by a simple subjective-value function, where every individual determines the priority or preference $\succeq_q$ by the subjective value utility representation. We thus developed a stochastic model, as follows:
 
 $$
 \begin{eqnarray}
@@ -170,13 +223,12 @@ $$
 \end{eqnarray}
 $$ {#eq-model}
 
-In @eq-model the agent calculates the value of state $S'$ (which is the next state, i.e., next period). R is the reward (in dollars), $c_i$ is the cost at iteration $i$. $P$ is the probability of transitioning from state $S'$ to another state $(s'')$, given that our agents takes action $a$ in state $s'$. $V(s'')$ is the value of that new state. We subsequently sum these results over all the possible future states. Note we use $\gamma$ as our discount factor. In our normative model, we set the discounting factor to be 1.
+In @eq-model the agent calculates the value of state $s' \in S$ (which is the next state, i.e., next period). $i$ is the reward (in dollars) for completing a task, $c_i$ is the effort cost (estimated in dollar unites), and $r(a,s)$ is the net payoff of completing action $a$ at state $s$. $P$ is the probability of transitioning from state $s$ to another state $(s')$, given that our agents takes action $a$ in state $s$. $V(s')$ is the value of that new state. We subsequently sum these results over all the possible future states. Note we use $\gamma$ as our discount factor. In our normative model, we set the discounting factor to be 1. Note that this model only has two cost parameters $c=\{c_L, c_H\}$.
 
-Note that cost can include a subjective component. Instead of counting it as simply the number of clicks, we can assume that the agent may dread or fantasize about action $a$. As such, someone who likes the task might not be bothered by doing it so the cost may be very close to zero (or negative). And vice versa for someone who hates it. Similarly, we can account for substituting *subjective* probability for objective probability. That is, people might distort the actual probability of future events.
+We build upon this by then generating an optimal protocol for identifying the best set of choices at any stage for maximizing long-term outcomes. Using dynamic programming, a recursive method of taking the outcomes of subgames and applying it to the entire scheme, we identify which tasks should be chosen given stage of the 2-task queue. Given this framework, we can graph the ratio of urgent choices at each given state, as a function of the cost parameter $c_H$ and the discount factor (here $c_L = 0$ for all cases).
 
-We build upon this by then generating an optimal protocol for identifying the best set of choices at any stage for maximizing long-term outcomes. Using dynamic programming, a recursive method of taking the outcomes of subgames and applying it to the entire scheme, we identify which tasks should be chosen given stage of the 2-task queue.
-
-```{r dyn-pro-simulation-results}
+```{r}
+#| label: dyn-pro-simulation-results
 #| fig-cap: "Percentage of Urgent Choices"
 
 urgency_ratio_grid <- read_csv("urgency-ratio-grid.csv") 
@@ -192,61 +244,111 @@ levelplot(urgent ~ cost * gamma, urgency_ratio_grid,
 
 ```
 
+@dyn-pro-simulation-results shows that the optimal percentage of urgent choices varies by around 0.10, with lower probabilities centered around low cost parameters and high discount factors.
+
 ## Data
 
-We administered our experiment over both Mturk and Prolific. In our MTurk administration, we acquired N = 22 participants, and via Prolific, N = 53.
-
-Preliminary statistics yielded the following breakdown of demographic information:
+We administered our experiment over both Mturk and Prolific. In our MTurk administration, we acquired N = 22 participants, and via Prolific, N = 53. Here, we treat these samples as independent replications.
 
 ```{r}
-
+#| label: data-wrangling-pilot
+joint_pilot %>%
+  group_by(platform) %>%
+  mutate(
+    high_income = 
+      case_when(as.numeric(income) >= median(as.numeric(income), na.rm = TRUE) ~ 1,
+                as.numeric(income)  < median(as.numeric(income), na.rm = TRUE) ~ 0),
+    high_anxiety = 
+      case_when(stai >= median(stai, na.rm = TRUE) ~ 1,
+                stai  < median(stai, na.rm = TRUE) ~ 0)
+  ) %>%
+  mutate(
+    high_income = factor(high_income,
+                         ordered = TRUE,
+                         labels = c("Low Income", "High Income")),
+    high_anxiety = factor(high_anxiety,
+                          ordered = TRUE,
+                          labels = c("Low Anxiety", "High Anxiety"))
+  ) %>%
+  # Extract the indeces which differ for each variable: 
+  mutate(
+    heart = (u1 != u2), # <-- index @ which diff urgency
+    dollar = (i1 != i2), # <-- index @ which diff importance
+    effort = (e1 != e2), # <-- index @ which diff effort
+    left_choice = (choice == "L"), # < --- index when left is chosen
+    right_choice = (choice == "R"), # <--- index when right is chosen
+    split = ((u1 != u2) & (i1 != i2) & (u1 != i1)), # <--- "hard" decision
+    ui_leftsplit = left_choice*split, # <--- "hard" decision AND left is chosen
+    ui_rightsplit = right_choice*split
+  ) %>% 
+  # Find the means of the values:
+  mutate(
+    huli = case_when(split == 0 ~ NA,
+                     ui_leftsplit  == 1 & u1 == 2 ~ 1,
+                     ui_rightsplit == 1 & u2 == 2 ~ 1,
+                     ui_leftsplit  == 1 & u1 == 1 ~ 0,
+                     ui_rightsplit == 1 & u2 == 1 ~ 0),
+    luhi = case_when(split == 0 ~ NA,
+                     ui_leftsplit  == 1 & i1 == 2 ~ 1,
+                     ui_rightsplit == 1 & i2 == 2 ~ 1,
+                     ui_leftsplit  == 1 & i1 == 1 ~ 0,
+                     ui_rightsplit == 1 & i2 == 1 ~ 0)
+  ) -> joint_pilot
 ```
-
-K:
 
 ### Demographics
 
 For both Mturk and Prolific, we distinguish high-low income and high-low anxiety by a median split. The high income mean is about 70k, while the low income mean is around 30k $(p<0.001)$. Likewise, the high anxiety mean score is 56.29, while low anxiety mean score is 37.17 $(p<0.001)$.
 
-+------------------+-------+----------------------+----------------------+----------------------+
-| MTurk\           | Mean  | Median               | Min                  | Max                  |
-| N=22 x 20 trials |       |                      |                      |                      |
-+:=================+:======+:=====================+:=====================+:=====================+
-| Age              | 34.53 | 33                   | 19                   | 50                   |
-+------------------+-------+----------------------+----------------------+----------------------+
-| Income           |       | \$40,000 to \$49,999 | Less than \$10,000   | \$90,000 to \$99,999 |
-+------------------+-------+----------------------+----------------------+----------------------+
-| Education        |       | Bachelor's degree    | High school graduate | Master's degree      |
-+------------------+-------+----------------------+----------------------+----------------------+
-| STAI             | 44.21 | 47                   | 20                   | 67                   |
-+------------------+-------+----------------------+----------------------+----------------------+
++------------------+------------+----------------------+----------------------+----------------------+
+| MTurk\           | Mean       | Median               | Min                  | Max                  |
+| N=22 x 20 trials |            |                      |                      |                      |
++:=================+:===========+:=====================+:=====================+:=====================+
+| Age              | 34.53      | 33                   | 19                   | 50                   |
++------------------+------------+----------------------+----------------------+----------------------+
+| Income           |            | \$40,000 to \$49,999 | Less than \$10,000   | \$90,000 to \$99,999 |
++------------------+------------+----------------------+----------------------+----------------------+
+| Education        |            | Bachelor's degree    | High school graduate | Master's degree      |
++------------------+------------+----------------------+----------------------+----------------------+
+| STAI             | 44.21      | 47                   | 20                   | 67                   |
++------------------+------------+----------------------+----------------------+----------------------+
 
-+------------------+-------+----------------------+----------------------+----------------------+
-| Prolific\        | Mean  | Median               | Min                  | Max                  |
-| N=53 x 20 trials |       |                      |                      |                      |
-+:=================+:======+:=====================+:=====================+:=====================+
-| Age              | 30.13 | 28                   | 18                   | 75                   |
-+------------------+-------+----------------------+----------------------+----------------------+
-| Income           |       | \$40,000 to \$49,999 | Less than \$10,000   | \$90,000 to \$99,999 |
-+------------------+-------+----------------------+----------------------+----------------------+
-| Education        |       | Bachelor's degree    | High school graduate | Master's degree      |
-+------------------+-------+----------------------+----------------------+----------------------+
-| STAI             | 45.04 | 45                   | 20                   | 68                   |
-+------------------+-------+----------------------+----------------------+----------------------+
++------------------+------------+----------------------+----------------------+----------------------+
+| Prolific\        | Mean       | Median               | Min                  | Max                  |
+| N=53 x 20 trials |            |                      |                      |                      |
++:=================+:===========+:=====================+:=====================+:=====================+
+| Age              | 30.13      | 28                   | 18                   | 75                   |
++------------------+------------+----------------------+----------------------+----------------------+
+| Income           |            | \$40,000 to \$49,999 | Less than \$10,000   | \$90,000 to \$99,999 |
++------------------+------------+----------------------+----------------------+----------------------+
+| Education        |            | Bachelor's degree    | High school graduate | Master's degree      |
++------------------+------------+----------------------+----------------------+----------------------+
+| STAI             | 45.04      | 45                   | 20                   | 68                   |
++------------------+------------+----------------------+----------------------+----------------------+
 
-: Caption
+: The two samples display similar demographics
 
 ### Measures of Poverty
 
-M: 2022 Report
+Although income-based measures have long been the standard for assessing poverty, studies have since determined that purchasing power and standard of living are not accurately measured by such a metric. Rather, relative deprivation and state-trait anxiety measures are often more accurate empirical measurements of an individual's socioeconomic status (SES).
 
 #### Self-Reported Income
 
+Though the simplest measure to collect, self-reported incomes has a number of limitations. Participants may have the incentive not to divulge their true income levels. This bias can occur in both directions depending on the context and demand effects (e.g., a participant may want to appear richer or poorer than they actually are). Further, because exact income, when combined with other demographic measures, could potentially be used to identify participants, it is customary to elicit income brackets (vs. absolute income levels). This limitation may also reduce power and granularity in the our analysis.
+
 #### ZIP code Measures
 
-#### Composite Measure (PCA)
+To remove measurement error from self-reported income, we use median income and poverty measures by the zip code of each participant, as provided by Qualtrics (which collects IP addresses of each participant).
 
-We created several questions about physical, mental, and monetary deprivation. We then summarized these results in a PCA. We use only the top two components for now, as per the Scree plot:
+Our poverty measures are from the American Community Survey (ACS). The Census Bureau uses a set of dollar value thresholds that vary by family size and composition to determine who is in poverty, with thresholds (income cutoffs) arranged in a two-dimensional matrix (income and family size, from one person to nine or more people).
+
+Our median income data is based on the distribution of the total number of households and families including those with no income.
+
+For more information, check <https://www2.census.gov/programs-surveys/acs/tech_docs/subject_definitions/2021_ACSSubjectDefinitions.pdf>
+
+#### ¶Composite Measure (PCA)
+
+Given that poverty is a multidimensional variable, we attempt to capture it through a series of questions (see @questionnaires for details). We created several questions about physical, mental, and monetary deprivation. We then summarized these results in a PCA. We use only the top two components, as per the Scree plot:
 
 ```{r}
 #| fig-cap: pca-measure
@@ -282,22 +384,65 @@ Note: We included other deprivation questions related to physical/monetary depri
 
 ### Choice
 
-#### Trade-off Decisions
+#### §Trade-off Decisions
 
-When we compare an individual's choice of "challenging" tasks: decisions between high urgency - low importance or low importance - high urgency tasks, we observe that high anxiety and low income individuals more often choose high urgency tasks over high value tasks, which corroborates the current non-quanititvate literature as can be observed in the plots below.
+When we compare an individual's choice of "challenging" tasks: decisions between high urgency - low importance or low importance - high urgency tasks, we observe that high anxiety and low income individuals more often choose high urgency tasks over high value tasks, which corroborates the current non-quantitative literature as can be observed in the plots below.
 
 ```{r trade-off-results}
 #| label: trade-off-results
 #| fig-cap: "Choice proportions by income and anxiety"
 #| fig-subcap:
-#|   - "Mturk, Income"
-#|   - "Mturk, Anxiety"
-#|   - "Prolific, Income"
-#|   - "Prolific, Anxiety"
+#|   - "Income"
+#|   - "Anxiety"
 #| layout-ncol: 2
 #| column: page-right
 
+joint_pilot %>%
+  group_by(platform, high_income) %>%
+  filter(!is.na(high_income)) %>%
+  summarise(choose_urg = sum(huli, na.rm = TRUE),
+            total = sum(!is.na(huli)),
+            mean_huli  = mean(huli, na.rm = TRUE)) %>%
+  mutate(se = sqrt((mean_huli * (1-mean_huli)) / total)) %>%
+  
+  ggplot(aes(platform, mean_huli, fill = high_income),
+         alpha=0.7) + 
+  geom_col(position = "dodge") +
+  labs(title="Choice Frequency of Urgent vs Non-urgent Tasks",
+       x ="Platform",
+       y = "Frequency of urgent/not important choices",
+       fill = "") +
+  scale_fill_brewer() +
+  theme_minimal() +
+  geom_errorbar(aes(ymin = mean_huli - se, ymax = mean_huli + se),
+                width=0.4,
+                alpha=0.9,
+                position = position_dodge(0.9)) + 
+  geom_hline(yintercept=0.5, linetype=2)
 
+
+joint_pilot %>%
+  group_by(platform, high_anxiety) %>%
+  filter(!is.na(high_anxiety)) %>%
+  summarise(choose_urg = sum(huli, na.rm = TRUE),
+            total = sum(!is.na(huli)),
+            mean_huli  = mean(huli, na.rm = TRUE)) %>%
+  mutate(se = sqrt((mean_huli * (1-mean_huli)) / total)) %>%
+  
+  ggplot(aes(platform, mean_huli, fill = high_income),
+         alpha=0.7) + 
+  geom_col(position = "dodge") +
+  labs(title="Choice Frequency of Urgent vs Non-urgent Tasks",
+       x ="Platform",
+       y = "Frequency of urgent/not important choices",
+       fill = "") +
+  scale_fill_brewer() +
+  theme_minimal() +
+  geom_errorbar(aes(ymin = mean_huli - se, ymax = mean_huli + se),
+                width=0.4,
+                alpha=0.9,
+                position = position_dodge(0.9)) + 
+  geom_hline(yintercept=0.5, linetype=2)
 
 ```
 
@@ -305,31 +450,113 @@ Accuracy in trade-off decisions as a function of income and anxiety
 
 Multiple regression models to test the same hypotheses with different measures of income.
 
+```{r}
+library(tidymodels)
+joint_pilot %>%
+  mutate(huli = factor(huli,
+                       ordered = FALSE,
+                       levels = c(1,0),
+                       labels = c("High Urgency, Low Importance",
+                                  "Low Urgency, High Importance"))) %>%
+  prop_test(formula = huli ~ high_income,
+            alternative = "greater",
+            order = c("Low Income", "High Income")) -> pooled_income_test
+
+joint_pilot %>%
+  mutate(huli = factor(huli,
+                       ordered = FALSE,
+                       levels = c(1,0),
+                       labels = c("High Urgency, Low Importance",
+                                  "Low Urgency, High Importance"))) %>%
+  prop_test(formula = huli ~ high_anxiety,
+            alternative = "less",
+            order = c("Low Anxiety", "High Anxiety")) -> pooled_anxiety_test
+
+joint_pilot %>%
+  filter(high_income == "Low Income") %>%
+  mutate(huli = factor(huli,
+                       ordered = FALSE,
+                       levels = c(1,0),
+                       labels = c("High Urgency, Low Importance",
+                                  "Low Urgency, High Importance"))) %>%
+  prop_test(formula = huli ~ NULL,
+            success = "High Urgency, Low Importance",
+            p = 0.5,
+            alternative = "greater") -> low_income_test
+
+joint_pilot %>%
+  filter(high_anxiety == "High Anxiety") %>%
+  mutate(huli = factor(huli,
+                       ordered = FALSE,
+                       levels = c(1,0),
+                       labels = c("High Urgency, Low Importance",
+                                  "Low Urgency, High Importance"))) %>%
+  prop_test(formula = huli ~ NULL,
+            success = "High Urgency, Low Importance",
+            p = 0.5,
+            alternative = "greater") -> high_anxiety_test
+
+```
+
 Percent of urgent choices (vs. important) as a function of income and anxiety.
 
 ::: callout-note
 ## Key Result
 
-Individuals in the low income groups and in the high anxiety groups chose Urgent tasks more often than important tasks. This result is not consistent for high income or low anxiety groups. Future graphs in this document will show that the difference-in-difference is not as clear.
+Individuals in the low income groups and in the high anxiety groups chose urgent tasks more often than important tasks. This result is not consistent for high income or low anxiety groups. Future graphs in this document will show that the difference-in-difference is not as clear.
 :::
 
-Here we continue looking at the interesting effects of income and anxiety on choosing the Urgent task vs the Important task. We will show:
-
-1.  Accuracy in trade-off decisions as a function of income and anxiety
+1.  
 
 2.  Multiple regression models to test the same hypotheses with different measures of income.
 
-3.  Percent of urgent choices (vs. important) as a function of income and anxiety.
+3.  
+
+```{r}
+#| label: zip-code-measures
+
+# Processing data
+demograph <- qualtrics[qualtrics$PROLIFIC_PID %in% pilot1$participant,]
+participants_df <- aggregate(points ~ participant, data=pilot1, FUN = mean)
+demograph <- merge(y = qualtrics,
+                  x = participants_df,
+                  by.y = "PROLIFIC_PID",
+                  by.x = "participant")
+ip2zip <- read_csv("./3.2 Data/raw/ip2zip.csv")
+demograph <- merge(y = demograph,
+                   x = ip2zip,
+                   by.y = "IPAddress",
+                   by.x = "IP")
+### HERE:
+poverty <- read_csv("./3.2 Data/raw/PovertyStatus-ZIPcode/ACSST5Y2019.S1701_data_with_overlays_2021-12-21T174024.csv")
+poverty <- poverty %>%
+  select(NAME,S1701_C03_001E) %>%
+  mutate(ZIP = as.numeric(str_sub(NAME, start= -5))) %>%
+  select(-NAME)
+demograph <- demograph %>%
+  left_join(poverty, by = "ZIP")
+
+income <- read_csv("./3.2 Data/raw/Income-ZIPcode/ACSST5Y2019.S1903_data_with_overlays_2021-11-16T180635.csv")
+income <- income %>%
+  select(NAME,S1903_C03_001E) %>%
+  mutate(ZIP = as.numeric(str_sub(NAME, start= -5))) %>%
+  select(-NAME)
+demograph <- demograph %>%
+  select(-"IP") %>% ## Remove IP for privacy and cleaning
+  left_join(income, by = "ZIP")
+rm(ip2zip, income, poverty)
+
+```
 
 PCA \~ Urgent Choices Analysis
 
 It seems that when controlling for Dim 1 and 2, some effects become significant. Multicollinearity might be a problem, although correlations between STAI and PCA components are not higher than 0.6 (see correlation plots above). These results might be a result of a separation between State and Trait Anxiety. Although we only included the State questions of STAI, state and trait scores are likely correlated. PCA dimensions 1 and 2 may control for this confounding effect.
 
-### Reaction Time
+### ¶Reaction Time
 
 M:
 
-### Accuracy
+### ¶Accuracy
 
 We also obtain a comparison of the choices participants make and the optimal, or rational, protocol we generated.
 
@@ -337,11 +564,119 @@ Histogram for Prolific Data. Unlike MTurk, this distribution looks normal. This 
 
 K: explanation + histogram
 
-```{r accuracy-histograms}
-#| fig-cap: "The figure above highlights how participants typically make optimal decisions (when given 'challenging' tasks) with a probability in between 0.5 and 0.6. This is generally what we expect to observe."
+```{r}
+#| label: calculate-optimum
+
+# Extracting parameter values
+ShinyStan_2 <- summary(MTurk_sample_nolimit2)$summary
+costs <- data.frame(matrix(nrow = 56))
+costs$cL <- ShinyStan_2[c(5:60),1]
+costs$cH <- ShinyStan_2[c(61:116),1]
+costs <- costs[,-c(1)]
+
+# With estimated parameters, find optimal choice
+ev <- c(0,0)
+value <- c(0,0,0,0)
+#Tsubj <- Tsubj$n
+value_lookup = model_data$value_lookup
+counterpart <- model_data$counterpart
+choice_best <- as.data.frame(matrix(0, 56, 40))
+Tsubj <- model_data$Tsubj
+state_lookup <- model_data$state_lookup
+prob_weight <- model_data$prob_weight
+opt_st <- model_data$opt_st
+#opt_st <- opt_st[,-c(1)]
+for (i in c(1:model_data$N)) {
+  ev <- c(0,0)
+  ch <- matrix(0, 80, Tsubj[i])
+  st <- matrix(0, nrow = 52, ncol = Tsubj[i])
+  
+  # Declaring values for each option, lookup table (make it loop later)
+  value[1] = 2 - costs[i,2];
+  value[2] = 1 - costs[i,2];
+  value[3] = 1 - costs[i,1];
+  value[4] = 2 - costs[i,1];
+  if (i %% 10 == 0){
+    print(i)
+  }
+  for(option in c(1:80)) {
+    ch[option, Tsubj[i]] = value[value_lookup[option]]
+  }
+  for(state in c(1:52)) {
+    if (ch[state_lookup[state,1], Tsubj[i]] >= ch[state_lookup[state,2], Tsubj[i]]) {
+      st[state, Tsubj[i]] = ch[state_lookup[state,1], Tsubj[i]]
+    } else if (ch[state_lookup[state,1], Tsubj[i]] < ch[state_lookup[state,2], Tsubj[i]]) {
+      st[state, Tsubj[i]] = ch[state_lookup[state,2], Tsubj[i]]
+    }
+  }
+  ev[1] = ch[as.numeric(opt_st[i, Tsubj[i]]), Tsubj[i]]
+  ev[2] = ch[counterpart[as.numeric(opt_st[i, Tsubj[i]])], Tsubj[i]]
+  if (ev[1] >= ev[2]) {
+    choice_best[i, Tsubj[i]] = 1
+  } else {
+    choice_best[i, Tsubj[i]] = 2
+  }
+  
+  if (!Tsubj[i] == 1) {
+    
+    for (t in c(1:(Tsubj[i]-1))) {
+      round_back = Tsubj[i] - t
+      for(option in c(1:80)) {
+        weighted_value = as.numeric((prob_weight[option,])) %*% st[,(round_back + 1)]
+        ch[option, round_back] = value[value_lookup[option]] + weighted_value
+      }
+      for(state in c(1:52)) {
+        if (ch[state_lookup[state,1], round_back] >= ch[state_lookup[state,2], round_back]) {
+          st[state, round_back] = ch[state_lookup[state,1], round_back]
+        } else if (ch[state_lookup[state,1], round_back] < ch[state_lookup[state,2], round_back]) {
+          st[state, round_back] = ch[state_lookup[state,2], round_back]
+        }
+      }
+    }
+    for (t in c(1:(Tsubj[i]-1))) {
+      ev[1] = ch[as.numeric(opt_st[i, t]), t]
+      ev[2] = ch[counterpart[as.numeric(opt_st[i, t])], t]
+      if (ev[1] >= ev[2]) {
+        choice_best[i, t] = 1
+      } else {
+        choice_best[i, t] = 2
+      }
+    }
+  }
+}
+
+#####  Accuracy of all trials
+# Ignores people with less than 10 trials:
+choice <- model_data$choice
+
+choice_best <- choice_best[Tsubj > 10,c(1:36)]
+choice1 <- choice[Tsubj > 10,-c(1)]
+choice1[choice1 == 0] <- NA
+choice2 <- choice_best
+choice2[choice2 == 0] <- NA
+
+comparison <- (choice[Tsubj > 10,] == choice_best)
+comparison[is.na(choice2)] <- NA
+Accuracy <- rowMeans(comparison, na.rm=T)
+hist(Accuracy)
+Accuracy <- cbind(Accuracy, demograph[Tsubj > 10,]$participant)
+
+Accuracy <-merge(x = Accuracy, y = demograph, by.x = "V2", by.y = "participant")
+Accuracy$Accuracy <- as.numeric(Accuracy$Accuracy)
+
 ```
 
-#### Accuracy, Anxiety, and Income
+```{r}
+#| label: accuracy-histograms
+#| fig-cap: "The figure above highlights how participants typically make optimal decisions (when given 'challenging' tasks) with a probability in between 0.5 and 0.6. This is generally what we expect to observe."
+
+
+
+```
+
+#### ¶Accuracy, Anxiety, and Income
+
+1.  Accuracy in trade-off decisions as a function of income and anxiety
 
 Finally, we compare for each participant, how many of their choices are identical to a model that observed the full horizon for the Markov decision process. Each participant is a dot, y axis is the peerage of correct choices in the experiment while x axis is the STAI (anxiety measure). Generally the results are very similar to figure 1.5.
 
@@ -364,7 +699,7 @@ It appears that Accuracy does not vary across income and anxiety levels with the
 
 # Future Directions
 
-## Power Analysis
+## ¶Power Analysis
 
 ### Behavioral Measures
 
@@ -402,25 +737,31 @@ N per group =
 58
 ```
 
-## Redesign
+## ¶Redesign
 
-Version 2.0, we will attempt to add a scarcity component into the model:
+1.  A clock on the screen will display how long you have until that task, or the customer, decides to leave the line.
 
-\- Change urgency distribution
+2.  This will mean you can no longer make money for that task.
 
-\- Change the time of incoming tasks (5.s / task)
+3.  In the first round of this experiment, you will experience monetary "shocks." This means that at random times, some money might be taken from your total accumulated reward with no warning.
 
-Version 3.0, we will track for some stress/anxiety measures:
+4.  In the second round of this experiment, the rate at which orders arrive will be doubled at random times. However, there will be no monetary shocks.
+
+5.  Queue length is not fixed.
 
 \- Skin conductance, Cortisol, Eye tracking
 
-Eventually: Would also like to expand this and the dynamical programming to queues that are longer than length 2.
-
-### Probabilistic Choice
+### ¶Probabilistic Choice
 
 As seen in @accuracy-results,
 
 IRB
+
+### Perceived Effort
+
+Stress has been suggested to increase perceived effort (e.g., the study will investigate whether it's more tiring to complete a task when stressed), leading low-income individuals to be less likely to take up welfare programs, regardless of eligibility (Bertrand et al., 2006; Hernanz et al., 2004).
+
+In our model, cost can include a subjective component. Instead of counting it as simply the number of clicks, we can assume that the agent may dread or fantasize about action $a$. As such, someone who likes the task might not be bothered by doing it so the cost may be very close to zero (or negative). And vice versa for someone who hates it. Similarly, we can account for substituting *subjective* probability for objective probability. That is, people might distort the actual probability of future events.
 
 ### Flexible Queue Size
 
@@ -432,7 +773,11 @@ IRB
 
 As seen in @pca-measure, Revisit questionnaire to address variance problems. One possibility is to expand our sample to lower-income people. Another option is to try other questions that would elicit more variance.
 
+Refer to @questionnaires for our current iteration of comprehensive measurements.
+
 ## Population
+
+In Los Angeles, 18% of residents worry every day or almost every day about paying their bills, and 23% worry about job loss (Baldassare et al., 2021). This constant mindset of worry likely affects the livelihood of these citizens. In a recent PPIC survey, about "one in five Californians report that they or someone in their household has cut back on food (21%), put off seeing a doctor or purchasing medicine to save money (18%), been unable to pay a monthly bill (17%), or had difficulty paying the rent or mortgage (17%) in the last 12 months" (Baldassare et al., 2021).
 
 ### Online Sample
 
@@ -450,7 +795,15 @@ M: Proposal
 
 # Appendix {.unnumbered}
 
-## Fantasy and Dread Model
+## The Eisenhower Matrix {#app-eisenhower}
+
+"Who can define for us with accuracy the difference between the long and short term! Especially whenever our affairs seem to be in crisis, we are almost compelled to give our first attention to the urgent present rather than to the important future."
+
+\-\-- Dwight D. Eisenhower, 1961 address to the Century Association
+
+[![Source: https://todoist.com/productivity-methods/eisenhower-matrix](https://images.ctfassets.net/dm4oa8qtogq0/6Z0iRvBwjXMLrd28BUzTW4/a3b7838c90a65b26a2edb6814e7430dd/eisenhower-matrix.png){width="5.36in"}](https://todoist.com/productivity-methods/eisenhower-matrix)
+
+## Fantasy and Dread Model {#app-fantasy-dread}
 
 $$
 \begin{aligned}
@@ -473,11 +826,17 @@ P() depends on whether unattended task "decays"
 Example of Subjective Probabilities
 :::
 
-## Priority Queuing Simulation
+## Illustration: Priority Queuing
 
-## Dynamic Programming Simulation
+::: {#fig-prioq layout-ncol="2"}
+A list can contain an arbitrary number of tasks and the priority of each task is an integer drawn from some distribution. The tasks are set to arrive with the rate $\lambda$ following a Poisson dynamics with exponential arrival time distribution and they are executed with rate $\mu$ by always choosing the one with the highest priority.
 
-## Bayesian Model for Cost Estimation
+![Sample Queue](images/prioq-illustration.png){width="3.2in"}
+:::
+
+## ¶Dynamic Programming Simulation
+
+## ¶Bayesian Model for Cost Estimation
 
 ### Model
 
@@ -1228,3 +1587,7 @@ Prolific1_Stan_results <- sampling(object = my_model, data = model_data,
                                    cores = 3)
 
 ```
+
+## Questionnaires {#questionnaires}
+
+The remaining pages include the questionnaires we will administer to participants in the next experiment iterations.

@@ -22,6 +22,8 @@ library(readr)
 library(ggplot2)
 library(latticeExtra)
 library(rstan)
+library(tidymodels)
+library(pglm)
 
 load("./joint_pilot.Rdata")
 load("./prolific1StanData.Rdata")
@@ -29,7 +31,7 @@ load("./MTurk_sample_nolimit2.Rdata")
 ```
 
 ::: {.callout-important icon="false"}
-## ¶Abstract
+## §Abstract
 
 Pre-existing literature suggests that relative material scarcity -- particularly wealth inequality -- is a significant contributing factor in dictating how people behave. We characterize irrational decision-making across impoverished groups by examining two distinct paradigms: (1) effects of inefficiency in time allocation and (2) influences of stereotyping on intersocial processes (ie. collaboration).
 
@@ -296,277 +298,8 @@ joint_pilot %>%
   ) -> joint_pilot
 ```
 
-### Demographics
-
-For both Mturk and Prolific, we distinguish high-low income and high-low anxiety by a median split. The high income mean is about 70k, while the low income mean is around 30k $(p<0.001)$. Likewise, the high anxiety mean score is 56.29, while low anxiety mean score is 37.17 $(p<0.001)$.
-
-+------------------+------------+----------------------+----------------------+----------------------+
-| MTurk\           | Mean       | Median               | Min                  | Max                  |
-| N=22 x 20 trials |            |                      |                      |                      |
-+:=================+:===========+:=====================+:=====================+:=====================+
-| Age              | 34.53      | 33                   | 19                   | 50                   |
-+------------------+------------+----------------------+----------------------+----------------------+
-| Income           |            | \$40,000 to \$49,999 | Less than \$10,000   | \$90,000 to \$99,999 |
-+------------------+------------+----------------------+----------------------+----------------------+
-| Education        |            | Bachelor's degree    | High school graduate | Master's degree      |
-+------------------+------------+----------------------+----------------------+----------------------+
-| STAI             | 44.21      | 47                   | 20                   | 67                   |
-+------------------+------------+----------------------+----------------------+----------------------+
-
-+------------------+------------+----------------------+----------------------+----------------------+
-| Prolific\        | Mean       | Median               | Min                  | Max                  |
-| N=53 x 20 trials |            |                      |                      |                      |
-+:=================+:===========+:=====================+:=====================+:=====================+
-| Age              | 30.13      | 28                   | 18                   | 75                   |
-+------------------+------------+----------------------+----------------------+----------------------+
-| Income           |            | \$40,000 to \$49,999 | Less than \$10,000   | \$90,000 to \$99,999 |
-+------------------+------------+----------------------+----------------------+----------------------+
-| Education        |            | Bachelor's degree    | High school graduate | Master's degree      |
-+------------------+------------+----------------------+----------------------+----------------------+
-| STAI             | 45.04      | 45                   | 20                   | 68                   |
-+------------------+------------+----------------------+----------------------+----------------------+
-
-: The two samples display similar demographics
-
-### Measures of Poverty
-
-Although income-based measures have long been the standard for assessing poverty, studies have since determined that purchasing power and standard of living are not accurately measured by such a metric. Rather, relative deprivation and state-trait anxiety measures are often more accurate empirical measurements of an individual's socioeconomic status (SES).
-
-#### Self-Reported Income
-
-Though the simplest measure to collect, self-reported incomes has a number of limitations. Participants may have the incentive not to divulge their true income levels. This bias can occur in both directions depending on the context and demand effects (e.g., a participant may want to appear richer or poorer than they actually are). Further, because exact income, when combined with other demographic measures, could potentially be used to identify participants, it is customary to elicit income brackets (vs. absolute income levels). This limitation may also reduce power and granularity in the our analysis.
-
-#### ZIP code Measures
-
-To remove measurement error from self-reported income, we use median income and poverty measures by the zip code of each participant, as provided by Qualtrics (which collects IP addresses of each participant).
-
-Our poverty measures are from the American Community Survey (ACS). The Census Bureau uses a set of dollar value thresholds that vary by family size and composition to determine who is in poverty, with thresholds (income cutoffs) arranged in a two-dimensional matrix (income and family size, from one person to nine or more people).
-
-Our median income data is based on the distribution of the total number of households and families including those with no income.
-
-For more information, check <https://www2.census.gov/programs-surveys/acs/tech_docs/subject_definitions/2021_ACSSubjectDefinitions.pdf>
-
-#### ¶Composite Measure (PCA)
-
-Given that poverty is a multidimensional variable, we attempt to capture it through a series of questions (see @questionnaires for details). We created several questions about physical, mental, and monetary deprivation. We then summarized these results in a PCA. We use only the top two components, as per the Scree plot:
-
 ```{r}
-#| fig-cap: pca-measure
-
-```
-
-##### "Dimension 1" top 5 contributors:
-
-(Higher dimension values = higher "depression")
-
-1.  How would you rate your mental health over the past 4 weeks? (1-5)
-2.  Please select Yes or No for each of the following questions (YES = 1, NO = 2).
-    a.  I am happy about achieving something good in the last 4 weeks.
-    b.  Depressed and unhappy.
-3.  Over the past 2 weeks, how often have you felt down, depressed, or hopeless?
-4.  Over the past 2 weeks, how often have you felt little interest or pleasure in doing things?
-
-##### "Dimension 2" top 5 contributors:
-
-(Higher dim. values = higher "concern for mental health")
-
-1.  How important are the following:
-    a.  How you feel about yourself
-    b.  Your mental state of being
-    c.  Your physical state of being
-2.  How important are the following aspects of your life?
-    a.  I need to be mentally healthy
-    b.  Having a good house to stay in
-
-Note: We included other deprivation questions related to physical/monetary deprivation. However, those questions did not yield sufficient variance.
-
-## Results
-
-### Choice
-
-#### §Trade-off Decisions
-
-When we compare an individual's choice of "challenging" tasks: decisions between high urgency - low importance or low importance - high urgency tasks, we observe that high anxiety and low income individuals more often choose high urgency tasks over high value tasks, which corroborates the current non-quantitative literature as can be observed in the plots below.
-
-```{r trade-off-results}
-#| label: trade-off-results
-#| fig-cap: "Choice proportions by income and anxiety"
-#| fig-subcap:
-#|   - "Income"
-#|   - "Anxiety"
-#| layout-ncol: 2
-#| column: page-right
-
-joint_pilot %>%
-  group_by(platform, high_income) %>%
-  filter(!is.na(high_income)) %>%
-  summarise(choose_urg = sum(huli, na.rm = TRUE),
-            total = sum(!is.na(huli)),
-            mean_huli  = mean(huli, na.rm = TRUE)) %>%
-  mutate(se = sqrt((mean_huli * (1-mean_huli)) / total)) %>%
-  
-  ggplot(aes(platform, mean_huli, fill = high_income),
-         alpha=0.7) + 
-  geom_col(position = "dodge") +
-  labs(title="Choice Frequency of Urgent vs Non-urgent Tasks",
-       x ="Platform",
-       y = "Frequency of urgent/not important choices",
-       fill = "") +
-  scale_fill_brewer() +
-  theme_minimal() +
-  geom_errorbar(aes(ymin = mean_huli - se, ymax = mean_huli + se),
-                width=0.4,
-                alpha=0.9,
-                position = position_dodge(0.9)) + 
-  geom_hline(yintercept=0.5, linetype=2)
-
-
-joint_pilot %>%
-  group_by(platform, high_anxiety) %>%
-  filter(!is.na(high_anxiety)) %>%
-  summarise(choose_urg = sum(huli, na.rm = TRUE),
-            total = sum(!is.na(huli)),
-            mean_huli  = mean(huli, na.rm = TRUE)) %>%
-  mutate(se = sqrt((mean_huli * (1-mean_huli)) / total)) %>%
-  
-  ggplot(aes(platform, mean_huli, fill = high_income),
-         alpha=0.7) + 
-  geom_col(position = "dodge") +
-  labs(title="Choice Frequency of Urgent vs Non-urgent Tasks",
-       x ="Platform",
-       y = "Frequency of urgent/not important choices",
-       fill = "") +
-  scale_fill_brewer() +
-  theme_minimal() +
-  geom_errorbar(aes(ymin = mean_huli - se, ymax = mean_huli + se),
-                width=0.4,
-                alpha=0.9,
-                position = position_dodge(0.9)) + 
-  geom_hline(yintercept=0.5, linetype=2)
-
-```
-
-Accuracy in trade-off decisions as a function of income and anxiety
-
-Multiple regression models to test the same hypotheses with different measures of income.
-
-```{r}
-library(tidymodels)
-joint_pilot %>%
-  mutate(huli = factor(huli,
-                       ordered = FALSE,
-                       levels = c(1,0),
-                       labels = c("High Urgency, Low Importance",
-                                  "Low Urgency, High Importance"))) %>%
-  prop_test(formula = huli ~ high_income,
-            alternative = "greater",
-            order = c("Low Income", "High Income")) -> pooled_income_test
-
-joint_pilot %>%
-  mutate(huli = factor(huli,
-                       ordered = FALSE,
-                       levels = c(1,0),
-                       labels = c("High Urgency, Low Importance",
-                                  "Low Urgency, High Importance"))) %>%
-  prop_test(formula = huli ~ high_anxiety,
-            alternative = "less",
-            order = c("Low Anxiety", "High Anxiety")) -> pooled_anxiety_test
-
-joint_pilot %>%
-  filter(high_income == "Low Income") %>%
-  mutate(huli = factor(huli,
-                       ordered = FALSE,
-                       levels = c(1,0),
-                       labels = c("High Urgency, Low Importance",
-                                  "Low Urgency, High Importance"))) %>%
-  prop_test(formula = huli ~ NULL,
-            success = "High Urgency, Low Importance",
-            p = 0.5,
-            alternative = "greater") -> low_income_test
-
-joint_pilot %>%
-  filter(high_anxiety == "High Anxiety") %>%
-  mutate(huli = factor(huli,
-                       ordered = FALSE,
-                       levels = c(1,0),
-                       labels = c("High Urgency, Low Importance",
-                                  "Low Urgency, High Importance"))) %>%
-  prop_test(formula = huli ~ NULL,
-            success = "High Urgency, Low Importance",
-            p = 0.5,
-            alternative = "greater") -> high_anxiety_test
-
-```
-
-Percent of urgent choices (vs. important) as a function of income and anxiety.
-
-::: callout-note
-## Key Result
-
-Individuals in the low income groups and in the high anxiety groups chose urgent tasks more often than important tasks. This result is not consistent for high income or low anxiety groups. Future graphs in this document will show that the difference-in-difference is not as clear.
-:::
-
-1.  
-
-2.  Multiple regression models to test the same hypotheses with different measures of income.
-
-3.  
-
-```{r}
-#| label: zip-code-measures
-
-# Processing data
-demograph <- qualtrics[qualtrics$PROLIFIC_PID %in% pilot1$participant,]
-participants_df <- aggregate(points ~ participant, data=pilot1, FUN = mean)
-demograph <- merge(y = qualtrics,
-                  x = participants_df,
-                  by.y = "PROLIFIC_PID",
-                  by.x = "participant")
-ip2zip <- read_csv("./3.2 Data/raw/ip2zip.csv")
-demograph <- merge(y = demograph,
-                   x = ip2zip,
-                   by.y = "IPAddress",
-                   by.x = "IP")
-### HERE:
-poverty <- read_csv("./3.2 Data/raw/PovertyStatus-ZIPcode/ACSST5Y2019.S1701_data_with_overlays_2021-12-21T174024.csv")
-poverty <- poverty %>%
-  select(NAME,S1701_C03_001E) %>%
-  mutate(ZIP = as.numeric(str_sub(NAME, start= -5))) %>%
-  select(-NAME)
-demograph <- demograph %>%
-  left_join(poverty, by = "ZIP")
-
-income <- read_csv("./3.2 Data/raw/Income-ZIPcode/ACSST5Y2019.S1903_data_with_overlays_2021-11-16T180635.csv")
-income <- income %>%
-  select(NAME,S1903_C03_001E) %>%
-  mutate(ZIP = as.numeric(str_sub(NAME, start= -5))) %>%
-  select(-NAME)
-demograph <- demograph %>%
-  select(-"IP") %>% ## Remove IP for privacy and cleaning
-  left_join(income, by = "ZIP")
-rm(ip2zip, income, poverty)
-
-```
-
-PCA \~ Urgent Choices Analysis
-
-It seems that when controlling for Dim 1 and 2, some effects become significant. Multicollinearity might be a problem, although correlations between STAI and PCA components are not higher than 0.6 (see correlation plots above). These results might be a result of a separation between State and Trait Anxiety. Although we only included the State questions of STAI, state and trait scores are likely correlated. PCA dimensions 1 and 2 may control for this confounding effect.
-
-### ¶Reaction Time
-
-M:
-
-### ¶Accuracy
-
-We also obtain a comparison of the choices participants make and the optimal, or rational, protocol we generated.
-
-Histogram for Prolific Data. Unlike MTurk, this distribution looks normal. This score is calculated by first estimating the cost parameters for each participant and then using them with backwards induction to discover the optimal choice at each presented state.
-
-K: explanation + histogram
-
-```{r}
-#| label: calculate-optimum
-
+#| label: accuracy-code
 # Extracting parameter values
 ShinyStan_2 <- summary(MTurk_sample_nolimit2)$summary
 costs <- data.frame(matrix(nrow = 56))
@@ -648,64 +381,528 @@ for (i in c(1:model_data$N)) {
 #####  Accuracy of all trials
 # Ignores people with less than 10 trials:
 choice <- model_data$choice
-
 choice_best <- choice_best[Tsubj > 10,c(1:36)]
 choice1 <- choice[Tsubj > 10,-c(1)]
 choice1[choice1 == 0] <- NA
 choice2 <- choice_best
 choice2[choice2 == 0] <- NA
-
 comparison <- (choice[Tsubj > 10,] == choice_best)
 comparison[is.na(choice2)] <- NA
 Accuracy <- rowMeans(comparison, na.rm=T)
-hist(Accuracy)
-Accuracy <- cbind(Accuracy, demograph[Tsubj > 10,]$participant)
-
-Accuracy <-merge(x = Accuracy, y = demograph, by.x = "V2", by.y = "participant")
+Accuracy <- cbind(Accuracy, as.character(demograph[Tsubj > 10,]$participant))
+Accuracy <- merge(x = Accuracy, y = demograph, by.x = "V2", by.y = "participant")
 Accuracy$Accuracy <- as.numeric(Accuracy$Accuracy)
 
+comparisonLONG <- as.data.frame(comparison) %>%
+  cbind(as.character(demograph[Tsubj > 10,]$participant)) %>%
+  rename(participant = `as.character(demograph[Tsubj > 10, ]$participant)`) %>%
+  pivot_longer(cols = c(1:36), values_drop_na = TRUE, names_to = "round", values_to = "Optimal") %>%
+  mutate(round = as.numeric(round))
+
+## Adding poverty measure
+pilot1 <- pilot1 %>% 
+  left_join(demograph[,c(2,10:11)], by = "participant")
+
+trade_off_accuracy <- pilot1 %>%
+  group_by(participant) %>% 
+  filter(length(RT) >= 10) %>%
+  mutate(round = row_number()) %>%
+  left_join(comparisonLONG, by = c("participant", "round")) %>%
+  filter(u1 != u2, i1 != i2, i1 != u1) %>%
+  mutate(Urgency = ifelse(u1 == 2 & choice == "L", 1,
+                          ifelse(u2 == 2 & choice == "R", 1, 0 )),
+         S1701_C03_001E = as.numeric(S1701_C03_001E),
+         S1903_C03_001E = as.numeric(S1903_C03_001E))
 ```
+
+### Demographics
+
+For both Mturk and Prolific, we distinguish high-low income and high-low anxiety by a median split. The high income mean is about 70k, while the low income mean is around 30k $(p<0.001)$. Likewise, the high anxiety mean score is 56.29, while low anxiety mean score is 37.17 $(p<0.001)$.
+
++------------------+------------+----------------------+----------------------+----------------------+
+| MTurk\           | Mean       | Median               | Min                  | Max                  |
+| N=22 x 20 trials |            |                      |                      |                      |
++:=================+:===========+:=====================+:=====================+:=====================+
+| Age              | 34.53      | 33                   | 19                   | 50                   |
++------------------+------------+----------------------+----------------------+----------------------+
+| Income           |            | \$40,000 to \$49,999 | Less than \$10,000   | \$90,000 to \$99,999 |
++------------------+------------+----------------------+----------------------+----------------------+
+| Education        |            | Bachelor's degree    | High school graduate | Master's degree      |
++------------------+------------+----------------------+----------------------+----------------------+
+| STAI             | 44.21      | 47                   | 20                   | 67                   |
++------------------+------------+----------------------+----------------------+----------------------+
+
++------------------+------------+----------------------+----------------------+----------------------+
+| Prolific\        | Mean       | Median               | Min                  | Max                  |
+| N=53 x 20 trials |            |                      |                      |                      |
++:=================+:===========+:=====================+:=====================+:=====================+
+| Age              | 30.13      | 28                   | 18                   | 75                   |
++------------------+------------+----------------------+----------------------+----------------------+
+| Income           |            | \$40,000 to \$49,999 | Less than \$10,000   | \$90,000 to \$99,999 |
++------------------+------------+----------------------+----------------------+----------------------+
+| Education        |            | Bachelor's degree    | High school graduate | Master's degree      |
++------------------+------------+----------------------+----------------------+----------------------+
+| STAI             | 45.04      | 45                   | 20                   | 68                   |
++------------------+------------+----------------------+----------------------+----------------------+
+
+: The two samples display similar demographics
 
 ```{r}
-#| label: accuracy-histograms
-#| fig-cap: "The figure above highlights how participants typically make optimal decisions (when given 'challenging' tasks) with a probability in between 0.5 and 0.6. This is generally what we expect to observe."
+#| label: processing-data
+demograph <- qualtrics[qualtrics$PROLIFIC_PID %in% pilot1$participant,]
+participants_df <- aggregate(points ~ participant, data=pilot1, FUN = mean)
+demograph <- merge(y = qualtrics,
+                  x = participants_df,
+                  by.y = "PROLIFIC_PID",
+                  by.x = "participant")
+ip2zip <- read_csv("./3.2 Data/raw/ip2zip.csv")
+demograph <- merge(y = demograph,
+                   x = ip2zip,
+                   by.y = "IPAddress",
+                   by.x = "IP")
+### HERE:
+poverty <- read_csv("./3.2 Data/raw/PovertyStatus-ZIPcode/ACSST5Y2019.S1701_data_with_overlays_2021-12-21T174024.csv")
+poverty <- poverty %>%
+  select(NAME,S1701_C03_001E) %>%
+  mutate(ZIP = as.numeric(str_sub(NAME, start= -5))) %>%
+  select(-NAME)
+demograph <- demograph %>%
+  left_join(poverty, by = "ZIP")
+
+income <- read_csv("./3.2 Data/raw/Income-ZIPcode/ACSST5Y2019.S1903_data_with_overlays_2021-11-16T180635.csv")
+income <- income %>%
+  select(NAME,S1903_C03_001E) %>%
+  mutate(ZIP = as.numeric(str_sub(NAME, start= -5))) %>%
+  select(-NAME)
+demograph <- demograph %>%
+  select(-"IP") %>% ## Remove IP for privacy and cleaning
+  left_join(income, by = "ZIP")
+rm(ip2zip, income, poverty)
+
+```
+
+### Measures of Poverty
+
+Although income-based measures have long been the standard for assessing poverty, studies have since determined that purchasing power and standard of living are not accurately measured by such a metric. Rather, relative deprivation and state-trait anxiety measures are often more accurate empirical measurements of an individual's socioeconomic status (SES).
+
+#### Self-Reported Income
+
+Though the simplest measure to collect, self-reported incomes has a number of limitations. Participants may have the incentive not to divulge their true income levels. This bias can occur in both directions depending on the context and demand effects (e.g., a participant may want to appear richer or poorer than they actually are). Further, because exact income, when combined with other demographic measures, could potentially be used to identify participants, it is customary to elicit income brackets (vs. absolute income levels). This limitation may also reduce power and granularity in the our analysis.
+
+#### ZIP code Measures
+
+To remove measurement error from self-reported income, we use median income and poverty measures by the zip code of each participant, as provided by Qualtrics (which collects IP addresses of each participant).
+
+Our poverty measures are from the American Community Survey (ACS). The Census Bureau uses a set of dollar value thresholds that vary by family size and composition to determine who is in poverty, with thresholds (income cutoffs) arranged in a two-dimensional matrix (income and family size, from one person to nine or more people).
+
+Our median income data is based on the distribution of the total number of households and families including those with no income.
+
+For more information, check <https://www2.census.gov/programs-surveys/acs/tech_docs/subject_definitions/2021_ACSSubjectDefinitions.pdf>
+
+#### ¶Composite Measure (PCA)
+
+Given that poverty is a multidimensional variable, we attempt to capture it through a series of questions (see @questionnaires for details). We created several questions about physical, mental, and monetary deprivation. We then summarized these results in a PCA. We use only the top two components, as per the Scree plot:
+
+```{r}
+#| fig-cap: pca-measure
+
+## PCA internal relationships
+# Creating the plot
+plot(demograph$income, demograph$Dim.1, pch = 19, col = "lightblue",
+     xlab="Income", ylab="Dimension 1")
+# Regression line
+abline(lm(demograph$Dim.1 ~ demograph$income), col = "red", lwd = 3)
+# Pearson correlation
+text(paste("Correlation:", round(cor(demograph$Dim.1, demograph$income, use = "complete.obs"), 2)), x = 6, y = .7)
+
+plot(demograph$income, demograph$Dim.2, pch = 19, col = "lightblue",
+     xlab="Income", ylab="Dimension 2")
+# Regression line
+abline(lm(demograph$Dim.2 ~ demograph$income), col = "red", lwd = 3)
+# Pearson correlation
+text(paste("Correlation:", round(cor(demograph$Dim.2, demograph$income, use = "complete.obs"), 2)), x = 6, y = .7)
+########
+plot(demograph$stai, demograph$Dim.1, pch = 19, col = "lightblue",
+     xlab="Anxiety", ylab="Dimension 1")
+# Regression line
+abline(lm(demograph$Dim.1 ~ demograph$stai), col = "red", lwd = 3)
+# Pearson correlation
+text(paste("Correlation:", round(cor(demograph$Dim.1, demograph$stai, use = "complete.obs"), 2)), x = 40, y = -2)
+
+plot(demograph$stai, demograph$Dim.2, pch = 19, col = "lightblue",
+     xlab="Anxiety", ylab="Dimension 2")
+# Regression line
+abline(lm(demograph$Dim.2 ~ demograph$stai), col = "red", lwd = 3)
+# Pearson correlation
+text(paste("Correlation:", round(cor(demograph$Dim.2, demograph$stai, use = "complete.obs"), 2)), x = 40, y = .7)
+
+```
+
+##### "Dimension 1" top 5 contributors:
+
+(Higher dimension values = higher "depression")
+
+1.  How would you rate your mental health over the past 4 weeks? (1-5)
+2.  Please select Yes or No for each of the following questions (YES = 1, NO = 2).
+    a.  I am happy about achieving something good in the last 4 weeks.
+    b.  Depressed and unhappy.
+3.  Over the past 2 weeks, how often have you felt down, depressed, or hopeless?
+4.  Over the past 2 weeks, how often have you felt little interest or pleasure in doing things?
+
+##### "Dimension 2" top 5 contributors:
+
+(Higher dim. values = higher "concern for mental health")
+
+1.  How important are the following:
+    a.  How you feel about yourself
+    b.  Your mental state of being
+    c.  Your physical state of being
+2.  How important are the following aspects of your life?
+    a.  I need to be mentally healthy
+    b.  Having a good house to stay in
+
+Note: We included other deprivation questions related to physical/monetary deprivation. However, those questions did not yield sufficient variance.
+
+## Results
+
+### Choice
+
+#### ¶Task Performance
+
+```{r}
+#| label: total-points
+#| fig-cap: 
 
 
 
 ```
 
-#### ¶Accuracy, Anxiety, and Income
+#### §Trade-off Decisions
+
+When we compare an individual's choice of "challenging" tasks: decisions between high urgency - low importance or low importance - high urgency tasks, we observe that high anxiety and low income individuals more often choose high urgency tasks over high value tasks, which corroborates the current non-quantitative literature as can be observed in the plots below.
+
+```{r}
+#| label: trade-off-results
+#| fig-cap: "Choice proportions by income and anxiety"
+#| fig-subcap:
+#|   - "Income"
+#|   - "Anxiety"
+#| layout-ncol: 2
+#| column: page-right
+
+joint_pilot %>%
+  group_by(platform, high_income) %>%
+  filter(!is.na(high_income)) %>%
+  summarise(choose_urg = sum(huli, na.rm = TRUE),
+            total = sum(!is.na(huli)),
+            mean_huli  = mean(huli, na.rm = TRUE)) %>%
+  mutate(se = sqrt((mean_huli * (1-mean_huli)) / total)) %>%
+  
+  ggplot(aes(platform, mean_huli, fill = high_income),
+         alpha=0.7) + 
+  geom_col(position = "dodge") +
+  labs(title="Choice Frequency of Urgent vs Non-urgent Tasks",
+       x ="Platform",
+       y = "Frequency of urgent/not important choices",
+       fill = "") +
+  scale_fill_brewer() +
+  theme_minimal() +
+  geom_errorbar(aes(ymin = mean_huli - se, ymax = mean_huli + se),
+                width=0.4,
+                alpha=0.9,
+                position = position_dodge(0.9)) + 
+  geom_hline(yintercept=0.5, linetype=2)
+
+
+joint_pilot %>%
+  group_by(platform, high_anxiety) %>%
+  filter(!is.na(high_anxiety)) %>%
+  summarise(choose_urg = sum(huli, na.rm = TRUE),
+            total = sum(!is.na(huli)),
+            mean_huli  = mean(huli, na.rm = TRUE)) %>%
+  mutate(se = sqrt((mean_huli * (1-mean_huli)) / total)) %>%
+  
+  ggplot(aes(platform, mean_huli, fill = high_income),
+         alpha=0.7) + 
+  geom_col(position = "dodge") +
+  labs(title="Choice Frequency of Urgent vs Non-urgent Tasks",
+       x ="Platform",
+       y = "Frequency of urgent/not important choices",
+       fill = "") +
+  scale_fill_brewer() +
+  theme_minimal() +
+  geom_errorbar(aes(ymin = mean_huli - se, ymax = mean_huli + se),
+                width=0.4,
+                alpha=0.9,
+                position = position_dodge(0.9)) + 
+  geom_hline(yintercept=0.5, linetype=2)
+
+```
+
+Accuracy in trade-off decisions as a function of income and anxiety
+
+Multiple regression models to test the same hypotheses with different measures of income.
+
+```{r}
+
+joint_pilot %>%
+  mutate(huli = factor(huli,
+                       ordered = FALSE,
+                       levels = c(1,0),
+                       labels = c("High Urgency, Low Importance",
+                                  "Low Urgency, High Importance"))) %>%
+  prop_test(formula = huli ~ high_income,
+            alternative = "greater",
+            order = c("Low Income", "High Income")) -> pooled_income_test
+
+joint_pilot %>%
+  mutate(huli = factor(huli,
+                       ordered = FALSE,
+                       levels = c(1,0),
+                       labels = c("High Urgency, Low Importance",
+                                  "Low Urgency, High Importance"))) %>%
+  prop_test(formula = huli ~ high_anxiety,
+            alternative = "less",
+            order = c("Low Anxiety", "High Anxiety")) -> pooled_anxiety_test
+
+joint_pilot %>%
+  filter(high_income == "Low Income") %>%
+  mutate(huli = factor(huli,
+                       ordered = FALSE,
+                       levels = c(1,0),
+                       labels = c("High Urgency, Low Importance",
+                                  "Low Urgency, High Importance"))) %>%
+  prop_test(formula = huli ~ NULL,
+            success = "High Urgency, Low Importance",
+            p = 0.5,
+            alternative = "greater") -> low_income_test
+
+joint_pilot %>%
+  filter(high_anxiety == "High Anxiety") %>%
+  mutate(huli = factor(huli,
+                       ordered = FALSE,
+                       levels = c(1,0),
+                       labels = c("High Urgency, Low Importance",
+                                  "Low Urgency, High Importance"))) %>%
+  prop_test(formula = huli ~ NULL,
+            success = "High Urgency, Low Importance",
+            p = 0.5,
+            alternative = "greater") -> high_anxiety_test
+
+```
+
+Percent of urgent choices (vs. important) as a function of income and anxiety.
+
+::: callout-note
+## Key Result
+
+Individuals in the low income groups and in the high anxiety groups chose urgent tasks more often than important tasks. This result is not consistent for high income or low anxiety groups. Future graphs in this document will show that the difference-in-difference is not as clear.
+:::
+
+1.  
+
+2.  Multiple regression models to test the same hypotheses with different measures of income.
+
+3.  
+
+```{r}
+#| label: zip-code-measures
+
+
+```
+
+#### §General Urgency Bias
+
+```{r}
+#| label: pca-stai-urg-bias
+
+ggplot(trade_off_accuracy, aes(x = stai, y = Urgency)) +
+  labs(x="Anxiety", y="Urgent Choices") +
+  geom_jitter(color = "blue", alpha = 0.4, width = 0.03, height = 0.01) +
+  geom_smooth(method = "glm", 
+              method.args = list(family = "binomial"))
+
+summary(pglm(formula = Urgency ~ (Dim.1 + Dim.2)*stai,
+             data = trade_off_accuracy,
+             effect = "twoways",
+             index = c("participant", "round"),
+             model = "random",
+             family = binomial('logit'))) -> urg_bias_model
+```
+
+It seems that when controlling for Dim 1 and 2, some effects become significant. Multicollinearity might be a problem, although correlations between STAI and PCA components are not higher than 0.6 (see correlation plots above). These results might be a result of a separation between State and Trait Anxiety. Although we only included the State questions of STAI, state and trait scores are likely correlated. PCA dimensions 1 and 2 may control for this confounding effect.
+
+We review the Key Results from the first pages: urgent choices do seem to be above 50% for key groups, but the differences-in-differences across income and anxiety levels are not significant.
+
+Again, people might not mind leaving the High Importance task undone. This is what some friends have called the "insurance ice cream." That is, if I leave this High Importance task in my queue, I can use it when I get a task that is High Effort but Low Urgency.\
+
+### ¶Reaction Time
+
+```{r}
+# RT histograms
+### log(RT)
+hist(as.numeric(trade_off_accuracy$RT), breaks = 100)
+hist(log(as.numeric(trade_off_accuracy$RT)), breaks = 100)
+ggplot(trade_off_accuracy, aes(x = income, y = log(as.numeric(RT)))) +
+  labs(x="Income", y="Log of RT in Trade-offs") +
+  geom_jitter(color = "blue", alpha = 0.4, width = 0.03, height = 0.01) +
+  geom_smooth(method = "glm", 
+              method.args = list(family = "gaussian"))
+
+ggplot(trade_off_accuracy, aes(x = stai, y = log(as.numeric(RT)))) +
+  labs(x="Anxiety", y="Log of RT in Trade-offs") +
+  geom_jitter(color = "blue", alpha = 0.4, width = 0.03, height = 0.01) +
+  geom_smooth(method = "glm", 
+              method.args = list(family = "gaussian"))
+
+summary(glm(formula = as.numeric(RT) ~ Dim.1*stai*Dim.2, data = trade_off_accuracy, family = "gaussian"))
+```
+
+### ¶Accuracy
+
+We also obtain a comparison of the choices participants make and the optimal, or rational, protocol we generated. This is done by estimating a hierarchical Bayesian model...
+
+```{r}
+# Histogram of effort cost
+hist(costs$cL, breaks=16)
+hist(costs$cH, breaks=12)
+   #Plot
+dat <- data.frame(dens = c(costs$cH, costs$cL)
+                  , lines = rep(c("cH", "cL"), each = nrow(costs)))
+ggplot(dat, aes(x = dens, fill = lines)) + 
+  #geom_histogram() +
+  geom_density(alpha = 0.5)
+```
+
+Histogram for Prolific Data. Unlike MTurk, this distribution looks normal. This score is calculated by first estimating the cost parameters for each participant and then using them with backwards induction to discover the optimal choice at each presented state.
+
+K: explanation + histogram
+
+```{r}
+#| label: accuracy-histogram
+#| fig-cap: "Histogram of Accuracy Proportions"
+
+hist(Accuracy)
+
+```
+
+@accuracy-histogram highlights how participants typically make optimal decisions (when given 'challenging' tasks) with a probability in between 0.5 and 0.6. This is generally what we expect to observe.
+
+#### §Accuracy, Anxiety, and Income
 
 1.  Accuracy in trade-off decisions as a function of income and anxiety
 
 Finally, we compare for each participant, how many of their choices are identical to a model that observed the full horizon for the Markov decision process. Each participant is a dot, y axis is the peerage of correct choices in the experiment while x axis is the STAI (anxiety measure). Generally the results are very similar to figure 1.5.
 
 ```{r}
-#| label: accuracy-results
-#| fig-cap: "Accuracy by Income and Anxiety"
+#| label: aggregate-accuracy-results
+#| fig-cap: "Aggregate Accuracy by Income and Anxiety"
 #| fig-subcap:
-#|   - "Mturk, Income"
-#|   - "Mturk, Anxiety"
 #|   - "Prolific, Income"
 #|   - "Prolific, Anxiety"
 #| layout-ncol: 2
 #| column: page-right
+ggplot(Accuracy, aes(x=income, y=Accuracy)) +
+  geom_point() +
+  stat_smooth(method=loess) +
+  geom_label(x=6, y=.8,
+             label=paste("Correlation:",
+                         round(cor(Accuracy$Accuracy, Accuracy$income), 2)))
 
-
+ggplot(Accuracy, aes(x=stai, y=Accuracy)) +
+  geom_point() +
+  stat_smooth(method=loess) +
+  geom_label(x=30, y=.8,
+             label=paste("Correlation:",
+                         round(cor(Accuracy$stai, Accuracy$Accuracy), 2)))
 
 ```
 
 It appears that Accuracy does not vary across income and anxiety levels with these measures. Some possibilities of this fact might include that, since time discounting here is virtually 0, leaving the important task behind will not affect participants as much (depending, of course, of the estimated cost parameters).
 
+```{r}
+#| label: accuracy-results
+#| fig-cap: "Trial Accuracy by Income and Anxiety (logistic function fit)"
+#| fig-subcap:
+#|   - "Accuracy in trade-off decisions as a function of self-reported income"
+#|   - "Accuracy in trade-off decisions as a function of self-reported anxiety, by the STAI questionnaire"
+#| layout-ncol: 2
+#| column: page-right
+
+# plot with Income
+ggplot(trade_off_accuracy, aes(x = as.numeric(income), y = as.numeric(Optimal))) +
+  labs(x="Income", y="Accuracy") +
+  geom_jitter(color = "blue", alpha = 0.4, width = 0.03, height = 0.01) +
+  geom_smooth(method = "glm", 
+              method.args = list(family = "binomial")) 
+
+# Now with STAI
+ggplot(trade_off_accuracy, aes(x = stai, y = as.numeric(Optimal))) +
+  labs(x="Anxiety", y="Accuracy") +
+  geom_jitter(color = "blue", alpha = 0.4, width = 0.03, height = 0.01) +
+  geom_smooth(method = "glm", 
+              method.args = list(family = "binomial")) 
+```
+
 # Future Directions
 
-## ¶Power Analysis
+## Power Analysis
 
-### Behavioral Measures
+### §Behavioral Measures
 
-IRB
+```{r}
 
-### Physiological Measures
+#### For Power Analysis
+trade_off_scaled <- trade_off_accuracy %>%
+  mutate(
+    Dim.1 = scale(Dim.1),
+    Dim.2 = scale(Dim.2),
+    stai = scale(stai),
+  ) %>%
+  filter(!is.na(participant) &
+         !is.na(stai) &
+         !is.na(Dim.1))
+
+model_scaled <- 
+  pglm(formula = Urgency ~ (Dim.1 + Dim.2)*stai,
+       data = trade_off_scaled,
+       effect = "twoways",
+       index = c("participant", "round"),
+       model = "random",
+       family = binomial('logit'))
+
+# Success rate at the 1 sd of STAI
+exp(model_scaled$estimate["(Intercept)"] + model_scaled$estimate["stai"]) /
+  (1 + exp(model_scaled$estimate["(Intercept)"] + model_scaled$estimate["stai"]))
+
+# Success rate at the 1 sd of Dim.2
+exp(model_scaled$estimate["(Intercept)"] + model_scaled$estimate["Dim.2"]) /
+  (1 + exp(model_scaled$estimate["(Intercept)"] + model_scaled$estimate["Dim.2"]))
+
+# Success rate at the 1 sd of stai:Dim.2
+exp(model_scaled$estimate["(Intercept)"] + model_scaled$estimate["Dim.2:stai"]) /
+  (1 + exp(model_scaled$estimate["(Intercept)"] + model_scaled$estimate["Dim.2:stai"]))
+
+# Success rate at the mean of stai:Dim.2
+exp(model_scaled$estimate["(Intercept)"]) /
+  (1 + exp(model_scaled$estimate["(Intercept)"]))
+
+# calculate McFadden's R-squared
+
+model_null <- 
+  pglm(formula = Urgency ~ 1,
+       data = trade_off_scaled,
+       index = c("participant", "round"),
+       family = binomial('logit'))
+
+as.numeric(1 - logLik(model_scaled)/logLik(model_null))
+
+# number of effective trials per subject
+length(trade_off_scaled$participant)/length(unique(trade_off_scaled$participant))
+
+```
+
+### ¶Physiological Measures
 
 "Sartorial Symbols of Social Class Elicit Class-Consistent Behavioral and Physiological Responses: A Dyadic Approach" (Kraus et al 2014)
 
@@ -737,7 +934,7 @@ N per group =
 58
 ```
 
-## ¶Redesign
+## §Redesign
 
 1.  A clock on the screen will display how long you have until that task, or the customer, decides to leave the line.
 
@@ -751,11 +948,11 @@ N per group =
 
 \- Skin conductance, Cortisol, Eye tracking
 
-### ¶Probabilistic Choice
+### §Probabilistic Choice
 
 As seen in @accuracy-results,
 
-IRB
+Revisit the experiment to address the range of urgent choices. One possibility is to add an artificial discount factor. Another possibility is to explore non-deterministic choices (that is, urgency does not mean certain decay of value from one state to another, but a probable decay).
 
 ### Perceived Effort
 
@@ -834,9 +1031,93 @@ A list can contain an arbitrary number of tasks and the priority of each task is
 ![Sample Queue](images/prioq-illustration.png){width="3.2in"}
 :::
 
-## ¶Dynamic Programming Simulation
+## §General Linear Models of Accuracy
 
-## ¶Bayesian Model for Cost Estimation
+```{r}
+#| label: glm-accuracy
+summary(pglm(formula = Optimal ~ as.numeric(income)*stai,
+             data = trade_off_accuracy,
+             effect = "twoways",
+             index = c("participant", "round"),
+             model = "random",
+             family = binomial('logit')))
+
+summary(pglm(formula = Optimal ~ (Dim.1 + Dim.2)*stai,
+             data = trade_off_accuracy,
+             effect = "twoways",
+             index = c("participant", "round"),
+             model = "random",
+             family = binomial('logit')))
+### With demographics
+summary(pglm(formula = Optimal ~ age + as.numeric(education) + as.numeric(income),
+             data = trade_off_accuracy,
+             effect = "twoways",
+             index = c("participant", "round"),
+             model = "random",
+             family = binomial('logit')))
+trade_off_accuracy <- trade_off_accuracy %>%
+  ungroup() %>%
+  mutate(poverty_zip = scale(S1701_C03_001E),
+         median_income_zip = scale(S1903_C03_001E))
+summary(pglm(formula = Optimal ~ age + as.numeric(education) + poverty_zip,
+             data = trade_off_accuracy,
+             effect = "twoways",
+             index = c("participant", "round"),
+             model = "random",
+             family = binomial('logit')))
+summary(pglm(formula = Optimal ~ age + as.numeric(education) + median_income_zip,
+             data = trade_off_accuracy,
+             effect = "twoways",
+             index = c("participant", "round"),
+             model = "random",
+             family = binomial('logit')))
+```
+
+## ¶Urgency Bias and Deprivation Measures
+
+```{r}
+#| label: img-urg-pca
+
+#####  trade-off decisions correlated with PCA deprivation
+ggplot(trade_off_accuracy, aes(x = Dim.1, y = Urgency)) +
+  labs(x = "Dimension 1", y="Urgent Choices") +
+  geom_jitter(color = "blue", alpha = 0.4, width = 0.03, height = 0.01) +
+  geom_smooth(method = "glm", 
+              method.args = list(family = "binomial"))
+
+#####  trade-off decisions correlated with PCA deprivation
+ggplot(trade_off_accuracy, aes(x = Dim.2, y = Urgency)) +
+  labs(x="Dimension 2", y="Urgent Choices") +
+  geom_jitter(color = "blue", alpha = 0.4, width = 0.03, height = 0.01) +
+  geom_smooth(method = "glm", 
+              method.args = list(family = "binomial"))
+
+
+## Urgency ~ anxiety#income + round
+### With psychological mechanisms
+summary(lm(Urgency ~ income*stai, data = trade_off_accuracy))
+summary(glm(as.numeric(Urgency) ~ income*stai, data = trade_off_accuracy, family = "binomial"))
+### With demographics
+summary(lm(Urgency ~ age + education + income, data = trade_off_accuracy))
+
+# Zip codes
+#plot with Income
+ggplot(trade_off_accuracy, aes(x = S1701_C03_001E, y = as.numeric(Urgency))) +
+  labs(x="ZIP code deprivation score", y="Urgency") +
+  geom_jitter(color = "blue", alpha = 0.4, width = 0.03, height = 0.01) +
+  geom_smooth(method = "glm", 
+              method.args = list(family = "binomial")) 
+ggplot(trade_off_accuracy, aes(x = S1903_C03_001E, y = as.numeric(Urgency))) +
+  labs(x="ZIP code median income", y="Urgency") +
+  geom_jitter(color = "blue", alpha = 0.4, width = 0.03, height = 0.01) +
+  geom_smooth(method = "glm", 
+              method.args = list(family = "binomial"))
+
+```
+
+## §Dynamic Programming Simulation
+
+## §Bayesian Model for Cost Estimation
 
 ### Model
 

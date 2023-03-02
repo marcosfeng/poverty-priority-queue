@@ -24,10 +24,13 @@ library(latticeExtra)
 library(rstan)
 library(tidymodels)
 library(pglm)
+library(factoextra)
 
 load("./joint_pilot.Rdata")
 load("./prolific1StanData.Rdata")
 load("./MTurk_sample_nolimit2.Rdata")
+demograph <- qualtrics[qualtrics$PROLIFIC_PID %in% joint_pilot$participant,]
+
 ```
 
 ::: {.callout-important icon="false"}
@@ -117,7 +120,9 @@ urgency_survival_grid <- read_csv("urgency-survival-grid.csv") %>%
   filter(time < 20) # Anything greater is close to 0
 
 levelplot(mean_survival ~ time * weight, urgency_survival_grid, 
-          panel = panel.2dsmoother(n = 200))
+          panel = panel.levelplot.points, cex = 0
+    ) + 
+    latticeExtra::layer_(panel.2dsmoother(..., n = 200))
 
 ```
 
@@ -233,7 +238,7 @@ We build upon this by then generating an optimal protocol for identifying the be
 #| label: dyn-pro-simulation-results
 #| fig-cap: "Percentage of Urgent Choices"
 
-urgency_ratio_grid <- read_csv("urgency-ratio-grid.csv") 
+urgency_ratio_grid <- read_csv("urgency-ratio-grid.csv")
 urgency_ratio_grid <- urgency_ratio_grid %>%
   rename(gamma = `...1`) %>%
   pivot_longer(!gamma, names_to = "cost", values_to = "urgent") %>%
@@ -299,6 +304,60 @@ joint_pilot %>%
 ```
 
 ```{r}
+#| wrangle-stai-demo
+qualtrics <- read_csv("PrioQ - Consolidated_January 13, 2022_18.42.csv")
+qualtrics <- qualtrics[-c(1:2),]
+vars <- c("Q36", "Q37" , "Q39" , "Q40" , "Q42" , "Q45" , "Q46" , "Q47" , "Q50" , "Q51",
+          "Q34" , "Q35" ,"Q38" , "Q41" , "Q43" , "Q44" , "Q48" , "Q49" , "Q52" , "Q53...54", "Q26", "Q27", "Q32")
+qualtrics <- qualtrics %>%
+  mutate(across(vars, as.numeric))
+qualtrics <- qualtrics %>%
+  mutate(
+    stai = (Q36 + Q37 + Q39 + Q40 + Q42 + Q45 + Q46 + Q47 + Q50 + Q51 +
+      5*10 - Q34 - Q35 -Q38 - Q41 - Q43 - Q44 - Q48 - Q49 - Q52 - Q53...54),
+    age = 2021 - Q26
+  )
+qualtrics <- qualtrics %>%
+  rename(
+    income = Q32,
+    education = Q27
+  )
+```
+
+```{r}
+#| label: processing-data
+participants_df <- aggregate(points ~ participant, data=joint_pilot, FUN = mean)
+demograph <- merge(y = qualtrics,
+                  x = participants_df,
+                  by.y = "PROLIFIC_PID",
+                  by.x = "participant")
+ip2zip <- read_csv("./ZIPcode/ip2zip.csv")
+demograph <- merge(y = demograph,
+                   x = ip2zip,
+                   by.y = "IPAddress",
+                   by.x = "IP")
+### HERE:
+poverty <- read_csv("./ZIPcode/ACSST5Y2019.S1701_data_with_overlays_2021-12-21T174024.csv")
+poverty <- poverty %>%
+  select(NAME,S1701_C03_001E) %>%
+  mutate(ZIP = as.numeric(str_sub(NAME, start= -5))) %>%
+  select(-NAME)
+demograph <- demograph %>%
+  left_join(poverty, by = "ZIP")
+
+income <- read_csv("./ZIPcode/ACSST5Y2019.S1903_data_with_overlays_2021-11-16T180635.csv")
+income <- income %>%
+  select(NAME,S1903_C03_001E) %>%
+  mutate(ZIP = as.numeric(str_sub(NAME, start= -5))) %>%
+  select(-NAME)
+demograph <- demograph %>%
+  select(-"IP") %>% ## Remove IP for privacy and cleaning
+  left_join(income, by = "ZIP")
+rm(ip2zip, income, poverty)
+
+```
+
+```{r}
 #| label: accuracy-code
 # Extracting parameter values
 ShinyStan_2 <- summary(MTurk_sample_nolimit2)$summary
@@ -329,9 +388,6 @@ for (i in c(1:model_data$N)) {
   value[2] = 1 - costs[i,2];
   value[3] = 1 - costs[i,1];
   value[4] = 2 - costs[i,1];
-  if (i %% 10 == 0){
-    print(i)
-  }
   for(option in c(1:80)) {
     ch[option, Tsubj[i]] = value[value_lookup[option]]
   }
@@ -400,10 +456,10 @@ comparisonLONG <- as.data.frame(comparison) %>%
   mutate(round = as.numeric(round))
 
 ## Adding poverty measure
-pilot1 <- pilot1 %>% 
+joint_pilot <- joint_pilot %>% 
   left_join(demograph[,c(2,10:11)], by = "participant")
 
-trade_off_accuracy <- pilot1 %>%
+trade_off_accuracy <- joint_pilot %>%
   group_by(participant) %>% 
   filter(length(RT) >= 10) %>%
   mutate(round = row_number()) %>%
@@ -447,40 +503,6 @@ For both Mturk and Prolific, we distinguish high-low income and high-low anxiety
 
 : The two samples display similar demographics
 
-```{r}
-#| label: processing-data
-demograph <- qualtrics[qualtrics$PROLIFIC_PID %in% pilot1$participant,]
-participants_df <- aggregate(points ~ participant, data=pilot1, FUN = mean)
-demograph <- merge(y = qualtrics,
-                  x = participants_df,
-                  by.y = "PROLIFIC_PID",
-                  by.x = "participant")
-ip2zip <- read_csv("./3.2 Data/raw/ip2zip.csv")
-demograph <- merge(y = demograph,
-                   x = ip2zip,
-                   by.y = "IPAddress",
-                   by.x = "IP")
-### HERE:
-poverty <- read_csv("./3.2 Data/raw/PovertyStatus-ZIPcode/ACSST5Y2019.S1701_data_with_overlays_2021-12-21T174024.csv")
-poverty <- poverty %>%
-  select(NAME,S1701_C03_001E) %>%
-  mutate(ZIP = as.numeric(str_sub(NAME, start= -5))) %>%
-  select(-NAME)
-demograph <- demograph %>%
-  left_join(poverty, by = "ZIP")
-
-income <- read_csv("./3.2 Data/raw/Income-ZIPcode/ACSST5Y2019.S1903_data_with_overlays_2021-11-16T180635.csv")
-income <- income %>%
-  select(NAME,S1903_C03_001E) %>%
-  mutate(ZIP = as.numeric(str_sub(NAME, start= -5))) %>%
-  select(-NAME)
-demograph <- demograph %>%
-  select(-"IP") %>% ## Remove IP for privacy and cleaning
-  left_join(income, by = "ZIP")
-rm(ip2zip, income, poverty)
-
-```
-
 ### Measures of Poverty
 
 Although income-based measures have long been the standard for assessing poverty, studies have since determined that purchasing power and standard of living are not accurately measured by such a metric. Rather, relative deprivation and state-trait anxiety measures are often more accurate empirical measurements of an individual's socioeconomic status (SES).
@@ -502,6 +524,43 @@ For more information, check <https://www2.census.gov/programs-surveys/acs/tech_d
 #### ¶Composite Measure (PCA)
 
 Given that poverty is a multidimensional variable, we attempt to capture it through a series of questions (see @questionnaires for details). We created several questions about physical, mental, and monetary deprivation. We then summarized these results in a PCA. We use only the top two components, as per the Scree plot:
+
+```{r}
+#| label: pca-scree
+
+# PCA
+qualtrics[,c(55:141)] <- sapply(qualtrics[,c(55:141)],as.numeric)
+qualtrics.prepca <- 
+  qualtrics[,c(55:141)][,(apply(qualtrics[,c(55:141)], 2, var, na.rm=TRUE) != 0) &
+                          !is.na(apply(qualtrics[,c(55:141)], 2, var, na.rm=TRUE))]
+qualtrics.prepca <- qualtrics.prepca %>%
+  add_column(PROLIFIC_PID = qualtrics$PROLIFIC_PID)
+qualtrics.prepca <- na.omit(qualtrics.prepca[!is.na(qualtrics.prepca$PROLIFIC_PID),])
+qualtrics.pca <- prcomp(qualtrics.prepca[,-c(48)], center = TRUE, scale = TRUE)
+### Scree plot
+fviz_eig(qualtrics.pca)
+# Results for Variables
+qualtrics.var <- get_pca_var(qualtrics.pca)
+View(qualtrics.var$coord)  # Loadings
+View(qualtrics.var$contrib)
+# Results for individuals
+qualtrics.ind <- get_pca_ind(qualtrics.pca)
+deprivation <- as.data.frame(qualtrics.ind$coord[,c(1:2)])         # Coordinates
+deprivation$PROLIFIC_PID <- qualtrics.prepca$PROLIFIC_PID
+
+qualtrics <- qualtrics %>%
+  left_join(deprivation, by = "PROLIFIC_PID")
+
+qualtrics <- qualtrics %>%
+  select(PROLIFIC_PID, IPAddress, stai, income, education, age, Dim.1, Dim.2)
+
+#join demographics
+pilot1 <- merge(y = qualtrics,
+                x = pilot1,
+                by.y = "PROLIFIC_PID",
+                by.x = "participant")
+
+```
 
 ```{r}
 #| fig-cap: pca-measure
@@ -571,7 +630,7 @@ Note: We included other deprivation questions related to physical/monetary depri
 
 ```{r}
 #| label: total-points
-#| fig-cap: 
+#| fig-cap: "Total Rewards"
 
 
 
@@ -622,7 +681,7 @@ joint_pilot %>%
             mean_huli  = mean(huli, na.rm = TRUE)) %>%
   mutate(se = sqrt((mean_huli * (1-mean_huli)) / total)) %>%
   
-  ggplot(aes(platform, mean_huli, fill = high_income),
+  ggplot(aes(platform, mean_huli, fill = high_anxiety),
          alpha=0.7) + 
   geom_col(position = "dodge") +
   labs(title="Choice Frequency of Urgent vs Non-urgent Tasks",
@@ -743,7 +802,7 @@ Again, people might not mind leaving the High Importance task undone. This is wh
 ### log(RT)
 hist(as.numeric(trade_off_accuracy$RT), breaks = 100)
 hist(log(as.numeric(trade_off_accuracy$RT)), breaks = 100)
-ggplot(trade_off_accuracy, aes(x = income, y = log(as.numeric(RT)))) +
+ggplot(trade_off_accuracy, aes(x = as.numeric(income), y = log(as.numeric(RT)))) +
   labs(x="Income", y="Log of RT in Trade-offs") +
   geom_jitter(color = "blue", alpha = 0.4, width = 0.03, height = 0.01) +
   geom_smooth(method = "glm", 
@@ -782,7 +841,7 @@ K: explanation + histogram
 #| label: accuracy-histogram
 #| fig-cap: "Histogram of Accuracy Proportions"
 
-hist(Accuracy)
+hist(Accuracy$Accuracy, breaks=10)
 
 ```
 
@@ -854,6 +913,7 @@ ggplot(trade_off_accuracy, aes(x = stai, y = as.numeric(Optimal))) +
 
 #### For Power Analysis
 trade_off_scaled <- trade_off_accuracy %>%
+  ungroup() %>%
   mutate(
     Dim.1 = scale(Dim.1),
     Dim.2 = scale(Dim.2),

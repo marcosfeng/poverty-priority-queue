@@ -29,3 +29,5 @@ vignettes/*.pdf
 # Google Drive
 .DS_Store
 Icon
+
+/.quarto/

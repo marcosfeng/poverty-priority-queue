@@ -1,9 +1,16 @@
 ---
 title: "Poverty and Priority Queueing"
-author: "Marcos Gallo"
-date: "2023/02/28"
+author: "Marcos Gallo and Kavya Rajagopalan"
+date: "2023/03/01"
+execute:
+  echo: false
+  warning: false
 format:
   pdf:
+    documentclass: report
+    
+    geometry:
+     - margin = 25mm
     toc: true
     number-sections: true
     colorlinks: true
@@ -20,6 +27,7 @@ library(dplyr)
 library(tidyr)
 library(readr)
 library(ggplot2)
+library(viridis)
 library(latticeExtra)
 library(rstan)
 library(tidymodels)
@@ -36,9 +44,9 @@ demograph <- qualtrics[qualtrics$PROLIFIC_PID %in% joint_pilot$participant,]
 ::: {.callout-important icon="false"}
 ## §Abstract
 
-Pre-existing literature suggests that relative material scarcity -- particularly wealth inequality -- is a significant contributing factor in dictating how people behave. We characterize irrational decision-making across impoverished groups by examining two distinct paradigms: (1) effects of inefficiency in time allocation and (2) influences of stereotyping on intersocial processes (ie. collaboration).
+Pre-existing literature suggests that relative material scarcity -- particularly wealth inequality -- is a significant contributing factor in dictating how people behave. We characterize irrational decision-making across impoverished groups by examining the effects of inefficiency in time allocation.
 
-We experimentally model time allocation in low SES groups by administering an artificial priority queue where agents must attend to tasks with differing levels of effort, urgency and value. Observations suggest that individuals from low SES groups prioritize urgent tasks while agents from high SES groups prioritize high value tasks. Alternatively, we model intersocial collaboration by examining distribution of rewards during coalition games across agents of varying socioeconomic groups.
+We experimentally model time allocation in low SES groups by administering an artificial priority queue where agents must attend to tasks with differing levels of effort, urgency and value. Observations suggest that individuals from low SES groups prioritize urgent tasks while agents from high SES groups prioritize high value tasks.
 :::
 
 Poverty is a multi-dimensional problem, and behavioral scientists have focused on the effects of the environment on the decision-making process across socio-economic levels (Bertrand et al., 2004). Their underlying assumption is that humans share the same underlying biology and psychology, and that "poverty" causes significant changes in people's environments and, in turn, their decisions. For example, living in poverty often means having a limited set of options in life (from choosing what to have for dinner to which occupation to pursue), and it increases the number of demands in terms of time and mental resources (Banerjee & Duflo, 2012). This lack of control over choices leads to a chronic state of vigilance and stress (Chemin et al., 2013).
@@ -110,7 +118,7 @@ $$ where $t$ is the wait time, and $s$ is a scaling parameter (in the following 
 
 By simulating this queue, we can graph a heatmap with the relationship of the weight of urgency on the priority function ($\alpha$) and cumulative survival rate:
 
-```{r}
+```{r eval=FALSE}
 #| label: simmer-simulation
 #| fig-cap: "Probability of Survival by Urgency Weight"
 
@@ -136,7 +144,6 @@ Further, with interevent times, we can calculate the burstiness and memory as a 
 
 urgency_burstiness_grid <- read_csv("urgency-burstiness-grid.csv") 
 
-library(viridis)
 plt_bursty <-
   ggplot(urgency_burstiness_grid,
          aes(x = M, y = B)) +
@@ -183,7 +190,8 @@ The cognitive fatigue that such tasks cause individuals to endure can become ove
 In this study, we propose that the behavioral deviations brought by overweighting urgency are mediated by affect. Specifically, it is through stress or anxiety that these shifts occur. Previously, Morris and Coley (2004, <https://psycnet.apa.org/record/2004-18349-003>) examined correlates of role strain among mothers. They find a variety of factors that increase the "strain" in this population. By extension, we propose three channels though which role strain may increase the urgency bias, as follows:
 
 ```{mermaid}
-flowchart Role Strain
+%%| fig-width: 5
+flowchart LR
   A[Income] --> B{Role Strain}
   C[Social Support] --> B
   D[Education] --> B
@@ -191,9 +199,9 @@ flowchart Role Strain
   F[Gov't Welfare] --> B
   B --> G(Subjective Ratings of Strain)
   B --> H(Stress and Anxiety)
-  B --> I(Urgency Bias)
-  G --> I
+  G --> I(Urgency Bias)
   H --> I
+  B --> I
 ```
 
 # The Experiment
@@ -208,11 +216,11 @@ Our experiment, created on Pavlovia, simulates the outlined scenario in an onlin
 
 For every iteration of the game that a high urgency task is unattended to, the value of the task decreases - at which point the participant leaves the queue if the value reaches no dollar signs.
 
-To incentivize players in the game, we offer a \$1.00\$ prize which is contingent on the total number of dollar-signs, total value, players accumulate throughout the game. A counter is positioned on the display to indicate progress. Likewise, we perform 20 iterations of this experiment: sufficient time to gauge patterns within participant behavior. An important feature of this experiment is that participants can attend to tasks in any order, not necessarily left to right, which effectively should indicate how they prioritize all three of these factors. In general, our rudimentary experimental design appears as follows:
+To incentivize players in the game, we offer a $\$1.00$ prize which is contingent on the total number of dollar-signs, total value, players accumulate throughout the game. A counter is positioned on the display to indicate progress. Likewise, we perform 20 iterations of this experiment: sufficient time to gauge patterns within participant behavior. An important feature of this experiment is that participants can attend to tasks in any order, not necessarily left to right, which effectively should indicate how they prioritize all three of these factors. In general, our rudimentary experimental design appears as follows:
 
 ![The figure above represents the basic interface programmed for the game. Participants have a queue at the top of the game, and a series of icons they must press in order to complete a task. The hearts and dollar signs on a task represent the importance and urgency of the task and the money counter at the bottom of the screen indicates the accumulated wealth of the participant.](images/totalice.jpeg){#img-exp}
 
-Although we do not gather inter-event data from this game <!--# can we use the RTs to calculate tau? -->, players are unaware of this feature. We expect that many participants rush and become stressed - traits of induced scarcity. To measure relative SES and relative anxiety, we use a post and intro survey to determine a relative deprivation index and also a set of STAI.
+Although we do not gather inter-event data from this game (can we use the RTs to calculate tau?), players are unaware of this feature. We expect that many participants rush and become stressed - traits of induced scarcity. To measure relative SES and relative anxiety, we use a post and intro survey to determine a relative deprivation index and also a set of STAI.
 
 We should note that specific task situations require minimal cognition. If an individual is presented with a high value, high urgency task then they will always choose this this task. However, if an individual is presented a high importance, low urgency task and a high urgency, low importance task - it is not entirely apparent what the optimal course of action for future outcomes may be, and more so what choices individuals will make. Using R, we capture these results and output baseline charts of what the choice distribution looks like.
 
@@ -221,13 +229,13 @@ We should note that specific task situations require minimal cognition. If an in
 We devised a theoretical model for how we expect rational decision-making to manifest in our priority queuing experiment such that frequency of deviations from rationality can be monitored. To formalize the optimal, or rational, set of behavior for maximizing rewards over long-term exposure in a queue, we developed a closed-form model. We hypothesize that this decision-making process can be summarized by a simple subjective-value function, where every individual determines the priority or preference $\succeq_q$ by the subjective value utility representation. We thus developed a stochastic model, as follows:
 
 $$
-\begin{eqnarray}
-    V(s) &=& \max\limits_{a}(r(s,a) + \gamma\sum\limits_{S}P(s,a, s')V(s'))\\
-    S &=& \{HHU \times HHU, HHU \times HH0, LHU \times LHU, …\}\\
-    r(a,s) &=& i_a - c_a\\
-    R &=& {r(HHU, HHV \times HHU) = 1 - c_H, …}\\
-    V(s_{final}) &=& \max\limits_{a}(r(s_{final}, a))\\
-\end{eqnarray}
+\begin{aligned} 
+V(s) &= \max\limits_{a}(r(s,a) + \gamma\sum\limits_{S}P(s,a, s')V(s'))\\
+    S &= \{HHU \times HHU, HHU \times HH0, LHU \times LHU, …\}\\
+    r(a,s) &= i_a - c_a\\
+    R &= {r(HHU, HHV \times HHU) = 1 - c_H, …}\\
+    V(s_{final}) &= \max\limits_{a}(r(s_{final}, a))
+\end{aligned}
 $$ {#eq-model}
 
 In @eq-model the agent calculates the value of state $s' \in S$ (which is the next state, i.e., next period). $i$ is the reward (in dollars) for completing a task, $c_i$ is the effort cost (estimated in dollar unites), and $r(a,s)$ is the net payoff of completing action $a$ at state $s$. $P$ is the probability of transitioning from state $s$ to another state $(s')$, given that our agents takes action $a$ in state $s$. $V(s')$ is the value of that new state. We subsequently sum these results over all the possible future states. Note we use $\gamma$ as our discount factor. In our normative model, we set the discounting factor to be 1. Note that this model only has two cost parameters $c=\{c_L, c_H\}$.
@@ -304,7 +312,7 @@ joint_pilot %>%
 ```
 
 ```{r}
-#| wrangle-stai-demo
+#| label: wrangle-stai-demo
 qualtrics <- read_csv("PrioQ - Consolidated_January 13, 2022_18.42.csv")
 qualtrics <- qualtrics[-c(1:2),]
 vars <- c("Q36", "Q37" , "Q39" , "Q40" , "Q42" , "Q45" , "Q46" , "Q47" , "Q50" , "Q51",
@@ -339,20 +347,26 @@ demograph <- merge(y = demograph,
 ### HERE:
 poverty <- read_csv("./ZIPcode/ACSST5Y2019.S1701_data_with_overlays_2021-12-21T174024.csv")
 poverty <- poverty %>%
-  select(NAME,S1701_C03_001E) %>%
+  dplyr::select(NAME,S1701_C03_001E) %>%
   mutate(ZIP = as.numeric(str_sub(NAME, start= -5))) %>%
-  select(-NAME)
+  dplyr::select(-NAME)
 demograph <- demograph %>%
   left_join(poverty, by = "ZIP")
 
 income <- read_csv("./ZIPcode/ACSST5Y2019.S1903_data_with_overlays_2021-11-16T180635.csv")
 income <- income %>%
-  select(NAME,S1903_C03_001E) %>%
+  dplyr::select(NAME,S1903_C03_001E) %>%
   mutate(ZIP = as.numeric(str_sub(NAME, start= -5))) %>%
-  select(-NAME)
+  dplyr::select(-NAME)
 demograph <- demograph %>%
-  select(-"IP") %>% ## Remove IP for privacy and cleaning
-  left_join(income, by = "ZIP")
+  dplyr::select(-"IP") %>% ## Remove IP for privacy and cleaning
+  left_join(income, by = "ZIP") %>%
+  mutate(
+    S1701_C03_001E = as.numeric(S1701_C03_001E),
+    S1903_C03_001E = as.numeric(S1903_C03_001E)
+  )
+
+
 rm(ip2zip, income, poverty)
 
 ```
@@ -466,40 +480,46 @@ trade_off_accuracy <- joint_pilot %>%
   left_join(comparisonLONG, by = c("participant", "round")) %>%
   filter(u1 != u2, i1 != i2, i1 != u1) %>%
   mutate(Urgency = ifelse(u1 == 2 & choice == "L", 1,
-                          ifelse(u2 == 2 & choice == "R", 1, 0 )),
-         S1701_C03_001E = as.numeric(S1701_C03_001E),
-         S1903_C03_001E = as.numeric(S1903_C03_001E))
+                          ifelse(u2 == 2 & choice == "R", 1, 0 )))
+
+trade_off_accuracy <- demograph %>%
+  dplyr::select("participant","S1701_C03_001E","S1903_C03_001E") %>%
+  right_join(trade_off_accuracy,by = "participant") %>%
+  ungroup() %>%
+  mutate(poverty_zip = scale(as.numeric(S1701_C03_001E)),
+         median_income_zip = scale(as.numeric(S1903_C03_001E)))
+
 ```
 
 ### Demographics
 
 For both Mturk and Prolific, we distinguish high-low income and high-low anxiety by a median split. The high income mean is about 70k, while the low income mean is around 30k $(p<0.001)$. Likewise, the high anxiety mean score is 56.29, while low anxiety mean score is 37.17 $(p<0.001)$.
 
-+------------------+------------+----------------------+----------------------+----------------------+
-| MTurk\           | Mean       | Median               | Min                  | Max                  |
-| N=22 x 20 trials |            |                      |                      |                      |
-+:=================+:===========+:=====================+:=====================+:=====================+
-| Age              | 34.53      | 33                   | 19                   | 50                   |
-+------------------+------------+----------------------+----------------------+----------------------+
-| Income           |            | \$40,000 to \$49,999 | Less than \$10,000   | \$90,000 to \$99,999 |
-+------------------+------------+----------------------+----------------------+----------------------+
-| Education        |            | Bachelor's degree    | High school graduate | Master's degree      |
-+------------------+------------+----------------------+----------------------+----------------------+
-| STAI             | 44.21      | 47                   | 20                   | 67                   |
-+------------------+------------+----------------------+----------------------+----------------------+
++------------------+-------+----------------------+----------------------+----------------------+
+| MTurk\           | Mean  | Median               | Min                  | Max                  |
+| N=22 x 20 trials |       |                      |                      |                      |
++:=================+:======+:=====================+:=====================+:=====================+
+| Age              | 34.53 | 33                   | 19                   | 50                   |
++------------------+-------+----------------------+----------------------+----------------------+
+| Income           |       | \$40,000 to \$49,999 | Less than \$10,000   | \$90,000 to \$99,999 |
++------------------+-------+----------------------+----------------------+----------------------+
+| Education        |       | Bachelor's degree    | High school graduate | Master's degree      |
++------------------+-------+----------------------+----------------------+----------------------+
+| STAI             | 44.21 | 47                   | 20                   | 67                   |
++------------------+-------+----------------------+----------------------+----------------------+
 
-+------------------+------------+----------------------+----------------------+----------------------+
-| Prolific\        | Mean       | Median               | Min                  | Max                  |
-| N=53 x 20 trials |            |                      |                      |                      |
-+:=================+:===========+:=====================+:=====================+:=====================+
-| Age              | 30.13      | 28                   | 18                   | 75                   |
-+------------------+------------+----------------------+----------------------+----------------------+
-| Income           |            | \$40,000 to \$49,999 | Less than \$10,000   | \$90,000 to \$99,999 |
-+------------------+------------+----------------------+----------------------+----------------------+
-| Education        |            | Bachelor's degree    | High school graduate | Master's degree      |
-+------------------+------------+----------------------+----------------------+----------------------+
-| STAI             | 45.04      | 45                   | 20                   | 68                   |
-+------------------+------------+----------------------+----------------------+----------------------+
++------------------+-------+----------------------+----------------------+----------------------+
+| Prolific\        | Mean  | Median               | Min                  | Max                  |
+| N=53 x 20 trials |       |                      |                      |                      |
++:=================+:======+:=====================+:=====================+:=====================+
+| Age              | 30.13 | 28                   | 18                   | 75                   |
++------------------+-------+----------------------+----------------------+----------------------+
+| Income           |       | \$40,000 to \$49,999 | Less than \$10,000   | \$90,000 to \$99,999 |
++------------------+-------+----------------------+----------------------+----------------------+
+| Education        |       | Bachelor's degree    | High school graduate | Master's degree      |
++------------------+-------+----------------------+----------------------+----------------------+
+| STAI             | 45.04 | 45                   | 20                   | 68                   |
++------------------+-------+----------------------+----------------------+----------------------+
 
 : The two samples display similar demographics
 
@@ -541,11 +561,9 @@ qualtrics.pca <- prcomp(qualtrics.prepca[,-c(48)], center = TRUE, scale = TRUE)
 fviz_eig(qualtrics.pca)
 # Results for Variables
 qualtrics.var <- get_pca_var(qualtrics.pca)
-View(qualtrics.var$coord)  # Loadings
-View(qualtrics.var$contrib)
 # Results for individuals
 qualtrics.ind <- get_pca_ind(qualtrics.pca)
-deprivation <- as.data.frame(qualtrics.ind$coord[,c(1:2)])         # Coordinates
+deprivation <- as.data.frame(qualtrics.ind$coord[,c(1:2)])   # Coordinates
 deprivation$PROLIFIC_PID <- qualtrics.prepca$PROLIFIC_PID
 
 qualtrics <- qualtrics %>%
@@ -554,46 +572,41 @@ qualtrics <- qualtrics %>%
 qualtrics <- qualtrics %>%
   select(PROLIFIC_PID, IPAddress, stai, income, education, age, Dim.1, Dim.2)
 
-#join demographics
-pilot1 <- merge(y = qualtrics,
-                x = pilot1,
-                by.y = "PROLIFIC_PID",
-                by.x = "participant")
-
 ```
 
 ```{r}
 #| fig-cap: pca-measure
+#| layout-ncol: 2
 
 ## PCA internal relationships
 # Creating the plot
-plot(demograph$income, demograph$Dim.1, pch = 19, col = "lightblue",
+plot(qualtrics$income, qualtrics$Dim.1, pch = 19, col = "lightblue",
      xlab="Income", ylab="Dimension 1")
 # Regression line
-abline(lm(demograph$Dim.1 ~ demograph$income), col = "red", lwd = 3)
+abline(lm(qualtrics$Dim.1 ~ as.numeric(qualtrics$income)), col = "red", lwd = 3)
 # Pearson correlation
-text(paste("Correlation:", round(cor(demograph$Dim.1, demograph$income, use = "complete.obs"), 2)), x = 6, y = .7)
+text(paste("Correlation:", round(cor(qualtrics$Dim.1, as.numeric(qualtrics$income), use = "complete.obs"), 2)), x = 6, y = .7)
 
-plot(demograph$income, demograph$Dim.2, pch = 19, col = "lightblue",
+plot(as.numeric(qualtrics$income), qualtrics$Dim.2, pch = 19, col = "lightblue",
      xlab="Income", ylab="Dimension 2")
 # Regression line
-abline(lm(demograph$Dim.2 ~ demograph$income), col = "red", lwd = 3)
+abline(lm(qualtrics$Dim.2 ~ as.numeric(qualtrics$income)), col = "red", lwd = 3)
 # Pearson correlation
-text(paste("Correlation:", round(cor(demograph$Dim.2, demograph$income, use = "complete.obs"), 2)), x = 6, y = .7)
+text(paste("Correlation:", round(cor(qualtrics$Dim.2, as.numeric(qualtrics$income), use = "complete.obs"), 2)), x = 6, y = .7)
 ########
-plot(demograph$stai, demograph$Dim.1, pch = 19, col = "lightblue",
+plot(qualtrics$stai, qualtrics$Dim.1, pch = 19, col = "lightblue",
      xlab="Anxiety", ylab="Dimension 1")
 # Regression line
-abline(lm(demograph$Dim.1 ~ demograph$stai), col = "red", lwd = 3)
+abline(lm(qualtrics$Dim.1 ~ qualtrics$stai), col = "red", lwd = 3)
 # Pearson correlation
-text(paste("Correlation:", round(cor(demograph$Dim.1, demograph$stai, use = "complete.obs"), 2)), x = 40, y = -2)
+text(paste("Correlation:", round(cor(qualtrics$Dim.1, qualtrics$stai, use = "complete.obs"), 2)), x = 40, y = -2)
 
-plot(demograph$stai, demograph$Dim.2, pch = 19, col = "lightblue",
+plot(qualtrics$stai, qualtrics$Dim.2, pch = 19, col = "lightblue",
      xlab="Anxiety", ylab="Dimension 2")
 # Regression line
-abline(lm(demograph$Dim.2 ~ demograph$stai), col = "red", lwd = 3)
+abline(lm(qualtrics$Dim.2 ~ qualtrics$stai), col = "red", lwd = 3)
 # Pearson correlation
-text(paste("Correlation:", round(cor(demograph$Dim.2, demograph$stai, use = "complete.obs"), 2)), x = 40, y = .7)
+text(paste("Correlation:", round(cor(qualtrics$Dim.2, qualtrics$stai, use = "complete.obs"), 2)), x = 40, y = .7)
 
 ```
 
@@ -976,22 +989,22 @@ Prior = Upper-class = -0.69, se = 0.31; Lower-class = 0.04, se = 0.31
 
 ```{r}
 
-# HVC across SES
-Estimated sample sizes for a two-sample means test
-t test assuming sd1 = sd2 = sd
-HO: m2 = m1 versus Ha: m2 != m1
-Study parameters:
-alpha = 0.0500
-power = 0.8000
-delta = -0.7300
-m1 = 0.0400
-m2 = -0.6900
-sd = 1.3860
-Estimated sample sizes:
-N=
-N per group =
-116
-58
+# # HVC across SES
+# Estimated sample sizes for a two-sample means test
+# t test assuming sd1 = sd2 = sd
+# HO: m2 = m1 versus Ha: m2 != m1
+# Study parameters:
+# alpha = 0.0500
+# power = 0.8000
+# delta = -0.7300
+# m1 = 0.0400
+# m2 = -0.6900
+# sd = 1.3860
+# Estimated sample sizes:
+# N=
+# N per group =
+# 116
+# 58
 ```
 
 ## §Redesign
@@ -1058,7 +1071,7 @@ M: Proposal
 
 \-\-- Dwight D. Eisenhower, 1961 address to the Century Association
 
-[![Source: https://todoist.com/productivity-methods/eisenhower-matrix](https://images.ctfassets.net/dm4oa8qtogq0/6Z0iRvBwjXMLrd28BUzTW4/a3b7838c90a65b26a2edb6814e7430dd/eisenhower-matrix.png){width="5.36in"}](https://todoist.com/productivity-methods/eisenhower-matrix)
+[![Source: https://todoist.com/productivity-methods/eisenhower-matrix](images/eisenhower-matrix.png){width="5.36in"}](https://todoist.com/productivity-methods/eisenhower-matrix)
 
 ## Fantasy and Dread Model {#app-fantasy-dread}
 
@@ -1115,10 +1128,7 @@ summary(pglm(formula = Optimal ~ age + as.numeric(education) + as.numeric(income
              index = c("participant", "round"),
              model = "random",
              family = binomial('logit')))
-trade_off_accuracy <- trade_off_accuracy %>%
-  ungroup() %>%
-  mutate(poverty_zip = scale(S1701_C03_001E),
-         median_income_zip = scale(S1903_C03_001E))
+
 summary(pglm(formula = Optimal ~ age + as.numeric(education) + poverty_zip,
              data = trade_off_accuracy,
              effect = "twoways",
@@ -1779,7 +1789,7 @@ transitions[transitions$state2_2 == "NA",]$state2_2 <- NA
 data$choice_bin <- 1
 data[data$choice == "R",]$choice_bin <- 2
 choice <- data %>%
-  select(participant, COUNTER, choice_bin) %>%
+  dplyr::select(participant, COUNTER, choice_bin) %>%
   group_by(COUNTER) %>%
   spread(COUNTER, choice_bin)
 # Take NAs out
@@ -1825,7 +1835,7 @@ data <- merge(x = data,
               by = c("u1", "u2", "e1", "e2", "i1", "i2"))
 
 opt_st <- data %>%
-  select(participant, COUNTER, index) %>%
+  dplyr::select(participant, COUNTER, index) %>%
   group_by(COUNTER) %>%
   spread(COUNTER, index)
 # Take NAs out
@@ -1850,7 +1860,7 @@ S <- merge(x = S,
            by.y = c("Var1", "Var2"),
            all.x = TRUE)
 state_lookup <- S %>%
-  select(st_index, index, index2)
+  dplyr::select(st_index, index, index2)
 # Take NAs out
 state_lookup[is.na(state_lookup$index2),]$index2 <- state_lookup[is.na(state_lookup$index2),]$index
 # Order state_lookup
@@ -1882,13 +1892,13 @@ choice_state <- merge(x = choice_state,
 choice_state$st_index <- choice_state$st_index.x
 choice_state[is.na(choice_state$st_index.x),]$st_index <- choice_state[is.na(choice_state$st_index.x),]$st_index.y
 choice_state <- choice_state %>%
-  select(`c(1:80)`, st_index)
+  dplyr::select(`c(1:80)`, st_index)
 prob_weight <- merge(x=prob_weight,
                      y=choice_state,
                      by.x = "index2",
                      by.y= "c(1:80)")
 prob_weight <- prob_weight %>%
-  select(index, st_index, prob)
+  dplyr::select(index, st_index, prob)
 
 prob_weight <- prob_weight %>%
   group_by(index) %>%
@@ -1901,7 +1911,7 @@ counterpart <- merge(x = counterpart, y = state_lookup[,-c(1)], by.x = "c(1:80)"
 counterpart$index_ALL <- counterpart$index
 counterpart[is.na(counterpart$index),]$index_ALL <- counterpart[is.na(counterpart$index),]$index2
 counterpart <- counterpart %>%
-  select(index_ALL)
+  dplyr::select(index_ALL)
 
 model_data <- list( N = length(unique(data$participant)), #number of part
                     T = max(data$COUNTER), # number of max rounds

@@ -942,6 +942,8 @@ trade_off_scaled <- trade_off_accuracy %>%
          !is.na(stai) &
          !is.na(Dim.1))
 
+# Urgency is whether I choose the urgent task
+# in trials where there is a trade off (data = trade_off_scaled)
 model_scaled <- 
   pglm(formula = Urgency ~ (Dim.1 + Dim.2)*stai,
        data = trade_off_scaled,
@@ -978,6 +980,9 @@ as.numeric(1 - logLik(model_scaled)/logLik(model_null))
 
 # number of effective trials per subject
 length(trade_off_scaled$participant)/length(unique(trade_off_scaled$participant))
+
+
+## With income + STAI
 
 ```
 

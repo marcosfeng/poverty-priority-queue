@@ -1,0 +1,1637 @@
+\hypertarget{task-prioritization}{%
+\section{Task Prioritization}\label{task-prioritization}}
+
+\begin{tcolorbox}[enhanced jigsaw, toptitle=1mm, coltitle=black, colframe=quarto-callout-important-color-frame, colbacktitle=quarto-callout-important-color!10!white, titlerule=0mm, opacityback=0, rightrule=.15mm, bottomtitle=1mm, title={§Abstract}, bottomrule=.15mm, breakable, left=2mm, arc=.35mm, toprule=.15mm, leftrule=.75mm, colback=white, opacitybacktitle=0.6]
+
+Pre-existing literature suggests that relative material scarcity --
+particularly wealth inequality -- is a significant contributing factor
+in dictating how people behave. We characterize irrational
+decision-making across impoverished groups by examining the effects of
+inefficiency in time allocation.
+
+We experimentally model time allocation in low SES groups by
+administering an artificial priority queue where agents must attend to
+tasks with differing levels of effort, urgency and value. Observations
+suggest that individuals from low SES groups prioritize urgent tasks
+while agents from high SES groups prioritize high value tasks.
+
+\end{tcolorbox}
+
+Poverty is a multi-dimensional problem, and behavioral scientists have
+focused on the effects of the environment on the decision-making process
+across socio-economic levels (Bertrand et al., 2004). Their underlying
+assumption is that humans share the same underlying biology and
+psychology, and that ``poverty'' causes significant changes in people's
+environments and, in turn, their decisions. For example, living in
+poverty often means having a limited set of options in life (from
+choosing what to have for dinner to which occupation to pursue), and it
+increases the number of demands in terms of time and mental resources
+(Banerjee \& Duflo, 2012). This lack of control over choices leads to a
+chronic state of vigilance and stress (Chemin et al., 2013).
+
+In this paper, we focus on the trade-offs between urgency and importance
+in day-to-day decisions. It is hypothesized that, in the mass of to-dos
+and responsibilities, those with limited resources have to leave
+specific tasks undone. Consequently, we argue that they may not have
+time to complete all tasks or the necessary money and, as a result, must
+decide what to prioritize in their lives. Although one could
+theoretically calculate the most optimal course of action, it is
+improbable that individuals would take this actuarial approach. Instead,
+we argue that they are more likely to use heuristics or intuition to
+decide what problem to address, where to spend money, and what to leave
+undone. Such heuristics, however, are prone to fail under particular
+circumstances.
+
+We argue that, under the strain faced by the poor, a series of behaviors
+and physiological phenomena arise. Making ``urgent versus important''
+trade-offs causes stress and anxiety levels to increase and shift
+attention towards specific features of a choice. We propose that an
+environment of poverty shifts the weight placed on the urgency of a task
+(e.g., estimating that urgent tasks will ``come back to bite'' much
+faster than others and estimating that nonurgent opportunities are
+unlikely to disappear or change). This urgency mindset may increase
+stress and anxiety levels, leading the poor to spend significant
+portions of their income on tobacco, alcohol, and lotteries (Banerjee \&
+Duflo, 2007; Blalock et al., 2007; Haisley et al., 2008; World Health
+Organization, 2021). Individuals in low socio-economic groups tend to
+save too little (Shurtleff, 2009) frequently borrow at exorbitant
+interest rates (Banerjee \& Duflo, 2007; Skiba \& Tobacman, 2008), and
+limit preventive healthcare services (Lusardi et al., 2010).
+
+\hypertarget{poverty-traps}{%
+\subsection{Poverty Traps}\label{poverty-traps}}
+
+We argue that the poor are caught in an ``urgency trap,'' where neglect
+of nonurgent tasks may cause an increase of urgency in the future. For
+example, not undergoing regular medical check-ups may increase
+susceptibility to unexpected illnesses.
+
+This phenomenon is closely related to the theory of poverty traps. This
+framework defines a self-perpetuating phenomena that arise when an
+economy is caught within a cycle that suffers from persistent
+undevelopment. In this paper, we model poverty traps as an equilibrium
+which favors disutility over iterative cycles. To determine causal
+relationships between such outcomes and the behavior of low SES (type 1)
+agents, we examine cases of suboptimality that are distinct from high
+SES (type 2) agents. To assess self-reinforcing behavior intrinsic to
+poverty traps, we classify and compare the choice behavior of type 1
+agents in regards to their time allocation.
+
+\hypertarget{priority-queuing}{%
+\subsection{Priority Queuing}\label{priority-queuing}}
+
+Time allocation is often modeled through priority queues, models to
+represent ordinal choices of tasks attended to based on some subjective
+value or utility function. Triaging bays often treat queues as a
+function of urgency and order of arrival, whilst donor matching programs
+facilitate queues based on a point-system which weights time, severity
+and likelihood of survival.
+
+Two critical Priority Queuing models are developed by Cobham and
+Barabasi. While Cobham's model treats a queue as an infinite list of
+tasks, with varying task arrival times and execution rates, the Barabasi
+model treats the queue as a finite size list with waiting times
+(\(\tau_w\)).
+
+\begin{equation}\protect\hypertarget{eq-prio-q}{}{
+P(\tau_w) = \left\{
+            \begin{array}{ll}
+            1 - \frac{1-p^2}{4p}\ln\frac{1+p}{1-p},\\
+            \frac{1-p^2}{4p(\tau_w - 1)}[(\frac{1+p}{2})^{\tau_w-1} - (\frac{1-p}{2})^{\tau_w - 1}],
+            \end{array}
+            \right.
+}\label{eq-prio-q}\end{equation}
+
+We observe that mathematically as \(p \rightarrow 0\), this distribution
+reduces to an inverse poisson distribution.Ultimately this expression is
+independent of the priority distribution - suggesting that the alginment
+of task priorities has no role on the time for these respective tasks to
+be executed.
+
+Unfortunately, the preexisting models for priority queues are limited in
+regards to applications. There is negligible literature about priority
+queuing in marginalized groups and in regards to how priority queuing is
+rationalizable.
+
+One set of literature describes priority queues as a double-sided
+matching market with queues that depend on priorities and also impatient
+customers (Castro et al 2020). In this literature, customers of high
+value are matched prior to those of low value, and likewise impatient
+customers can leave the queue if they are not matched immediately with a
+customer of their priority. In such queues, customers are matched
+according to the order they arrive in and the available participants in
+the other market. A notable feature of this literature is that customers
+of high priority are perceived as more preferred than customers who are
+highly impatient. Essentially after the steady-state build up of
+customers in the queue increases, high priority customers are queued and
+low-priority customers are told to wait. While this behavior is
+representative of many cases in real life, it does not particularly
+align with the behavior that the extended literature from Role Strain
+suggests about the decision-making choices of individuals from low SES.
+There is clearly a disconnect in how the average individual prioritizes
+tasks and likewise how poor individuals do as well.
+
+\hypertarget{urgency-and-importance}{%
+\subsubsection{Urgency and Importance}\label{urgency-and-importance}}
+
+Although some scientists have proposed a ``Scarcity'' view of poverty
+(Mullainathan \& Shafir, 2014), their conclusions have not withstood the
+scrutiny of science, leaving the causes and mechanisms of these
+phenomena largely unexplained (O'Donnell et al., 2021). We seek a more
+rigorous understanding of how relative-poverty can be self-perpetuating
+through poor time allocation. We explain prioritization of day-to-day
+tasks as an attempt to balance two requirements: (1) maximize life
+satisfaction given one's limited resources, and (2) minimize the
+potentially harmful effects of leaving tasks undone change with time. We
+call the former requirement ``importance'' and the latter ``urgency''
+(Bratterud et al., 2020).
+
+The Eisenhower Matrix (see @app-eisenhower for details), a simple tool
+for determining optimal long-term decisions, is a simplification of how
+individuals determine their queue for attending to daily tasks. This
+framework uses dimensions of urgency (time scarcity) and importance
+(expected value maximization) as primary motivations for which tasks
+require completion. We intend to characterize the mapping between
+urgency \(U\) and importance \(I\) , namely
+\(\{ U,I \} \mapsto \mathbb{R}\). As discussed in
+Section~\ref{sec-poverty}, the literature speculates the influence of
+effort costs in decision-making - thereby suggesting Eisenhower Matrices
+should be modified to account for the added parameter.
+
+\hypertarget{simulation}{%
+\paragraph{Simulation}\label{simulation}}
+
+Priority Queues models are a tangible mechanism for capturing the
+choices and inter-event time agents require in regards to
+decision-making for daily tasks. Using the pre-existing literature
+surrounding poverty, we simulate an artificial priority queue, using a
+priority function
+
+\begin{equation}\protect\hypertarget{eq-prio}{}{
+\text{Priority} = \alpha U + (1- \alpha) I
+}\label{eq-prio}\end{equation}
+
+where \(U, I, \alpha\) are ``urgency,'' ``importance,'' and the urgency
+weight, respectively.
+
+Our first step is to run a discrete-event simulation (DES) to uncover
+the relationship between \(\alpha\) , probability of survival, and
+burstiness measures. DES is a technique for modelling stochastic,
+dynamic and discretely evolving systems. In this framework, consider:
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\item
+  An individual who is able to finish any job
+\item
+  A ready supply of jobs with no prospect of any shortages
+\item
+  Jobs are allocated a priority when they arrive in the queue according
+  to Equation~\ref{eq-prio}
+\item
+  The time taken to complete a job is variable but independent of the
+  task
+\end{enumerate}
+
+We define the completion time for the different activities as random
+draws from an exponential distribution with \(\lambda = 5\). Likewise,
+the interarrival times for tasks are from an exponential distribution of
+\(\lambda = 5\). Each incoming task receives \(U, I \sim Unif(0,1)\) and
+a priority according to Equation~\ref{eq-prio}. Tasks are completed in
+the order of priority.
+
+Importantly, each task contains a survival rate as a function of its
+importance. The higher the urgency, the more likely the task is to fail
+(or die off). This feature internalizes the fact that urgent tasks may
+bring imminent negative consequences. The survival probability of a task
+is given by a Weibull distribution with a monomial function:
+
+\[
+\Pr (\text{survival}|\alpha = s(1+U),\beta=1) = 1 - e^{(-t/\alpha)^\beta}
+\] where \(t\) is the wait time, and \(s\) is a scaling parameter (in
+the following simulations calibrated to be 100). As such, each task
+contains a survival probability, which is then accumulated throughout
+the ask, such that the cumulative survival rate of later tasks are
+smaller than those of earlier ones.
+
+By simulating this queue, we can graph a heatmap with the relationship
+of the weight of urgency on the priority function (\(\alpha\)) and
+cumulative survival rate:
+
+@simmer-simulation shows that those with higher urgency weights are more
+likely to survive longer in the queue.
+
+Further, with interevent times, we can calculate the burstiness and
+memory as a function of urgency weights.
+
+\begin{figure}
+
+{\centering \includegraphics{thesis-file-ppq_files/figure-latex/simmer-burstiness-1.pdf}
+
+}
+
+\caption{Burstiness by Urgency Weight}
+
+\end{figure}
+
+@simmer-burstiness shows that the surviving tasks are indeed around the
+area of bursty phenomena as reported in the literature. However, there
+does not seem to be a relationship between urgency weighting and
+burstiness.
+
+\hypertarget{sec-poverty}{%
+\subsection{Relating to Poverty}\label{sec-poverty}}
+
+The literature suggests that the persistence of generational poverty is
+propagated by countless environmental, physical and psychological
+factors known as ``Poverty Traps'' (Barrett et al 2016). Though the
+dynamics of these negative feedback loops are heavily researched, the
+commonly invoked mechanism suggests that these traps exist due to a
+country, person or economy being unable to accumulate enough capital for
+incomes to rise. However, more recent literature suggests that investing
+additional capital within an environment will not raise the long-term
+steady-state income level (Kraay et al 2014) - contradicting the
+commonly held position. Many studies also investigate whether S-shaped
+curves, a great predicator of temporally dynamic relationships between
+income and assets, are indicative of poverty traps. However, this type
+of analysis has frequently yielded incorrect assessments of
+poverty-trapping due to a proclivity for numerical errors that such an
+approach poses. Given the misleading nature of many theoretical
+approaches to characterize poverty traps, the limited strain of
+literature addressing this topic has recently begun veering in the
+direction of seeking behavioral prescriptions.
+
+Our analysis of poverty traps will explore how self-reinforcing
+behaviors in priority queues represent distinct facets of poverty traps.
+
+\hypertarget{irrationality-of-time-allocation}{%
+\subsubsection{Irrationality of Time
+Allocation}\label{irrationality-of-time-allocation}}
+
+A particular facet of ``poverty traps'' can be attributed to the
+inefficiency of daily task management. Individuals are described as
+making a sequence of decisions and bargains in order to reduce the
+strain of their daily demands and roles in a process similar to that of
+an economic decision: Allocating limited resources such as energy, time,
+emotions, and goods (Goode, 1960) in different ways. For individuals who
+belonging to a higher socioeconomic class (SEC), delegating these roles
+becomes far easier, and the bandwidth to tackle other tasks increases
+significantly. The converse is true however as well: the poorer one is,
+the more uncontrolled demand there is on both time and money.
+
+\hypertarget{role-strain}{%
+\subsubsection{Role Strain}\label{role-strain}}
+
+Role strain, the ``effort'' dimension or subjective value individuals
+attribute to completing arbitrary tasks, is observed to be higher among
+the poor (Hopper et al 2020). Formulated in 1960 by Columbia sociologist
+William Goode, this theory argues that individuals cannot meet all role
+demands, and through a series of role decisions and bargains, they
+strive to adjust these demands. In this process, they allocate scarce
+resources-\/-role energies, time, emotions, goods-\/-among the role
+obligations they have to fulfill. In other words, individuals seek to
+minimize their perceived role strain (the cognitive and emotional effort
+of carrying out their duties).
+
+Adding tasks to already demanding circumstances will only add to role
+strain, while adding an extra participant to assist with tasks will
+instead diminish the strain. A hypothesized cause of poverty traps is
+the proclivity for the impoverished to over-commit to high urgency
+tasks, thereby neglecting or under-commiting to high effort or high
+importance tasks. Goode concurs with this assessment, claiming that
+conflicts among task choices typically arise through role conflict (when
+two roles have demands which are mutually exclusive) or role overload
+(when an individual is too resource scarce to meet the demands of
+multiple roles). The latter holds more weight in our research goals, an
+assertion we further investigate.
+
+\hypertarget{scarcity}{%
+\subsubsection{Scarcity}\label{scarcity}}
+
+Notably, time and resource scarcity are positively correlated with
+socioeconomic class. Essentially, a paucity of goods is intrinsic to
+individuals who are poor. The behavioral patterns which emerge as a
+result, align with the expected results from Role Strain literature. In
+countless replication studies, it has been determined that scarcity
+yields an increase in focus during task completion. The most prominent
+replication exercise conducted five experiments in which different
+resources were withheld in order to induce a scarcity complex (Shah et
+al 2012). In each game, participants were awarded a differing number of
+``guesses,'' or ``attempts'' as a source of currency in order to
+simulate either resource abundance or scarcity across players. It was
+observed that when players were more resource scarce, focus on the task
+increased as a response to the limited opportunities for success that
+were available. Although the efficiency and accuracy at tasks completion
+improved for such players, a byproduct was an increase in stress as
+well. This same outcome has been confirmed in alternative literature (de
+Bruijn et al 2021), when it was determined that for individuals who have
+less resources, their daily tasks become increasingly taxing and
+necessitate more attention (Adamkovič et al 2022).
+
+\hypertarget{cognitive-load}{%
+\subsubsection{Cognitive Load}\label{cognitive-load}}
+
+The cognitive fatigue that such tasks cause individuals to endure can
+become overwhelming. Countless literature suggests that in the aftermath
+of highly strenuous tasks caused by induced scarcity, attentional shifts
+become more commonplace. However, other studies claim that there may not
+be enough information to thoroughly arrive at this conclusion.
+Nonetheless, nearly all of the current literature converges to the
+understanding that poverty inadvertently results in overborrowing of
+resources -- particularly of those that are scarce. This phenomenon is
+exemplified with debt -- low SES individuals with a lower credit score
+are at higher risk for requesting loans.
+
+\hypertarget{relating-to-anxiety}{%
+\subsection{Relating to Anxiety}\label{relating-to-anxiety}}
+
+In this study, we propose that the behavioral deviations brought by
+overweighting urgency are mediated by affect. Specifically, it is
+through stress or anxiety that these shifts occur. Previously, Morris
+and Coley (2004, \url{https://psycnet.apa.org/record/2004-18349-003})
+examined correlates of role strain among mothers. They find a variety of
+factors that increase the ``strain'' in this population. By extension,
+we propose three channels though which role strain may increase the
+urgency bias, as follows:
+
+\begin{figure}[H]
+
+{\centering \includegraphics[width=5in,height=2.53in]{thesis-file-ppq_files/figure-latex/mermaid-figure-1.png}
+
+}
+
+\end{figure}
+
+\hypertarget{the-experiment}{%
+\section{The Experiment}\label{the-experiment}}
+
+In practical applications, we can imagine an icecream parlor as a
+paragon example of Priority Queuing in which tasks require are imbued
+with varying degrees of effort, urgency and value. Effort is a tangible
+variable and can be measured by complexity of icecream created:
+additional toppings, or additional flavors. We imagine importance as the
+monetary value, or utility, reaped from completing a task. Urgency can
+be measured by customers who are impatient. We imagine such participants
+as having a finite time until they leave the queue and both the value
+and effort variable associated with their task becomes dismissed.
+
+\hypertarget{structure}{%
+\subsection{Structure}\label{structure}}
+
+Our experiment, created on Pavlovia, simulates the outlined scenario in
+an online format. We construct a 2-task queue which indicates what type
+of ``order'' or task an agent must attend to: (high/low) urgency,
+(high/low) effort, (high/low) importance. High importance is visually
+represented by two dollar signs, which low importance is represented by
+one dollar sign. Likewise, two heart represent high urgency, and one
+heart represents low urgency. Finally, the effort variable is
+characterized by the number of ``clicks'' and the likelihood to
+``squint'' - real effort costs for participants - a specific task
+requires. This generally occurs when specific sprinkle/scoop pairings
+are presented. Note that the nomenclature for identifying these tasks
+has a three symbol standard, where the first symbol represents the value
+of a task (H or L for high or low), the second symbol represents the
+effort (H or L) and the final symbol represents the urgency (H or 0 for
+high or non-urgent).
+
+\begin{figure}
+
+{\centering \includegraphics{images/2ice.png}
+
+}
+
+\caption{The top of the display is the 2-task queue, the bottom of the
+display are the clicks participants must make to successfully complete a
+task.}
+
+\end{figure}
+
+For every iteration of the game that a high urgency task is unattended
+to, the value of the task decreases - at which point the participant
+leaves the queue if the value reaches no dollar signs.
+
+To incentivize players in the game, we offer a \(\$1.00\) prize which is
+contingent on the total number of dollar-signs, total value, players
+accumulate throughout the game. A counter is positioned on the display
+to indicate progress. Likewise, we perform 20 iterations of this
+experiment: sufficient time to gauge patterns within participant
+behavior. An important feature of this experiment is that participants
+can attend to tasks in any order, not necessarily left to right, which
+effectively should indicate how they prioritize all three of these
+factors. In general, our rudimentary experimental design appears as
+follows:
+
+\begin{figure}
+
+{\centering \includegraphics{images/totalice.jpeg}
+
+}
+
+\caption{The figure above represents the basic interface programmed for
+the game. Participants have a queue at the top of the game, and a series
+of icons they must press in order to complete a task. The hearts and
+dollar signs on a task represent the importance and urgency of the task
+and the money counter at the bottom of the screen indicates the
+accumulated wealth of the participant.}
+
+\end{figure}
+
+Although we do not gather inter-event data from this game (can we use
+the RTs to calculate tau?), players are unaware of this feature. We
+expect that many participants rush and become stressed - traits of
+induced scarcity. To measure relative SES and relative anxiety, we use a
+post and intro survey to determine a relative deprivation index and also
+a set of STAI.
+
+We should note that specific task situations require minimal cognition.
+If an individual is presented with a high value, high urgency task then
+they will always choose this this task. However, if an individual is
+presented a high importance, low urgency task and a high urgency, low
+importance task - it is not entirely apparent what the optimal course of
+action for future outcomes may be, and more so what choices individuals
+will make. Using R, we capture these results and output baseline charts
+of what the choice distribution looks like.
+
+\hypertarget{simulation-1}{%
+\subsubsection{Simulation}\label{simulation-1}}
+
+We devised a theoretical model for how we expect rational
+decision-making to manifest in our priority queuing experiment such that
+frequency of deviations from rationality can be monitored. To formalize
+the optimal, or rational, set of behavior for maximizing rewards over
+long-term exposure in a queue, we developed a closed-form model. We
+hypothesize that this decision-making process can be summarized by a
+simple subjective-value function, where every individual determines the
+priority or preference \(\succeq_q\) by the subjective value utility
+representation. We thus developed a stochastic model, as follows:
+
+\begin{equation}\protect\hypertarget{eq-model}{}{
+\begin{aligned} 
+V(s) &= \max\limits_{a}(r(s,a) + \gamma\sum\limits_{S}P(s,a, s')V(s'))\\
+    S &= \{HHU \times HHU, HHU \times HH0, LHU \times LHU, …\}\\
+    r(a,s) &= i_a - c_a\\
+    R &= {r(HHU, HHV \times HHU) = 1 - c_H, …}\\
+    V(s_{final}) &= \max\limits_{a}(r(s_{final}, a))
+\end{aligned}
+}\label{eq-model}\end{equation}
+
+In Equation~\ref{eq-model} the agent calculates the value of state
+\(s' \in S\) (which is the next state, i.e., next period). \(i\) is the
+reward (in dollars) for completing a task, \(c_i\) is the effort cost
+(estimated in dollar unites), and \(r(a,s)\) is the net payoff of
+completing action \(a\) at state \(s\). \(P\) is the probability of
+transitioning from state \(s\) to another state \((s')\), given that our
+agents takes action \(a\) in state \(s\). \(V(s')\) is the value of that
+new state. We subsequently sum these results over all the possible
+future states. Note we use \(\gamma\) as our discount factor. In our
+normative model, we set the discounting factor to be 1. Note that this
+model only has two cost parameters \(c=\{c_L, c_H\}\).
+
+We build upon this by then generating an optimal protocol for
+identifying the best set of choices at any stage for maximizing
+long-term outcomes. Using dynamic programming, a recursive method of
+taking the outcomes of subgames and applying it to the entire scheme, we
+identify which tasks should be chosen given stage of the 2-task queue.
+Given this framework, we can graph the ratio of urgent choices at each
+given state, as a function of the cost parameter \(c_H\) and the
+discount factor (here \(c_L = 0\) for all cases).
+
+\begin{figure}
+
+{\centering \includegraphics{thesis-file-ppq_files/figure-latex/dyn-pro-simulation-results-1.pdf}
+
+}
+
+\caption{Percentage of Urgent Choices}
+
+\end{figure}
+
+@dyn-pro-simulation-results shows that the optimal percentage of urgent
+choices varies by around 0.10, with lower probabilities centered around
+low cost parameters and high discount factors.
+
+\hypertarget{data}{%
+\subsection{Data}\label{data}}
+
+We administered our experiment over both Mturk and Prolific. In our
+MTurk administration, we acquired N = 22 participants, and via Prolific,
+N = 53. Here, we treat these samples as independent replications.
+
+\hypertarget{demographics}{%
+\subsubsection{Demographics}\label{demographics}}
+
+For both Mturk and Prolific, we distinguish high-low income and high-low
+anxiety by a median split. The high income mean is about 70k, while the
+low income mean is around 30k \((p<0.001)\). Likewise, the high anxiety
+mean score is 56.29, while low anxiety mean score is 37.17
+\((p<0.001)\).
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 8\tabcolsep) * \real{0.1827}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 8\tabcolsep) * \real{0.1250}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 8\tabcolsep) * \real{0.2212}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 8\tabcolsep) * \real{0.2212}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 8\tabcolsep) * \real{0.2212}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+MTurk\\
+N=22 x 20 trials\strut
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Mean
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Median
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Min
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Max
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+Age & 34.53 & 33 & 19 & 50 \\
+Income & & \$40,000 to \$49,999 & Less than \$10,000 & \$90,000 to
+\$99,999 \\
+Education & & Bachelor's degree & High school graduate & Master's
+degree \\
+STAI & 44.21 & 47 & 20 & 67 \\
+\end{longtable}
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 8\tabcolsep) * \real{0.1827}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 8\tabcolsep) * \real{0.1250}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 8\tabcolsep) * \real{0.2212}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 8\tabcolsep) * \real{0.2212}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 8\tabcolsep) * \real{0.2212}}@{}}
+\caption{The two samples display similar demographics}\tabularnewline
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+Prolific\\
+N=53 x 20 trials\strut
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Mean
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Median
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Min
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Max
+\end{minipage} \\
+\midrule\noalign{}
+\endfirsthead
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+Prolific\\
+N=53 x 20 trials\strut
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Mean
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Median
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Min
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Max
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+Age & 30.13 & 28 & 18 & 75 \\
+Income & & \$40,000 to \$49,999 & Less than \$10,000 & \$90,000 to
+\$99,999 \\
+Education & & Bachelor's degree & High school graduate & Master's
+degree \\
+STAI & 45.04 & 45 & 20 & 68 \\
+\end{longtable}
+
+\hypertarget{measures-of-poverty}{%
+\subsubsection{Measures of Poverty}\label{measures-of-poverty}}
+
+Although income-based measures have long been the standard for assessing
+poverty, studies have since determined that purchasing power and
+standard of living are not accurately measured by such a metric. Rather,
+relative deprivation and state-trait anxiety measures are often more
+accurate empirical measurements of an individual's socioeconomic status
+(SES).
+
+\hypertarget{self-reported-income}{%
+\paragraph{Self-Reported Income}\label{self-reported-income}}
+
+Though the simplest measure to collect, self-reported incomes has a
+number of limitations. Participants may have the incentive not to
+divulge their true income levels. This bias can occur in both directions
+depending on the context and demand effects (e.g., a participant may
+want to appear richer or poorer than they actually are). Further,
+because exact income, when combined with other demographic measures,
+could potentially be used to identify participants, it is customary to
+elicit income brackets (vs.~absolute income levels). This limitation may
+also reduce power and granularity in the our analysis.
+
+\hypertarget{zip-code-measures}{%
+\paragraph{ZIP code Measures}\label{zip-code-measures}}
+
+To remove measurement error from self-reported income, we use median
+income and poverty measures by the zip code of each participant, as
+provided by Qualtrics (which collects IP addresses of each participant).
+
+Our poverty measures are from the American Community Survey (ACS). The
+Census Bureau uses a set of dollar value thresholds that vary by family
+size and composition to determine who is in poverty, with thresholds
+(income cutoffs) arranged in a two-dimensional matrix (income and family
+size, from one person to nine or more people).
+
+Our median income data is based on the distribution of the total number
+of households and families including those with no income.
+
+For more information, check
+\url{https://www2.census.gov/programs-surveys/acs/tech_docs/subject_definitions/2021_ACSSubjectDefinitions.pdf}
+
+\hypertarget{composite-measure-pca}{%
+\paragraph{¶Composite Measure (PCA)}\label{composite-measure-pca}}
+
+Given that poverty is a multidimensional variable, we attempt to capture
+it through a series of questions (see @questionnaires for details). We
+created several questions about physical, mental, and monetary
+deprivation. We then summarized these results in a PCA. We use only the
+top two components, as per the Scree plot:
+
+\includegraphics{thesis-file-ppq_files/figure-latex/pca-scree-1.pdf}
+
+\begin{figure}
+
+\begin{minipage}[t]{0.50\linewidth}
+
+{\centering 
+
+\raisebox{-\height}{
+
+\includegraphics{thesis-file-ppq_files/figure-latex/unnamed-chunk-10-1.pdf}
+
+}
+
+\caption{pca-measure}
+
+}
+
+\end{minipage}%
+%
+\begin{minipage}[t]{0.50\linewidth}
+
+{\centering 
+
+\raisebox{-\height}{
+
+\includegraphics{thesis-file-ppq_files/figure-latex/unnamed-chunk-10-2.pdf}
+
+}
+
+\caption{pca-measure}
+
+}
+
+\end{minipage}%
+\newline
+\begin{minipage}[t]{0.50\linewidth}
+
+{\centering 
+
+\raisebox{-\height}{
+
+\includegraphics{thesis-file-ppq_files/figure-latex/unnamed-chunk-10-3.pdf}
+
+}
+
+\caption{pca-measure}
+
+}
+
+\end{minipage}%
+%
+\begin{minipage}[t]{0.50\linewidth}
+
+{\centering 
+
+\raisebox{-\height}{
+
+\includegraphics{thesis-file-ppq_files/figure-latex/unnamed-chunk-10-4.pdf}
+
+}
+
+\caption{pca-measure}
+
+}
+
+\end{minipage}%
+
+\end{figure}
+
+\hypertarget{dimension-1-top-5-contributors}{%
+\subparagraph{``Dimension 1'' top 5
+contributors:}\label{dimension-1-top-5-contributors}}
+
+(Higher dimension values = higher ``depression'')
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\tightlist
+\item
+  How would you rate your mental health over the past 4 weeks? (1-5)
+\item
+  Please select Yes or No for each of the following questions (YES = 1,
+  NO = 2).
+
+  \begin{enumerate}
+  \def\labelenumii{\alph{enumii}.}
+  \tightlist
+  \item
+    I am happy about achieving something good in the last 4 weeks.
+  \item
+    Depressed and unhappy.
+  \end{enumerate}
+\item
+  Over the past 2 weeks, how often have you felt down, depressed, or
+  hopeless?
+\item
+  Over the past 2 weeks, how often have you felt little interest or
+  pleasure in doing things?
+\end{enumerate}
+
+\hypertarget{dimension-2-top-5-contributors}{%
+\subparagraph{``Dimension 2'' top 5
+contributors:}\label{dimension-2-top-5-contributors}}
+
+(Higher dim. values = higher ``concern for mental health'')
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\tightlist
+\item
+  How important are the following:
+
+  \begin{enumerate}
+  \def\labelenumii{\alph{enumii}.}
+  \tightlist
+  \item
+    How you feel about yourself
+  \item
+    Your mental state of being
+  \item
+    Your physical state of being
+  \end{enumerate}
+\item
+  How important are the following aspects of your life?
+
+  \begin{enumerate}
+  \def\labelenumii{\alph{enumii}.}
+  \tightlist
+  \item
+    I need to be mentally healthy
+  \item
+    Having a good house to stay in
+  \end{enumerate}
+\end{enumerate}
+
+Note: We included other deprivation questions related to
+physical/monetary deprivation. However, those questions did not yield
+sufficient variance.
+
+\hypertarget{results}{%
+\subsection{Results}\label{results}}
+
+\hypertarget{choice}{%
+\subsubsection{Choice}\label{choice}}
+
+\hypertarget{task-performance}{%
+\paragraph{¶Task Performance}\label{task-performance}}
+
+\hypertarget{trade-off-decisions}{%
+\paragraph{§Trade-off Decisions}\label{trade-off-decisions}}
+
+When we compare an individual's choice of ``challenging'' tasks:
+decisions between high urgency - low importance or low importance - high
+urgency tasks, we observe that high anxiety and low income individuals
+more often choose high urgency tasks over high value tasks, which
+corroborates the current non-quantitative literature as can be observed
+in the plots below.
+
+\begin{figure*}
+
+\begin{minipage}[t]{0.50\linewidth}
+
+{\centering 
+
+\raisebox{-\height}{
+
+\includegraphics{thesis-file-ppq_files/figure-latex/trade-off-results-1.pdf}
+
+}
+
+\caption{Income}
+
+}
+
+\end{minipage}%
+%
+\begin{minipage}[t]{0.50\linewidth}
+
+{\centering 
+
+\raisebox{-\height}{
+
+\includegraphics{thesis-file-ppq_files/figure-latex/trade-off-results-2.pdf}
+
+}
+
+\caption{Anxiety}
+
+}
+
+\end{minipage}%
+\newline
+\begin{minipage}[t]{0.50\linewidth}
+
+{\centering 
+
+Choice proportions by income and anxiety
+
+}
+
+\end{minipage}%
+
+\end{figure*}
+
+Accuracy in trade-off decisions as a function of income and anxiety
+
+Multiple regression models to test the same hypotheses with different
+measures of income.
+
+Percent of urgent choices (vs.~important) as a function of income and
+anxiety.
+
+\begin{tcolorbox}[enhanced jigsaw, toptitle=1mm, coltitle=black, colframe=quarto-callout-note-color-frame, colbacktitle=quarto-callout-note-color!10!white, titlerule=0mm, opacityback=0, rightrule=.15mm, bottomtitle=1mm, title=\textcolor{quarto-callout-note-color}{\faInfo}\hspace{0.5em}{Key Result}, bottomrule=.15mm, breakable, left=2mm, arc=.35mm, toprule=.15mm, leftrule=.75mm, colback=white, opacitybacktitle=0.6]
+
+Individuals in the low income groups and in the high anxiety groups
+chose urgent tasks more often than important tasks. This result is not
+consistent for high income or low anxiety groups. Future graphs in this
+document will show that the difference-in-difference is not as clear.
+
+\end{tcolorbox}
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\item
+\item
+  Multiple regression models to test the same hypotheses with different
+  measures of income.
+\item
+\end{enumerate}
+
+\hypertarget{general-urgency-bias}{%
+\paragraph{§General Urgency Bias}\label{general-urgency-bias}}
+
+\includegraphics{thesis-file-ppq_files/figure-latex/pca-stai-urg-bias-1.pdf}
+
+It seems that when controlling for Dim 1 and 2, some effects become
+significant. Multicollinearity might be a problem, although correlations
+between STAI and PCA components are not higher than 0.6 (see correlation
+plots above). These results might be a result of a separation between
+State and Trait Anxiety. Although we only included the State questions
+of STAI, state and trait scores are likely correlated. PCA dimensions 1
+and 2 may control for this confounding effect.
+
+We review the Key Results from the first pages: urgent choices do seem
+to be above 50\% for key groups, but the differences-in-differences
+across income and anxiety levels are not significant.
+
+Again, people might not mind leaving the High Importance task undone.
+This is what some friends have called the ``insurance ice cream.'' That
+is, if I leave this High Importance task in my queue, I can use it when
+I get a task that is High Effort but Low Urgency.\\
+
+\hypertarget{reaction-time}{%
+\subsubsection{¶Reaction Time}\label{reaction-time}}
+
+\includegraphics{thesis-file-ppq_files/figure-latex/unnamed-chunk-16-1.pdf}
+
+\includegraphics{thesis-file-ppq_files/figure-latex/unnamed-chunk-16-2.pdf}
+
+\includegraphics{thesis-file-ppq_files/figure-latex/unnamed-chunk-16-3.pdf}
+
+\includegraphics{thesis-file-ppq_files/figure-latex/unnamed-chunk-16-4.pdf}
+
+\begin{verbatim}
+
+Call:
+glm(formula = as.numeric(RT) ~ Dim.1 * stai * Dim.2, family = "gaussian", 
+    data = trade_off_accuracy)
+
+Deviance Residuals: 
+   Min      1Q  Median      3Q     Max  
+-4.307  -2.575  -1.595  -0.128  60.375  
+
+Coefficients:
+                  Estimate Std. Error t value Pr(>|t|)
+(Intercept)      -0.945966   4.699342  -0.201    0.841
+Dim.1             0.133264   1.400407   0.095    0.924
+stai              0.100305   0.102634   0.977    0.331
+Dim.2             2.561913   2.392914   1.071    0.287
+Dim.1:stai       -0.001859   0.030565  -0.061    0.952
+Dim.1:Dim.2      -0.283810   0.754448  -0.376    0.708
+stai:Dim.2       -0.065885   0.052188  -1.262    0.210
+Dim.1:stai:Dim.2  0.003907   0.014055   0.278    0.782
+
+(Dispersion parameter for gaussian family taken to be 54.92665)
+
+    Null deviance: 4945.2  on 94  degrees of freedom
+Residual deviance: 4778.6  on 87  degrees of freedom
+  (47 observations deleted due to missingness)
+AIC: 659.81
+
+Number of Fisher Scoring iterations: 2
+\end{verbatim}
+
+\hypertarget{accuracy}{%
+\subsubsection{¶Accuracy}\label{accuracy}}
+
+We also obtain a comparison of the choices participants make and the
+optimal, or rational, protocol we generated. This is done by estimating
+a hierarchical Bayesian model\ldots{}
+
+\includegraphics{thesis-file-ppq_files/figure-latex/unnamed-chunk-17-1.pdf}
+
+\includegraphics{thesis-file-ppq_files/figure-latex/unnamed-chunk-17-2.pdf}
+
+\includegraphics{thesis-file-ppq_files/figure-latex/unnamed-chunk-17-3.pdf}
+
+Histogram for Prolific Data. Unlike MTurk, this distribution looks
+normal. This score is calculated by first estimating the cost parameters
+for each participant and then using them with backwards induction to
+discover the optimal choice at each presented state.
+
+K: explanation + histogram
+
+\begin{figure}
+
+{\centering \includegraphics{thesis-file-ppq_files/figure-latex/accuracy-histogram-1.pdf}
+
+}
+
+\caption{Histogram of Accuracy Proportions}
+
+\end{figure}
+
+@accuracy-histogram highlights how participants typically make optimal
+decisions (when given `challenging' tasks) with a probability in between
+0.5 and 0.6. This is generally what we expect to observe.
+
+\hypertarget{accuracy-anxiety-and-income}{%
+\paragraph{§Accuracy, Anxiety, and
+Income}\label{accuracy-anxiety-and-income}}
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\tightlist
+\item
+  Accuracy in trade-off decisions as a function of income and anxiety
+\end{enumerate}
+
+Finally, we compare for each participant, how many of their choices are
+identical to a model that observed the full horizon for the Markov
+decision process. Each participant is a dot, y axis is the peerage of
+correct choices in the experiment while x axis is the STAI (anxiety
+measure). Generally the results are very similar to figure 1.5.
+
+\begin{figure*}
+
+\begin{minipage}[t]{0.50\linewidth}
+
+{\centering 
+
+\raisebox{-\height}{
+
+\includegraphics{thesis-file-ppq_files/figure-latex/aggregate-accuracy-results-1.pdf}
+
+}
+
+\caption{Prolific, Income}
+
+}
+
+\end{minipage}%
+%
+\begin{minipage}[t]{0.50\linewidth}
+
+{\centering 
+
+\raisebox{-\height}{
+
+\includegraphics{thesis-file-ppq_files/figure-latex/aggregate-accuracy-results-2.pdf}
+
+}
+
+\caption{Prolific, Anxiety}
+
+}
+
+\end{minipage}%
+\newline
+\begin{minipage}[t]{0.50\linewidth}
+
+{\centering 
+
+Aggregate Accuracy by Income and Anxiety
+
+}
+
+\end{minipage}%
+
+\end{figure*}
+
+It appears that Accuracy does not vary across income and anxiety levels
+with these measures. Some possibilities of this fact might include that,
+since time discounting here is virtually 0, leaving the important task
+behind will not affect participants as much (depending, of course, of
+the estimated cost parameters).
+
+\begin{figure*}
+
+\begin{minipage}[t]{0.50\linewidth}
+
+{\centering 
+
+\raisebox{-\height}{
+
+\includegraphics{thesis-file-ppq_files/figure-latex/accuracy-results-1.pdf}
+
+}
+
+\caption{Accuracy in trade-off decisions as a function of self-reported
+income}
+
+}
+
+\end{minipage}%
+%
+\begin{minipage}[t]{0.50\linewidth}
+
+{\centering 
+
+\raisebox{-\height}{
+
+\includegraphics{thesis-file-ppq_files/figure-latex/accuracy-results-2.pdf}
+
+}
+
+\caption{Accuracy in trade-off decisions as a function of self-reported
+anxiety, by the STAI questionnaire}
+
+}
+
+\end{minipage}%
+\newline
+\begin{minipage}[t]{0.50\linewidth}
+
+{\centering 
+
+Trial Accuracy by Income and Anxiety (logistic function fit)
+
+}
+
+\end{minipage}%
+
+\end{figure*}
+
+\hypertarget{future-directions}{%
+\section{Future Directions}\label{future-directions}}
+
+\hypertarget{power-analysis}{%
+\subsection{Power Analysis}\label{power-analysis}}
+
+\hypertarget{behavioral-measures}{%
+\subsubsection{§Behavioral Measures}\label{behavioral-measures}}
+
+\begin{verbatim}
+(Intercept) 
+  0.7685878 
+\end{verbatim}
+
+\begin{verbatim}
+(Intercept) 
+  0.5509434 
+\end{verbatim}
+
+\begin{verbatim}
+(Intercept) 
+  0.3838275 
+\end{verbatim}
+
+\begin{verbatim}
+(Intercept) 
+  0.5942471 
+\end{verbatim}
+
+\begin{verbatim}
+[1] 0.07260647
+\end{verbatim}
+
+\begin{verbatim}
+[1] 2.567568
+\end{verbatim}
+
+\hypertarget{physiological-measures}{%
+\subsubsection{¶Physiological Measures}\label{physiological-measures}}
+
+``Sartorial Symbols of Social Class Elicit Class-Consistent Behavioral
+and Physiological Responses: A Dyadic Approach'' (Kraus et al 2014)
+
+Goal of paper: Determine the psychological response among participants
+paired across socio-economic groups.
+
+N = 128, 64 dyads (20 upper class, 20 lower class, 24 neutral condition)
+
+DV = HRV (Heart Rate Variability) reactivity differences between high
+vs.~low class
+
+Prior = Upper-class = -0.69, se = 0.31; Lower-class = 0.04, se = 0.31
+
+\hypertarget{redesign}{%
+\subsection{§Redesign}\label{redesign}}
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\item
+  A clock on the screen will display how long you have until that task,
+  or the customer, decides to leave the line.
+\item
+  This will mean you can no longer make money for that task.
+\item
+  In the first round of this experiment, you will experience monetary
+  ``shocks.'' This means that at random times, some money might be taken
+  from your total accumulated reward with no warning.
+\item
+  In the second round of this experiment, the rate at which orders
+  arrive will be doubled at random times. However, there will be no
+  monetary shocks.
+\item
+  Queue length is not fixed.
+\end{enumerate}
+
+- Skin conductance, Cortisol, Eye tracking
+
+\hypertarget{probabilistic-choice}{%
+\subsubsection{§Probabilistic Choice}\label{probabilistic-choice}}
+
+As seen in @accuracy-results,
+
+Revisit the experiment to address the range of urgent choices. One
+possibility is to add an artificial discount factor. Another possibility
+is to explore non-deterministic choices (that is, urgency does not mean
+certain decay of value from one state to another, but a probable decay).
+
+\hypertarget{perceived-effort}{%
+\subsubsection{Perceived Effort}\label{perceived-effort}}
+
+Stress has been suggested to increase perceived effort (e.g., the study
+will investigate whether it's more tiring to complete a task when
+stressed), leading low-income individuals to be less likely to take up
+welfare programs, regardless of eligibility (Bertrand et al., 2006;
+Hernanz et al., 2004).
+
+In our model, cost can include a subjective component. Instead of
+counting it as simply the number of clicks, we can assume that the agent
+may dread or fantasize about action \(a\). As such, someone who likes
+the task might not be bothered by doing it so the cost may be very close
+to zero (or negative). And vice versa for someone who hates it.
+Similarly, we can account for substituting \emph{subjective} probability
+for objective probability. That is, people might distort the actual
+probability of future events.
+
+\hypertarget{flexible-queue-size}{%
+\subsubsection{Flexible Queue Size}\label{flexible-queue-size}}
+
+IRB
+
+\hypertarget{comprehensive-measures-of-poverty}{%
+\subsubsection{Comprehensive Measures of
+Poverty}\label{comprehensive-measures-of-poverty}}
+
+IRB
+
+As seen in @pca-measure, Revisit questionnaire to address variance
+problems. One possibility is to expand our sample to lower-income
+people. Another option is to try other questions that would elicit more
+variance.
+
+Refer to @questionnaires for our current iteration of comprehensive
+measurements.
+
+\hypertarget{population}{%
+\subsection{Population}\label{population}}
+
+In Los Angeles, 18\% of residents worry every day or almost every day
+about paying their bills, and 23\% worry about job loss (Baldassare et
+al., 2021). This constant mindset of worry likely affects the livelihood
+of these citizens. In a recent PPIC survey, about ``one in five
+Californians report that they or someone in their household has cut back
+on food (21\%), put off seeing a doctor or purchasing medicine to save
+money (18\%), been unable to pay a monthly bill (17\%), or had
+difficulty paying the rent or mortgage (17\%) in the last 12 months''
+(Baldassare et al., 2021).
+
+\hypertarget{online-sample}{%
+\subsubsection{Online Sample}\label{online-sample}}
+
+Pros and cons.
+
+\hypertarget{homeless}{%
+\subsubsection{Homeless}\label{homeless}}
+
+M: Look Sera's studies
+
+IRB: Justification
+
+\hypertarget{other-low-ses-cohorts}{%
+\subsubsection{Other Low SES Cohorts}\label{other-low-ses-cohorts}}
+
+M: Proposal
+
+\hypertarget{appendix}{%
+\section*{Appendix}\label{appendix}}
+\addcontentsline{toc}{section}{Appendix}
+
+\hypertarget{app-eisenhower}{%
+\subsection{The Eisenhower Matrix}\label{app-eisenhower}}
+
+``Who can define for us with accuracy the difference between the long
+and short term! Especially whenever our affairs seem to be in crisis, we
+are almost compelled to give our first attention to the urgent present
+rather than to the important future.''
+
+-\/-\/- Dwight D. Eisenhower, 1961 address to the Century Association
+
+\begin{figure}
+
+{\centering 
+
+\href{https://todoist.com/productivity-methods/eisenhower-matrix}{\includegraphics[width=5.36in,height=\textheight]{images/eisenhower-matrix.png}}
+
+}
+
+\caption{Source:
+https://todoist.com/productivity-methods/eisenhower-matrix}
+
+\end{figure}
+
+\hypertarget{app-fantasy-dread}{%
+\subsection{Fantasy and Dread Model}\label{app-fantasy-dread}}
+
+\[
+\begin{aligned}
+& V\left(s^{\prime}\right)=r(a)-c(a)+\gamma \sum_s P\left(a, s^{\prime}, s^{\prime \prime}\right) V\left(s^{\prime \prime}\right) \\
+& \mathrm{SV}\left(\mathrm{s}^{\prime}\right)=\mathrm{r}(\mathrm{a})-e\left(a \mid z_e\right)+\gamma \sum_s S P(\cdot) V\left(s^{\prime}\right) \\
+& e\left(a \mid z_e\right)=z_e(c(e)) \\
+& \mathrm{SP}\left(a, s^{\prime}, s^{\prime \prime} \mid z_p\right)=z_p\left(P\left(a, s^{\prime}, s^{\prime \prime}\right)\right)
+\end{aligned}
+\]
+
+where \(z_e, z_p\) correspond to fantasy/dread and a sense of urgency,
+respectively. One possible
+
+P() depends on whether unattended task ``decays''
+
+\begin{figure}
+
+\begin{minipage}[t]{0.50\linewidth}
+
+{\centering 
+
+\raisebox{-\height}{
+
+\includegraphics{images/prob-weighting.png}
+
+}
+
+}
+
+\subcaption{\label{fig-prob-weight}Probability Weighting}
+\end{minipage}%
+%
+\begin{minipage}[t]{0.50\linewidth}
+
+{\centering 
+
+\raisebox{-\height}{
+
+\includegraphics{images/sense-urgency-illustration.png}
+
+}
+
+}
+
+\subcaption{\label{fig-sense-urg}Probability Example}
+\end{minipage}%
+
+\caption{\label{fig-prob-weighting}Example of Subjective Probabilities}
+
+\end{figure}
+
+\hypertarget{illustration-priority-queuing}{%
+\subsection{Illustration: Priority
+Queuing}\label{illustration-priority-queuing}}
+
+\begin{figure}
+
+\begin{minipage}[t]{0.50\linewidth}
+
+{\centering 
+
+A list can contain an arbitrary number of tasks and the priority of each
+task is an integer drawn from some distribution. The tasks are set to
+arrive with the rate \(\lambda\) following a Poisson dynamics with
+exponential arrival time distribution and they are executed with rate
+\(\mu\) by always choosing the one with the highest priority.
+
+}
+
+\end{minipage}%
+
+\caption{\label{fig-prioq}\includegraphics[width=3.2in,height=\textheight]{images/prioq-illustration.png}}
+
+\end{figure}
+
+\hypertarget{general-linear-models-of-accuracy}{%
+\subsection{§General Linear Models of
+Accuracy}\label{general-linear-models-of-accuracy}}
+
+\begin{verbatim}
+--------------------------------------------
+Maximum Likelihood estimation
+Newton-Raphson maximisation, 5 iterations
+Return code 1: gradient close to zero (gradtol)
+Log-Likelihood: -56.78464 
+5  free parameters
+Estimates:
+                          Estimate Std. error t value Pr(> t)
+(Intercept)             -9.321e-01  2.396e+00  -0.389   0.697
+as.numeric(income)       2.699e-01  3.276e-01   0.824   0.410
+stai                     4.295e-02  4.786e-02   0.897   0.370
+as.numeric(income):stai -8.028e-03  6.989e-03  -1.149   0.251
+sigma                    1.154e-10  7.857e-01   0.000   1.000
+--------------------------------------------
+\end{verbatim}
+
+\begin{verbatim}
+--------------------------------------------
+Maximum Likelihood estimation
+Newton-Raphson maximisation, 6 iterations
+Return code 2: successive function values within tolerance limit (tol)
+Log-Likelihood: -57.3358 
+7  free parameters
+Estimates:
+              Estimate Std. error t value Pr(> t)
+(Intercept)  6.163e-02  1.357e+00   0.045   0.964
+Dim.1        1.528e-01  3.291e-01   0.464   0.643
+Dim.2        3.479e-01  7.047e-01   0.494   0.622
+stai         8.776e-03  2.911e-02   0.301   0.763
+Dim.1:stai  -3.690e-03  6.295e-03  -0.586   0.558
+Dim.2:stai  -7.725e-03  1.411e-02  -0.547   0.584
+sigma       -9.235e-09  1.077e+00   0.000   1.000
+--------------------------------------------
+\end{verbatim}
+
+\begin{verbatim}
+--------------------------------------------
+Maximum Likelihood estimation
+Newton-Raphson maximisation, 5 iterations
+Return code 1: gradient close to zero (gradtol)
+Log-Likelihood: -56.63627 
+5  free parameters
+Estimates:
+                        Estimate Std. error t value Pr(> t)
+(Intercept)            6.697e-01  8.963e-01   0.747   0.455
+age                   -1.192e-03  2.627e-02  -0.045   0.964
+as.numeric(education)  9.408e-02  1.577e-01   0.597   0.551
+as.numeric(income)    -8.338e-02  6.308e-02  -1.322   0.186
+sigma                 -2.739e-10  1.007e+00   0.000   1.000
+--------------------------------------------
+\end{verbatim}
+
+\begin{verbatim}
+--------------------------------------------
+Maximum Likelihood estimation
+Newton-Raphson maximisation, 5 iterations
+Return code 8: successive function values within relative tolerance limit (reltol)
+Log-Likelihood: -54.53849 
+5  free parameters
+Estimates:
+                        Estimate Std. error t value Pr(> t)
+(Intercept)            6.373e-02  7.847e-01   0.081   0.935
+age                    4.577e-03  2.697e-02   0.170   0.865
+as.numeric(education)  7.831e-02  1.578e-01   0.496   0.620
+poverty_zip           -6.075e-02  2.182e-01  -0.278   0.781
+sigma                 -4.982e-08  9.720e-01   0.000   1.000
+--------------------------------------------
+\end{verbatim}
+
+\begin{verbatim}
+--------------------------------------------
+Maximum Likelihood estimation
+Newton-Raphson maximisation, 7 iterations
+Return code 1: gradient close to zero (gradtol)
+Log-Likelihood: -53.3177 
+5  free parameters
+Estimates:
+                        Estimate Std. error t value Pr(> t)
+(Intercept)           -6.211e-02  7.747e-01  -0.080   0.936
+age                    3.654e-03  2.676e-02   0.137   0.891
+as.numeric(education)  1.215e-01  1.615e-01   0.752   0.452
+median_income_zip     -3.523e-01  2.281e-01  -1.544   0.122
+sigma                  5.139e-11  9.810e-01   0.000   1.000
+--------------------------------------------
+\end{verbatim}
+
+\hypertarget{urgency-bias-and-deprivation-measures}{%
+\subsection{¶Urgency Bias and Deprivation
+Measures}\label{urgency-bias-and-deprivation-measures}}
+
+\includegraphics{thesis-file-ppq_files/figure-latex/img-urg-pca-1.pdf}
+
+\includegraphics{thesis-file-ppq_files/figure-latex/img-urg-pca-2.pdf}
+
+\begin{verbatim}
+
+Call:
+lm(formula = Urgency ~ income * stai, data = trade_off_accuracy)
+
+Residuals:
+     Min       1Q   Median       3Q      Max 
+-0.97332 -0.33284  0.05618  0.32169  0.70287 
+
+Coefficients:
+                Estimate Std. Error t value Pr(>|t|)  
+(Intercept)     0.631823   0.253099   2.496   0.0139 *
+income.L        0.930951   1.032625   0.902   0.3692  
+income.Q        1.310413   1.031955   1.270   0.2067  
+income.C        0.170411   0.992886   0.172   0.8640  
+income^4        0.022143   0.983775   0.023   0.9821  
+income^5       -0.602523   0.836765  -0.720   0.4729  
+income^6        0.878878   0.824150   1.066   0.2884  
+income^7        0.336358   0.827968   0.406   0.6853  
+income^8        0.542407   0.834785   0.650   0.5171  
+income^9        0.286211   0.787707   0.363   0.7170  
+income^10      -1.098670   0.659336  -1.666   0.0983 .
+income^11       1.036796   0.744274   1.393   0.1663  
+stai           -0.001608   0.005655  -0.284   0.7766  
+income.L:stai  -0.021575   0.022679  -0.951   0.3434  
+income.Q:stai  -0.022495   0.022307  -1.008   0.3153  
+income.C:stai   0.005348   0.021776   0.246   0.8064  
+income^4:stai  -0.004301   0.021510  -0.200   0.8419  
+income^5:stai   0.016948   0.019018   0.891   0.3747  
+income^6:stai  -0.019851   0.019297  -1.029   0.3057  
+income^7:stai  -0.008884   0.018524  -0.480   0.6324  
+income^8:stai  -0.004203   0.018643  -0.225   0.8220  
+income^9:stai   0.001841   0.018378   0.100   0.9204  
+income^10:stai  0.026004   0.015447   1.683   0.0950 .
+income^11:stai -0.023131   0.016476  -1.404   0.1630  
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+Residual standard error: 0.4577 on 117 degrees of freedom
+  (1 observation deleted due to missingness)
+Multiple R-squared:  0.274, Adjusted R-squared:  0.1313 
+F-statistic:  1.92 on 23 and 117 DF,  p-value: 0.01289
+\end{verbatim}
+
+\begin{verbatim}
+
+Call:
+glm(formula = as.numeric(Urgency) ~ income * stai, family = "binomial", 
+    data = trade_off_accuracy)
+
+Deviance Residuals: 
+    Min       1Q   Median       3Q      Max  
+-2.3817  -0.9022   0.3707   0.8958   1.6009  
+
+Coefficients:
+                 Estimate Std. Error z value Pr(>|z|)
+(Intercept)      2.537281 158.210599   0.016    0.987
+income.L        14.501104 397.000289   0.037    0.971
+income.Q         6.915760 294.624840   0.023    0.981
+income.C        -2.342265 661.521544  -0.004    0.997
+income^4         0.692770 275.929604   0.003    0.998
+income^5         0.993072 436.482912   0.002    0.998
+income^6        15.261138 708.441778   0.022    0.983
+income^7         3.968649 259.295923   0.015    0.988
+income^8         0.564147 483.263705   0.001    0.999
+income^9        -5.144107 900.076068  -0.006    0.995
+income^10      -12.725780 776.827596  -0.016    0.987
+income^11        2.410137 372.953246   0.006    0.995
+stai            -0.063169   5.273380  -0.012    0.990
+income.L:stai   -0.361615  13.230667  -0.027    0.978
+income.Q:stai   -0.084344   9.817283  -0.009    0.993
+income.C:stai    0.171087  22.049196   0.008    0.994
+income^4:stai   -0.003352   9.194547   0.000    1.000
+income^5:stai   -0.042589  14.548315  -0.003    0.998
+income^6:stai   -0.408018  23.614245  -0.017    0.986
+income^7:stai   -0.123880   8.641382  -0.014    0.989
+income^8:stai    0.079297  16.107777   0.005    0.996
+income^9:stai    0.244722  30.002178   0.008    0.993
+income^10:stai   0.365465  25.894025   0.014    0.989
+income^11:stai  -0.014740  12.431394  -0.001    0.999
+
+(Dispersion parameter for binomial family taken to be 1)
+
+    Null deviance: 189.46  on 140  degrees of freedom
+Residual deviance: 144.59  on 117  degrees of freedom
+  (1 observation deleted due to missingness)
+AIC: 192.59
+
+Number of Fisher Scoring iterations: 14
+\end{verbatim}
+
+\begin{verbatim}
+
+Call:
+lm(formula = Urgency ~ age + education + income, data = trade_off_accuracy)
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-0.8782 -0.3542  0.1270  0.2949  0.7261 
+
+Coefficients:
+            Estimate Std. Error t value Pr(>|t|)  
+(Intercept)  0.64128    0.28510   2.249   0.0272 *
+age         -0.00173    0.00915  -0.189   0.8505  
+education.L  0.17418    0.33022   0.527   0.5993  
+education.Q -0.28788    0.28185  -1.021   0.3101  
+education.C  0.14824    0.24217   0.612   0.5422  
+education^4  0.12081    0.18666   0.647   0.5193  
+education^5  0.08514    0.18169   0.469   0.6406  
+education^6 -0.20086    0.17495  -1.148   0.2543  
+income.L     0.09741    0.18407   0.529   0.5981  
+income.Q     0.19075    0.18318   1.041   0.3009  
+income.C     0.39939    0.20888   1.912   0.0594 .
+income^4    -0.29548    0.20414  -1.447   0.1517  
+income^5     0.17011    0.22274   0.764   0.4473  
+income^6    -0.09810    0.19487  -0.503   0.6161  
+income^7     0.10558    0.20188   0.523   0.6024  
+income^8     0.29780    0.28847   1.032   0.3050  
+income^9     0.42472    0.23011   1.846   0.0686 .
+income^10   -0.15619    0.19848  -0.787   0.4336  
+income^11   -0.10358    0.17588  -0.589   0.5576  
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+Residual standard error: 0.4678 on 80 degrees of freedom
+  (43 observations deleted due to missingness)
+Multiple R-squared:  0.2522,    Adjusted R-squared:  0.08392 
+F-statistic: 1.499 on 18 and 80 DF,  p-value: 0.1125
+\end{verbatim}
+
+\includegraphics{thesis-file-ppq_files/figure-latex/img-urg-pca-3.pdf}
+
+\includegraphics{thesis-file-ppq_files/figure-latex/img-urg-pca-4.pdf}
+
+\hypertarget{dynamic-programming-simulation}{%
+\subsection{§Dynamic Programming
+Simulation}\label{dynamic-programming-simulation}}
+
+\hypertarget{bayesian-model-for-cost-estimation}{%
+\subsection{§Bayesian Model for Cost
+Estimation}\label{bayesian-model-for-cost-estimation}}
+
+\hypertarget{model}{%
+\subsubsection{Model}\label{model}}
+
+\hypertarget{estimation}{%
+\subsubsection{Estimation}\label{estimation}}
+
+\hypertarget{code}{%
+\subsection{Code}\label{code}}
+
+\hypertarget{priority-queuing-simulation}{%
+\subsubsection{Priority Queuing
+Simulation}\label{priority-queuing-simulation}}
+
+\hypertarget{dynamic-programming-simulation-1}{%
+\subsubsection{Dynamic Programming
+Simulation}\label{dynamic-programming-simulation-1}}
+
+\hypertarget{bayesian-model-for-cost-estimation-1}{%
+\subsubsection{Bayesian Model for Cost
+Estimation}\label{bayesian-model-for-cost-estimation-1}}
+
+\hypertarget{model-1}{%
+\paragraph{Model}\label{model-1}}
+
+\hypertarget{model-data}{%
+\paragraph{Model Data}\label{model-data}}
+
+\hypertarget{estimation-1}{%
+\paragraph{Estimation}\label{estimation-1}}
+
+\hypertarget{questionnaires}{%
+\subsection{Questionnaires}\label{questionnaires}}
+
+The remaining pages include the questionnaires we will administer to
+participants in the next experiment iterations.

@@ -7,17 +7,9 @@ execute:
   warning: false
 format:
   latex:
+    pdf-engine: pdflatex
     template: mytemplate.tex
-    
-    geometry:
-     - margin = 25mm
-    toc: true
-    number-sections: true
-    colorlinks: true
-    code-line-numbers: true
 ---
-
-# Task Prioritization
 
 ```{r init, warning=FALSE, include=FALSE}
 
@@ -41,13 +33,13 @@ demograph <- qualtrics[qualtrics$PROLIFIC_PID %in% joint_pilot$participant,]
 
 ```
 
-::: {.callout-important icon="false"}
 ## §Abstract
 
 Pre-existing literature suggests that relative material scarcity -- particularly wealth inequality -- is a significant contributing factor in dictating how people behave. We characterize irrational decision-making across impoverished groups by examining the effects of inefficiency in time allocation.
 
 We experimentally model time allocation in low SES groups by administering an artificial priority queue where agents must attend to tasks with differing levels of effort, urgency and value. Observations suggest that individuals from low SES groups prioritize urgent tasks while agents from high SES groups prioritize high value tasks.
-:::
+
+# Task Prioritization
 
 Poverty is a multi-dimensional problem, and behavioral scientists have focused on the effects of the environment on the decision-making process across socio-economic levels (Bertrand et al., 2004). Their underlying assumption is that humans share the same underlying biology and psychology, and that "poverty" causes significant changes in people's environments and, in turn, their decisions. For example, living in poverty often means having a limited set of options in life (from choosing what to have for dinner to which occupation to pursue), and it increases the number of demands in terms of time and mental resources (Banerjee & Duflo, 2012). This lack of control over choices leads to a chronic state of vigilance and stress (Chemin et al., 2013).
 

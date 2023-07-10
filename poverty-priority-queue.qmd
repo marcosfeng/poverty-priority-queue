@@ -12,6 +12,10 @@ format:
     number-sections: true
     colorlinks: true
     code-line-numbers: true
+    keep-tex: true
+    include-in-header:
+      - text: |
+          \usepackage{dcolumn}
 ---
 
 # Task Prioritization
@@ -280,6 +284,19 @@ We administered our experiment over both Mturk and Prolific. In our MTurk admini
 
 ```{r}
 #| label: data-wrangling-pilot
+ordered_factor <- function(fact_var) {
+  categories <- levels(fact_var)
+  n_cat <- length(categories)
+  cont <- matrix(data = 0, nrow = n_cat, ncol = (n_cat - 1))
+  cont[col(cont) < row(cont)] <- 1
+  rownames(cont) <- categories
+  colnames(cont) <- paste(categories[2:n_cat],
+                          categories[1:(n_cat - 1)],
+                          sep = " vs. ")
+  contrasts(fact_var) <- cont
+  return(fact_var)
+}
+
 joint_pilot %>%
   group_by(platform) %>%
   mutate(
@@ -322,6 +339,9 @@ joint_pilot %>%
                      ui_leftsplit  == 1 & i1 == 1 ~ 0,
                      ui_rightsplit == 1 & i2 == 1 ~ 0)
   ) -> joint_pilot
+
+joint_pilot$income <- ordered_factor(joint_pilot$income)
+joint_pilot$education <- ordered_factor(joint_pilot$education)
 ```
 
 ```{r}
@@ -652,13 +672,70 @@ Note: We included other deprivation questions related to physical/monetary depri
 
 ### Choice
 
-#### ¶Task Performance
+The dataset from our experiment comprised multiple choice variables (Important, Hard, and Urgent tasks) and participant demographic information (STAI score, income level, and platform). We used this dataset to conduct a regression analysis to examine how participants' choice behavior influenced their total points accumulated in the task.
 
-```{r}
-#| label: total-points
-#| fig-cap: "Total Rewards"
+#### Task Performance
 
+We compiled data on each participant's selection and non-selection of each type of task (Important, Hard, and Urgent), then computed the frequency with which each participant picked a particular task type when given an option. @tbl-totalpoints indicates that the decision to complete Important tasks significantly affected the total points a participant amassed (Estimate = 16.098, p \< .001). Specifically, a ten percentage point rise in the ratio of selected Important tasks (two points, as opposed to one point) resulted in an increase of 1.6 points in the overall score. However, the percentage of times a participant chose Hard or Urgent tasks did not significantly explain the total points accumulated (Estimate = -7.563, p = .371 for Hard tasks; Estimate = 6.539, p = .142 for Urgent tasks).
 
+We also included demographic variables and participant characteristics (STAI score, income level, and platform) as control variables in the regression model, but none showed a significant relationship with total points.
+
+The model accounted for approximately 20.24% of the variance in total points (Adjusted R-squared = 0.132), with an overall significant model fit (F(6,68) = 2.877, p \< .05).
+
+```{r, results='asis'}
+#| label: tbl-totalpoints
+#| tbl-cap: "Regression analysis of total points on participants' choice behavior and demographic variables. The predictors include the percentage of choices where Important, Hard, and Urgent tasks were chosen, participants' STAI score, income level (High vs. Low), and the platform on which the experiment was conducted (Prolific vs. Mturk)."
+
+library(broom)
+library(stargazer)
+
+joint_pilot <- joint_pilot %>%
+  mutate(chosen_i = ifelse(choice == "L", i1, i2),
+         chosen_e = ifelse(choice == "L", e1, e2),
+         chosen_u = ifelse(choice == "L", u1, u2),
+         not_chosen_i = ifelse(choice == "L", i2, i1),
+         not_chosen_e = ifelse(choice == "L", e2, e1),
+         not_chosen_u = ifelse(choice == "L", u2, u1))
+
+# Calculate total points per participant
+points_per_participant <- joint_pilot %>%
+  group_by(participant) %>%
+  summarise(total_points = max(points),
+            stai = first(stai),
+            high_income = first(high_income),
+            platform = first(platform))
+
+# Calculate the percentage of times when the urgent, important and effortful options were chosen
+choice_percentages <- joint_pilot %>%
+  mutate(
+    urgent_chosen = ifelse(chosen_u > not_chosen_u, 1, 0),
+    important_chosen = ifelse(chosen_i > not_chosen_i, 1, 0),
+    effort_chosen = ifelse(chosen_e > not_chosen_e, 1, 0)
+  ) %>%
+  group_by(participant) %>%
+  summarise(perc_urgent_chosen = mean(urgent_chosen, na.rm = TRUE),
+            perc_important_chosen = mean(important_chosen, na.rm = TRUE),
+            perc_effort_chosen = mean(effort_chosen, na.rm = TRUE))
+
+performance <- inner_join(points_per_participant, choice_percentages, by = "participant")
+
+# Run regression
+regression_model <- lm(total_points ~ perc_important_chosen + 
+                         perc_effort_chosen + perc_urgent_chosen +
+                         stai + high_income + platform, data = performance)
+
+# summary_stats <- summary(regression_model)
+
+stargazer(regression_model, type = "latex", header = FALSE, align = TRUE,
+          covariate.labels = c("% Important task chosen (%)",
+                               "% Hard task chosen",
+                               "% Urgent task chosen",
+                               "STAI Score",
+                               "Low Income",
+                               "Platform: Prolific (vs. Mturk)"),
+          dep.var.labels = c("Total Points"),
+          star.cutoffs = c(.05, .01, .001), 
+          star.char = c("*", "**", "***"))
 
 ```
 

@@ -215,7 +215,7 @@ Our experimental design simulates the environment of an ice cream parlor using a
 
 ## Structure
 
-In the game interface, participants saw a queue of tasks representing ice cream orders on the sides of the screen. Each task varied according to three characteristics: effort, importance, and urgency. These characteristics corresponded to icons on each task image to aid the participants' decision-making process.
+In the game interface, participants saw a queue of tasks representing ice cream orders on the sides of the screen. Each task varied according to three characteristics: effort, importance, and urgency. These characteristics corresponded to icons on each task image to aid the participants' decision-making process, as depicted in @img-choice.
 
 ![Example of two tasks with differing levels of Importance (Value), Effort, and Urgency.](images/tasks_example.png){#img-choice}
 
@@ -225,7 +225,7 @@ In the game interface, participants saw a queue of tasks representing ice cream 
 
 3\. Urgency: We used clock icons on each image to convey the degree of urgency of a task. Two clock icons denoted a high-urgency order, while one clock icon represented a low-urgency order. High-urgency tasks lose value (dollar signs) if participants do not complete them in a given round (e.g., an urgent task worth 2 points would become an urgent task worth 1 point in the next round, and an urgent task worth 1 point would lose all of its value). If a high-urgency task lost all its value, it would disappear from the queue, and the participant was "punished" by having only one order in the queue for the following two rounds. Conversely, low-urgency tasks stayed in the queue for four rounds before being replaced with a new order, and there was no punishment if such a task disappeared.
 
-Note that we incentivized players in the game by offer a prize of up to $\$4.00$ , contingent on the total number of points players accumulate throughout the game.
+In each round, participants saw the screen shown in @img-exp. They were instructed to select a task from the queue (left or right) and click on the matching ice cream icons in the center of the screen to complete it. If they make a mistake, they can use the trash can icon to discard the current order and start over. The game continued for a total of 40 orders. Participants were not restricted to a specific order of task completion; they could choose any task from the queue at any time. This open-choice design allowed us to observe and analyze the decision-making and prioritization strategies employed by the participants. Note that we incentivized players in the game by offering a prize of up to $\$4.00$ , contingent on the total number of points players accumulated throughout the game.
 
 ![Game interface for the game. Participants have a queue, with a task on each side, and a series of icons they must press in order to complete a task. The clocks and dollar signs on a task represent the urgency and importance of the task, respectively. The top of the screen displays a points counter and a rounds counter.](images/exp_example.png){#img-exp}
 

@@ -727,7 +727,7 @@ regression_model <- lm(total_points ~ perc_important_chosen +
 # summary_stats <- summary(regression_model)
 
 stargazer(regression_model, type = "latex", header = FALSE, align = TRUE,
-          covariate.labels = c("% Important task chosen (%)",
+          covariate.labels = c("% Important task chosen",
                                "% Hard task chosen",
                                "% Urgent task chosen",
                                "STAI Score",

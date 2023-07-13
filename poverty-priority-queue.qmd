@@ -18,8 +18,6 @@ format:
           \usepackage{dcolumn}
 ---
 
-# Task Prioritization
-
 ```{r init, warning=FALSE, include=FALSE}
 
 library(stringi)
@@ -49,6 +47,8 @@ Pre-existing literature suggests that relative material scarcity -- particularly
 
 We experimentally model time allocation in low SES groups by administering an artificial priority queue where agents must attend to tasks with differing levels of effort, urgency and value. Observations suggest that individuals from low SES groups prioritize urgent tasks while agents from high SES groups prioritize high value tasks.
 :::
+
+# Introduction
 
 Poverty is a multi-dimensional problem, and behavioral scientists have focused on the effects of the environment on the decision-making process across socio-economic levels (Bertrand et al., 2004). Their underlying assumption is that humans share the same underlying biology and psychology, and that "poverty" causes significant changes in people's environments and, in turn, their decisions. For example, living in poverty often means having a limited set of options in life (from choosing what to have for dinner to which occupation to pursue), and it increases the number of demands in terms of time and mental resources (Banerjee & Duflo, 2012). This lack of control over choices leads to a chronic state of vigilance and stress (Chemin et al., 2013).
 
@@ -89,7 +89,9 @@ Although some scientists have proposed a "Scarcity" view of poverty (Mullainatha
 
 The Eisenhower Matrix (see @app-eisenhower for details), a simple tool for determining optimal long-term decisions, is a simplification of how individuals determine their queue for attending to daily tasks. This framework uses dimensions of urgency (time scarcity) and importance (expected value maximization) as primary motivations for which tasks require completion. We intend to characterize the mapping between urgency $U$ and importance $I$ , namely $\{ U,I \} \mapsto \mathbb{R}$. As discussed in @sec-poverty, the literature speculates the influence of effort costs in decision-making - thereby suggesting Eisenhower Matrices should be modified to account for the added parameter.
 
-#### Simulation
+# Theory
+
+## Simulation
 
 Priority Queues models are a tangible mechanism for capturing the choices and inter-event time agents require in regards to decision-making for daily tasks. Using the pre-existing literature surrounding poverty, we simulate an artificial priority queue, using a priority function
 
@@ -168,7 +170,7 @@ The literature suggests that the persistence of generational poverty is propagat
 
 Our analysis of poverty traps will explore how self-reinforcing behaviors in priority queues represent distinct facets of poverty traps.
 
-### Irrationality of Time Allocation
+### Suboptimal Time Allocation
 
 A particular facet of "poverty traps" can be attributed to the inefficiency of daily task management. Individuals are described as making a sequence of decisions and bargains in order to reduce the strain of their daily demands and roles in a process similar to that of an economic decision: Allocating limited resources such as energy, time, emotions, and goods (Goode, 1960) in different ways. For individuals who belonging to a higher socioeconomic class (SEC), delegating these roles becomes far easier, and the bandwidth to tackle other tasks increases significantly. The converse is true however as well: the poorer one is, the more uncontrolled demand there is on both time and money.
 
@@ -205,41 +207,35 @@ flowchart LR
   B --> I
 ```
 
+# Literature Review
+
 ## Research Questions
 
-1\.
+1.  To what extent does Socioeconomic Status influence task prioritization, and what is the mediating role of role strain in this process?
 
-2\.
+2.  What are the key affective mechanisms that contribute to suboptimal time allocation, and how do they interact with cognitive and environmental factors?
 
-3\.
+3.  How do urgency and importance shape task selection, and what are the underlying cognitive processes that drive these effects?
 
-# The Experiment
+# Pilot Experiment
 
-Our experimental design simulates the environment of an ice cream parlor using an interactive online game. The game was developed in PsychoPy version 2023.1.3 and hosted on the Pavlovia platform. Participants were ice cream parlor owners whose goal was to maximize profit by serving customers with varying needs.
+## Methodology
 
-## Structure
+Our experimental design simulates the environment of an ice cream parlor using an interactive online game. The game was developed in PsychoPy version 2023.1.3 and hosted on the Pavlovia platform. Participants were ice cream parlor owners whose goal was to maximize profit by completing tasks with varying characteristics.
+
+### Structure
 
 In the game interface, participants saw a queue of tasks representing ice cream orders on the sides of the screen. Each task varied according to three characteristics: effort, importance, and urgency. These characteristics corresponded to icons on each task image to aid the participants' decision-making process, as depicted in @img-choice.
 
-![Example of two tasks with differing levels of Importance (Value), Effort, and Urgency.](images/tasks_example.png){#img-choice}
+![Example of two tasks with differing levels of Importance (Value), Effort, and Urgency.](images/tasks_example.png){#img-choice alt="Example of two tasks with differing levels of Importance (Value), Effort, and Urgency."}
 
 1\. Effort: We operationalized effort through the number of clicks required to complete an order. More complex orders required more elements on the ice cream, some of which were relatively difficult to discern (e.g., the different types of sprinkles). We deem tasks with more elements, or hard-to-discern elements, more effortful.
 
-2\. Importance (value): We equate importance with subjective value, represented by dollar signs on the image. A single dollar sign indicated low importance (yielding one point), while two dollar signs indicated high importance (yielding two points). The points were the participants' earnings, and each point was worth \$0.10. The total earnings, a proxy for the participant's performance, were displayed at the top of the screen.
+2\. Importance (value): We equate importance with subjective value, represented by dollar signs on the image. A single dollar sign indicated low importance (yielding one point), while two dollar signs indicated high importance (yielding two points). The points were the participants' earnings, and each point was worth \$0.05. The total earnings, a proxy for the participant's performance, were displayed at the top of the screen.
 
-3\. Urgency: We used clock icons on each image to convey the degree of urgency of a task. Two clock icons denoted a high-urgency order, while one clock icon represented a low-urgency order. High-urgency tasks lose value (dollar signs) if participants do not complete them in a given round (e.g., an urgent task worth 2 points would become an urgent task worth 1 point in the next round, and an urgent task worth 1 point would lose all of its value). If a high-urgency task lost all its value, it would disappear from the queue, and the participant was "punished" by having only one order in the queue for the following two rounds. Conversely, low-urgency tasks stayed in the queue for four rounds before being replaced with a new order, and there was no punishment if such a task disappeared.
+3\. Urgency: We used clock icons on each image to convey the degree of urgency of a task. Two clock icons denoted a high-urgency order, while one clock icon represented a low-urgency order. High-urgency tasks lost value (dollar signs) if participants did not complete them in a given round (e.g., an urgent task worth 2 points would become an urgent task worth 1 point in the next round, and an urgent task worth 1 point would lose all of its value). If a high-urgency task lost all its value, it would disappear from the queue, and the participant was "punished" by having only one order in the queue for the following two rounds. Conversely, low-urgency tasks stayed in the queue until selected and completed.
 
-In each round, participants saw the screen shown in @img-exp. They were instructed to select a task from the queue (left or right) and click on the matching ice cream icons in the center of the screen to complete it. If they make a mistake, they can use the trash can icon to discard the current order and start over. The game continued for a total of 40 orders. Participants were not restricted to a specific order of task completion; they could choose any task from the queue at any time. This open-choice design allowed us to observe and analyze the decision-making and prioritization strategies employed by the participants. Note that we incentivized players in the game by offering a prize of up to $\$4.00$ , contingent on the total number of points players accumulated throughout the game.
-
-![Game interface for the game. Participants have a queue, with a task on each side, and a series of icons they must press in order to complete a task. The clocks and dollar signs on a task represent the urgency and importance of the task, respectively. The top of the screen displays a points counter and a rounds counter.](images/exp_example.png){#img-exp}
-
-# Theoretical Framework
-
-## Hypotheses
-
-We hypothesize that many participants may rush their decisions due to the induced scarcity, which could lead to stress and potentially affect their performance. To gather data on participants' socioeconomic status and anxiety levels, we administered pre- and post-experiment surveys.
-
-While certain task scenarios in the game require minimal cognition (e.g., a high value, high urgency task will always be prioritized), other scenarios present more complex decisions. For instance, when presented with a high importance, low urgency task and a high urgency, low importance task, the optimal course of action may not be immediately clear. We analyze the choices made by participants under these circumstances to gain insight into their prioritization strategies.
+In each round, participants saw the screen shown in @img-pilot-exp. They were instructed to select a task from the queue (left or right) and click on the matching ice cream icons in the center of the screen to complete it. If they made a mistake, they could use the trash can icon to discard the current order and start over. The game continued for a total of 20 orders. Participants were not restricted to a specific order of task completion; they could choose any task from the queue at any time. This open-choice design allowed us to observe and analyze the decision-making and prioritization strategies employed by the participants. Note that we incentivized players in the game by offering a prize of up to $\$1.00$ , contingent on the total number of points players accumulated throughout the game.
 
 ### Simulation
 
@@ -253,7 +249,7 @@ V(s) &= \max\limits_{a}(r(s,a) + \gamma\sum\limits_{S}P(s,a, s')V(s'))\\
     R &= {r(HHU, HHV \times HHU) = 1 - c_H, …}\\
     V(s_{final}) &= \max\limits_{a}(r(s_{final}, a))
 \end{aligned}
-$$ {#eq-model}
+$$
 
 In @eq-model the agent calculates the value of state $s' \in S$ (which is the next state, i.e., next period). $i$ is the reward (in dollars) for completing a task, $c_i$ is the effort cost (estimated in dollar unites), and $r(a,s)$ is the net payoff of completing action $a$ at state $s$. $P$ is the probability of transitioning from state $s$ to another state $(s')$, given that our agents takes action $a$ in state $s$. $V(s')$ is the value of that new state. We subsequently sum these results over all the possible future states. Note we use $\gamma$ as our discount factor. In our normative model, we set the discounting factor to be 1. Note that this model only has two cost parameters $c=\{c_L, c_H\}$.
 
@@ -277,6 +273,12 @@ levelplot(urgent ~ cost * gamma, urgency_ratio_grid,
 ```
 
 @dyn-pro-simulation-results shows that the optimal percentage of urgent choices varies by around 0.10, with lower probabilities centered around low cost parameters and high discount factors.
+
+## Hypotheses
+
+We hypothesize that many participants may rush their decisions due to the induced scarcity, which could lead to stress and potentially affect their performance. To gather data on participants' socioeconomic status and anxiety levels, we administered pre- and post-experiment surveys.
+
+While certain task scenarios in the game require minimal cognition (e.g., a high value, high urgency task will always be prioritized), other scenarios present more complex decisions. For instance, when presented with a high importance, low urgency task and a high urgency, low importance task, the optimal course of action may not be immediately clear. We analyze the choices made by participants under these circumstances to gain insight into their prioritization strategies.
 
 ## Data
 
@@ -670,11 +672,9 @@ Note: We included other deprivation questions related to physical/monetary depri
 
 ## Results
 
-### Choice
-
 The dataset from our experiment comprised multiple choice variables (Important, Hard, and Urgent tasks) and participant demographic information (STAI score, income level, and platform). We used this dataset to conduct a regression analysis to examine how participants' choice behavior influenced their total points accumulated in the task.
 
-#### Task Performance
+### Task Performance
 
 We compiled data on each participant's selection and non-selection of each type of task (Important, Hard, and Urgent), then computed the frequency with which each participant picked a particular task type when given an option. @tbl-totalpoints indicates that the decision to complete Important tasks significantly affected the total points a participant amassed (Estimate = 16.098, p \< .001). Specifically, a ten percentage point rise in the ratio of selected Important tasks (two points, as opposed to one point) resulted in an increase of 1.6 points in the overall score. However, the percentage of times a participant chose Hard or Urgent tasks did not significantly explain the total points accumulated (Estimate = -7.563, p = .371 for Hard tasks; Estimate = 6.539, p = .142 for Urgent tasks).
 
@@ -739,7 +739,7 @@ stargazer(regression_model, type = "latex", header = FALSE, align = TRUE,
 
 ```
 
-#### §Trade-off Decisions
+### §Trade-off Decisions
 
 When we compare an individual's choice of "challenging" tasks: decisions between high urgency - low importance or low importance - high urgency tasks, we observe that high anxiety and low income individuals more often choose high urgency tasks over high value tasks, which corroborates the current non-quantitative literature as can be observed in the plots below.
 
@@ -855,11 +855,9 @@ joint_pilot %>%
 
 Percent of urgent choices (vs. important) as a function of income and anxiety.
 
-::: callout-note
-## Key Result
+### Key Result
 
 Individuals in the low income groups and in the high anxiety groups chose urgent tasks more often than important tasks. This result is not consistent for high income or low anxiety groups. Future graphs in this document will show that the difference-in-difference is not as clear.
-:::
 
 1.  
 
@@ -873,7 +871,7 @@ Individuals in the low income groups and in the high anxiety groups chose urgent
 
 ```
 
-#### §General Urgency Bias
+### §General Urgency Bias
 
 ```{r}
 #| label: pca-stai-urg-bias
@@ -896,7 +894,7 @@ It seems that when controlling for Dim 1 and 2, some effects become significant.
 
 We review the Key Results from the first pages: urgent choices do seem to be above 50% for key groups, but the differences-in-differences across income and anxiety levels are not significant.
 
-Again, people might not mind leaving the High Importance task undone. This is what some friends have called the "insurance ice cream." That is, if I leave this High Importance task in my queue, I can use it when I get a task that is High Effort but Low Urgency.\
+Again, people might not mind leaving the High Importance task undone. This is what some friends have called the "insurance ice cream." That is, if I leave this High Importance task in my queue, I can use it when I get a task that is High Effort but Low Urgency.
 
 ### ¶Reaction Time
 
@@ -950,7 +948,7 @@ hist(Accuracy$Accuracy, breaks=10)
 
 @accuracy-histogram highlights how participants typically make optimal decisions (when given 'challenging' tasks) with a probability in between 0.5 and 0.6. This is generally what we expect to observe.
 
-#### §Accuracy, Anxiety, and Income
+### §Accuracy, Anxiety, and Income
 
 1.  Accuracy in trade-off decisions as a function of income and anxiety
 
@@ -1012,11 +1010,89 @@ ggplot(trade_off_accuracy, aes(x = stai, y = as.numeric(Optimal))) +
 
 ```
 
-# Future Directions
+# Experiment 1
+
+## Methodology
+
+Experiment 1 was developed in PsychoPy version 2023.1.3 and hosted on the Pavlovia platform.
+
+### Structure
+
+In line with the pilot study, the game interface for Experiment 1 presented participants with a queue of tasks, each varying in effort, importance, and urgency. As previously depicted in @img-choice, we visually represented these characteristics with corresponding icons on each task image.
+
+1.  Effort: As in the pilot study, we operationalized effort through the number of clicks required to complete an order, with more complex orders demanding more effort.
+
+2.  Importance (value): The representation of importance remained consistent with the pilot study, with dollar signs indicating the subjective value of a task. However, the point-to-cash conversion rate was adjusted, with each point now worth \$0.10, allowing participants to earn up to \$4.00 based on their total points.
+
+3.  Urgency: The urgency of tasks was conveyed similarly to the pilot study, with clock icons indicating the degree of urgency. However, low-urgency tasks now remained in the queue for four rounds before being replaced, and, unlike high-urgency tasks, there was no penalty if low-urgency tasks disappeared after four rounds.
+
+In each round, participants saw the screen shown in @img-exp. They were instructed to select a task from the queue (left or right) and click on the matching ice cream icons in the center of the screen to complete it. The game continued for 40 orders, doubling the length of the pilot study to provide a more robust measure of participant behavior. As in the pilot study, participants were not restricted to a specific order of task completion, allowing for an open-choice design that facilitated the observation and analysis of decision-making and prioritization strategies. The potential earnings increased to a maximum of $\$4.00$, contingent on the total number of points accumulated throughout the game, to further incentivize participation.
+
+Experiment 1 introduced a critical modification to the task queue logic, distinguishing it from the pilot study. As previously noted, specific task scenarios in the game posed more complex decision-making challenges, where the optimal course of action was not immediately apparent (e.g., choosing between a high-importance, low-urgency task, and a high-urgency, low-importance task). Due to the uniform task sampling employed in our pilot study, these "hard choices" were infrequently encountered.
+
+Experiment 1 addressed this limitation by adjusting the task queue logic. Specifically, if the remaining task in the queue was of high importance and low urgency, there was a 50% chance that the subsequent task would be of high urgency and low importance, and vice versa. This element of randomness introduced an additional layer of unpredictability into the task queue, thereby enhancing the realism and complexity of the decision-making process for participants. This significant redesign from the pilot study increased the frequency of "hard choices," enabling us to delve deeper into analyzing participants' decision-making and prioritization strategies under these more challenging circumstances.
+
+![Game interface for Experiment 1. Participants have a queue, with a task on each side, and a series of icons they must press in order to complete a task. The clocks and dollar signs on a task represent the urgency and importance of the task, respectively. The top of the screen displays a points counter and a rounds counter.](images/exp_example.png){#img-exp}
 
 ## Power Analysis
 
-### §Behavioral Measures
+### Behavioral Measures
+
+### Perceived Effort
+
+## Hypotheses
+
+## Data
+
+### Demographics
+
+### Comprehensive Measures of Poverty
+
+As seen in @pca-measure, Revisit questionnaire to address variance problems. One possibility is to expand our sample to lower-income people. Another option is to try other questions that would elicit more variance.
+
+Refer to @questionnaires for our current iteration of comprehensive measurements.
+
+## Results
+
+### Choice
+
+### Reaction Time
+
+### Accuracy
+
+# Discussion
+
+# Future Directions: Experiment 2
+
+## Methodology
+
+### Structure
+
+1.  A clock on the screen will display how long you have until that task, or the customer, decides to leave the line.
+
+2.  This will mean you can no longer make money for that task.
+
+3.  In the first round of this experiment, you will experience monetary "shocks." This means that at random times, some money might be taken from your total accumulated reward with no warning.
+
+4.  In the second round of this experiment, the rate at which orders arrive will be doubled at random times. However, there will be no monetary shocks.
+
+5.  Queue length is not fixed.
+
+\- Skin conductance, Cortisol, Eye tracking
+
+#### §Probabilistic Choice
+
+As seen in @accuracy-results,
+
+Revisit the experiment to address the range of urgent choices. One possibility is to add an artificial discount factor. Another possibility is to explore non-deterministic choices (that is, urgency does not mean certain decay of value from one state to another, but a probable decay).
+
+#### Flexible Queue Size
+
+### Simulation
+
+### Power Analysis
+
+#### §Behavioral Measures
 
 ```{r}
 
@@ -1076,7 +1152,7 @@ length(trade_off_scaled$participant)/length(unique(trade_off_scaled$participant)
 
 ```
 
-### ¶Physiological Measures
+#### ¶Physiological Measures
 
 "Sartorial Symbols of Social Class Elicit Class-Consistent Behavioral and Physiological Responses: A Dyadic Approach" (Kraus et al 2014)
 
@@ -1108,51 +1184,13 @@ Prior = Upper-class = -0.69, se = 0.31; Lower-class = 0.04, se = 0.31
 # 58
 ```
 
-## §Redesign
-
-1.  A clock on the screen will display how long you have until that task, or the customer, decides to leave the line.
-
-2.  This will mean you can no longer make money for that task.
-
-3.  In the first round of this experiment, you will experience monetary "shocks." This means that at random times, some money might be taken from your total accumulated reward with no warning.
-
-4.  In the second round of this experiment, the rate at which orders arrive will be doubled at random times. However, there will be no monetary shocks.
-
-5.  Queue length is not fixed.
-
-\- Skin conductance, Cortisol, Eye tracking
-
-### ¶Redesign Simulations and Comparisons
-
-```{r}
-
-```
-
-### §Probabilistic Choice
-
-As seen in @accuracy-results,
-
-Revisit the experiment to address the range of urgent choices. One possibility is to add an artificial discount factor. Another possibility is to explore non-deterministic choices (that is, urgency does not mean certain decay of value from one state to another, but a probable decay).
-
-### Perceived Effort
+#### Perceived Effort
 
 Stress has been suggested to increase perceived effort (e.g., the study will investigate whether it's more tiring to complete a task when stressed), leading low-income individuals to be less likely to take up welfare programs, regardless of eligibility (Bertrand et al., 2006; Hernanz et al., 2004).
 
 In our model, cost can include a subjective component. Instead of counting it as simply the number of clicks, we can assume that the agent may dread or fantasize about action $a$. As such, someone who likes the task might not be bothered by doing it so the cost may be very close to zero (or negative). And vice versa for someone who hates it. Similarly, we can account for substituting *subjective* probability for objective probability. That is, people might distort the actual probability of future events.
 
-### Flexible Queue Size
-
-IRB
-
-### Comprehensive Measures of Poverty
-
-IRB
-
-As seen in @pca-measure, Revisit questionnaire to address variance problems. One possibility is to expand our sample to lower-income people. Another option is to try other questions that would elicit more variance.
-
-Refer to @questionnaires for our current iteration of comprehensive measurements.
-
-### Qualitative Measures
+## Hypotheses
 
 ## Population
 
@@ -1172,7 +1210,11 @@ IRB: Justification
 
 M: Proposal
 
-# Appendix {.unnumbered}
+# Conclusion
+
+# References
+
+# Appendix
 
 ## The Eisenhower Matrix {#app-eisenhower}
 
@@ -1181,6 +1223,10 @@ M: Proposal
 \-\-- Dwight D. Eisenhower, 1961 address to the Century Association
 
 [![Source: https://todoist.com/productivity-methods/eisenhower-matrix](images/eisenhower-matrix.png){width="5.36in"}](https://todoist.com/productivity-methods/eisenhower-matrix)
+
+## Pilot Experiment Image
+
+![Game interface for Pilot Experiment. Participants had a queue with two tasks on top of the screen and a series of icons they must press in order to complete a task. The clocks (hearts, in this version) and dollar signs on a task represent the urgency and importance of the task, respectively. The right side of the screen displays a rounds counter (top) and a points counter (bottom).](images/totalice.jpeg){#img-pilot-exp}
 
 ## Fantasy and Dread Model {#app-fantasy-dread}
 
@@ -1302,9 +1348,9 @@ ggplot(trade_off_accuracy, aes(x = S1903_C03_001E, y = as.numeric(Urgency))) +
 
 ### Estimation
 
-## Code
+### Code
 
-### Priority Queuing Simulation
+## Priority Queuing Simulation
 
 ```{r pri-q-simulation, eval=FALSE, include=TRUE}
 
@@ -2050,4 +2096,4 @@ Prolific1_Stan_results <- sampling(object = my_model, data = model_data,
 
 ## Questionnaires {#questionnaires}
 
-The remaining pages include the questionnaires we will administer to participants in the next experiment iterations.
+The remaining pages include the questionnaires we will administer to participants in the next experiment iterations.''

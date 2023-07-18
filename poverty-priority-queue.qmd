@@ -610,34 +610,35 @@ qualtrics <- qualtrics %>%
 ```
 
 ```{r}
-#| fig-cap: pca-measure
+#| label: fig-pcacorrelations
+#| fig-cap: "Plot"
 #| layout-ncol: 2
 
 ## PCA internal relationships
 # Creating the plot
 plot(qualtrics$income, qualtrics$Dim.1, pch = 19, col = "lightblue",
-     xlab="Income", ylab="Dimension 1")
+     xlab="Income", ylab="Component 1")
 # Regression line
 abline(lm(qualtrics$Dim.1 ~ as.numeric(qualtrics$income)), col = "red", lwd = 3)
 # Pearson correlation
 text(paste("Correlation:", round(cor(qualtrics$Dim.1, as.numeric(qualtrics$income), use = "complete.obs"), 2)), x = 6, y = .7)
 
 plot(as.numeric(qualtrics$income), qualtrics$Dim.2, pch = 19, col = "lightblue",
-     xlab="Income", ylab="Dimension 2")
+     xlab="Income", ylab="Component 2")
 # Regression line
 abline(lm(qualtrics$Dim.2 ~ as.numeric(qualtrics$income)), col = "red", lwd = 3)
 # Pearson correlation
 text(paste("Correlation:", round(cor(qualtrics$Dim.2, as.numeric(qualtrics$income), use = "complete.obs"), 2)), x = 6, y = .7)
 ########
 plot(qualtrics$stai, qualtrics$Dim.1, pch = 19, col = "lightblue",
-     xlab="Anxiety", ylab="Dimension 1")
+     xlab="Anxiety", ylab="Component 1")
 # Regression line
 abline(lm(qualtrics$Dim.1 ~ qualtrics$stai), col = "red", lwd = 3)
 # Pearson correlation
 text(paste("Correlation:", round(cor(qualtrics$Dim.1, qualtrics$stai, use = "complete.obs"), 2)), x = 40, y = -2)
 
 plot(qualtrics$stai, qualtrics$Dim.2, pch = 19, col = "lightblue",
-     xlab="Anxiety", ylab="Dimension 2")
+     xlab="Anxiety", ylab="Component 2")
 # Regression line
 abline(lm(qualtrics$Dim.2 ~ qualtrics$stai), col = "red", lwd = 3)
 # Pearson correlation
@@ -727,9 +728,9 @@ regression_model <- lm(total_points ~ perc_important_chosen +
 # summary_stats <- summary(regression_model)
 
 stargazer(regression_model, type = "latex", header = FALSE, align = TRUE,
-          covariate.labels = c("% Important task chosen",
-                               "% Hard task chosen",
-                               "% Urgent task chosen",
+          covariate.labels = c("Percentage of Important task chosen",
+                               "Percentage of Hard task chosen",
+                               "Percentage of Urgent task chosen",
                                "STAI Score",
                                "Low Income",
                                "Platform: Prolific (vs. Mturk)"),
@@ -739,7 +740,7 @@ stargazer(regression_model, type = "latex", header = FALSE, align = TRUE,
 
 ```
 
-### §Trade-off Decisions
+### Trade-off Decisions
 
 When we compare an individual's choice of "challenging" tasks: decisions between high urgency - low importance or low importance - high urgency tasks, we observe that high anxiety and low income individuals more often choose high urgency tasks over high value tasks, which corroborates the current non-quantitative literature as can be observed in the plots below.
 
@@ -855,7 +856,7 @@ joint_pilot %>%
 
 Percent of urgent choices (vs. important) as a function of income and anxiety.
 
-### Key Result
+### General Urgency Bias
 
 Individuals in the low income groups and in the high anxiety groups chose urgent tasks more often than important tasks. This result is not consistent for high income or low anxiety groups. Future graphs in this document will show that the difference-in-difference is not as clear.
 
@@ -863,31 +864,41 @@ Individuals in the low income groups and in the high anxiety groups chose urgent
 
 2.  Multiple regression models to test the same hypotheses with different measures of income.
 
-3.  
-
 ```{r}
-#| label: zip-code-measures
+#| label: tbl-urgencypoverty
 
+pglm(formula = Urgency ~ Dim.1*Dim.2 +
+                         age + education,
+     data = trade_off_accuracy,
+     effect = "twoways",
+     index = c("participant", "round"),
+     model = "random",
+     family = binomial('logit')) -> urg_bias_pca
 
-```
+pglm(formula = Urgency ~ income*stai +
+                         age + education,
+     data = trade_off_accuracy,
+     effect = "twoways",
+     index = c("participant", "round"),
+     model = "random",
+     family = binomial('logit')) -> urg_bias_income
 
-### §General Urgency Bias
+pglm(formula = Urgency ~ S1701_C03_001E*stai +
+                         age + education,
+     data = trade_off_accuracy,
+     effect = "twoways",
+     index = c("participant", "round"),
+     model = "random",
+     family = binomial('logit')) -> urg_bias_zipdeprivation
 
-```{r}
-#| label: pca-stai-urg-bias
+pglm(formula = Urgency ~ S1903_C03_001E*stai +
+                         age + education,
+     data = trade_off_accuracy,
+     effect = "twoways",
+     index = c("participant", "round"),
+     model = "random",
+     family = binomial('logit')) -> urg_bias_zipincome
 
-ggplot(trade_off_accuracy, aes(x = stai, y = Urgency)) +
-  labs(x="Anxiety", y="Urgent Choices") +
-  geom_jitter(color = "blue", alpha = 0.4, width = 0.03, height = 0.01) +
-  geom_smooth(method = "glm", 
-              method.args = list(family = "binomial"))
-
-summary(pglm(formula = Urgency ~ (Dim.1 + Dim.2)*stai,
-             data = trade_off_accuracy,
-             effect = "twoways",
-             index = c("participant", "round"),
-             model = "random",
-             family = binomial('logit'))) -> urg_bias_model
 ```
 
 It seems that when controlling for Dim 1 and 2, some effects become significant. Multicollinearity might be a problem, although correlations between STAI and PCA components are not higher than 0.6 (see correlation plots above). These results might be a result of a separation between State and Trait Anxiety. Although we only included the State questions of STAI, state and trait scores are likely correlated. PCA dimensions 1 and 2 may control for this confounding effect.
@@ -896,37 +907,25 @@ We review the Key Results from the first pages: urgent choices do seem to be abo
 
 Again, people might not mind leaving the High Importance task undone. This is what some friends have called the "insurance ice cream." That is, if I leave this High Importance task in my queue, I can use it when I get a task that is High Effort but Low Urgency.
 
-### ¶Reaction Time
+### Reaction Time
 
 ```{r}
-# RT histograms
-### log(RT)
-hist(as.numeric(trade_off_accuracy$RT), breaks = 100)
-hist(log(as.numeric(trade_off_accuracy$RT)), breaks = 100)
-ggplot(trade_off_accuracy, aes(x = as.numeric(income), y = log(as.numeric(RT)))) +
-  labs(x="Income", y="Log of RT in Trade-offs") +
-  geom_jitter(color = "blue", alpha = 0.4, width = 0.03, height = 0.01) +
-  geom_smooth(method = "glm", 
-              method.args = list(family = "gaussian"))
+#| label: tbl-reactiontime
+#| tbl-cap: "Regression analysis of reaction time (RT) on participants' PCs and anxiety measures."
 
-ggplot(trade_off_accuracy, aes(x = stai, y = log(as.numeric(RT)))) +
-  labs(x="Anxiety", y="Log of RT in Trade-offs") +
-  geom_jitter(color = "blue", alpha = 0.4, width = 0.03, height = 0.01) +
-  geom_smooth(method = "glm", 
-              method.args = list(family = "gaussian"))
-
-summary(glm(formula = as.numeric(RT) ~ Dim.1*stai*Dim.2, data = trade_off_accuracy, family = "gaussian"))
+summary(glm(formula = as.numeric(RT) ~ Dim.1*Dim.2 + age + education, data = trade_off_accuracy, family = "gaussian"))
+summary(glm(formula = as.numeric(RT) ~ S1701_C03_001E*stai + age + education, data = trade_off_accuracy, family = "gaussian"))
+summary(glm(formula = as.numeric(RT) ~ Dim.1*stai*Dim.2 + age + education, data = trade_off_accuracy, family = "gaussian"))
+summary(glm(formula = as.numeric(RT) ~ S1903_C03_001E*stai, + age + education data = trade_off_accuracy, family = "gaussian"))
 ```
 
-### ¶Accuracy
+### Accuracy
 
 We also obtain a comparison of the choices participants make and the optimal, or rational, protocol we generated. This is done by estimating a hierarchical Bayesian model...
 
 ```{r}
-# Histogram of effort cost
-hist(costs$cL, breaks=16)
-hist(costs$cH, breaks=12)
-   #Plot
+#| label: fig-costs
+#| fig-cap: "Histogram of Estimated Costs per Participant"
 dat <- data.frame(dens = c(costs$cH, costs$cL)
                   , lines = rep(c("cH", "cL"), each = nrow(costs)))
 ggplot(dat, aes(x = dens, fill = lines)) + 
@@ -934,21 +933,19 @@ ggplot(dat, aes(x = dens, fill = lines)) +
   geom_density(alpha = 0.5)
 ```
 
-Histogram for Prolific Data. Unlike MTurk, this distribution looks normal. This score is calculated by first estimating the cost parameters for each participant and then using them with backwards induction to discover the optimal choice at each presented state.
-
-K: explanation + histogram
+This score is calculated by first estimating the cost parameters for each participant and then using them with backwards induction to discover the optimal choice at each presented state.
 
 ```{r}
-#| label: accuracy-histogram
+#| label: fig-accuracy
 #| fig-cap: "Histogram of Accuracy Proportions"
 
 hist(Accuracy$Accuracy, breaks=10)
 
 ```
 
-@accuracy-histogram highlights how participants typically make optimal decisions (when given 'challenging' tasks) with a probability in between 0.5 and 0.6. This is generally what we expect to observe.
+@fig-accuracy highlights how participants typically make optimal decisions (when given 'challenging' tasks) with a probability in between 0.5 and 0.6. This is generally what we expect to observe.
 
-### §Accuracy, Anxiety, and Income
+#### Accuracy, Anxiety, and Income
 
 1.  Accuracy in trade-off decisions as a function of income and anxiety
 
@@ -956,7 +953,7 @@ Finally, we compare for each participant, how many of their choices are identica
 
 ```{r}
 #| label: aggregate-accuracy-results
-#| fig-cap: "Aggregate Accuracy by Income and Anxiety"
+#| fig-cap: "Participant Accuracy by Income and Anxiety"
 #| fig-subcap:
 #|   - "Prolific, Income"
 #|   - "Prolific, Anxiety"
@@ -980,34 +977,41 @@ ggplot(Accuracy, aes(x=stai, y=Accuracy)) +
 
 It appears that Accuracy does not vary across income and anxiety levels with these measures. Some possibilities of this fact might include that, since time discounting here is virtually 0, leaving the important task behind will not affect participants as much (depending, of course, of the estimated cost parameters).
 
-```{r}
-#| label: accuracy-results
-#| fig-cap: "Trial Accuracy by Income and Anxiety (logistic function fit)"
-#| fig-subcap:
-#|   - "Accuracy in trade-off decisions as a function of self-reported income"
-#|   - "Accuracy in trade-off decisions as a function of self-reported anxiety, by the STAI questionnaire"
-#| layout-ncol: 2
-#| column: page-right
-
-# plot with Income
-ggplot(trade_off_accuracy, aes(x = as.numeric(income), y = as.numeric(Optimal))) +
-  labs(x="Income", y="Accuracy") +
-  geom_jitter(color = "blue", alpha = 0.4, width = 0.03, height = 0.01) +
-  geom_smooth(method = "glm", 
-              method.args = list(family = "binomial")) 
-
-# Now with STAI
-ggplot(trade_off_accuracy, aes(x = stai, y = as.numeric(Optimal))) +
-  labs(x="Anxiety", y="Accuracy") +
-  geom_jitter(color = "blue", alpha = 0.4, width = 0.03, height = 0.01) +
-  geom_smooth(method = "glm", 
-              method.args = list(family = "binomial")) 
-```
-
-### ¶Qualitative Data
+#### General Linear Models of Accuracy
 
 ```{r}
+#| label: tbl-accuracy
+summary(pglm(formula = Optimal ~ income*stai +
+                         age + education,
+             data = trade_off_accuracy,
+             effect = "twoways",
+             index = c("participant", "round"),
+             model = "random",
+             family = binomial('logit')))
 
+summary(pglm(formula = Optimal ~ Dim.1*Dim.2 +
+                         age + education,
+             data = trade_off_accuracy,
+             effect = "twoways",
+             index = c("participant", "round"),
+             model = "random",
+             family = binomial('logit')))
+
+summary(pglm(formula = Optimal ~ poverty_zip*stai +
+                         age + education,
+             data = trade_off_accuracy,
+             effect = "twoways",
+             index = c("participant", "round"),
+             model = "random",
+             family = binomial('logit')))
+
+summary(pglm(formula = Optimal ~ median_income_zip*stai +
+                         age + education,
+             data = trade_off_accuracy,
+             effect = "twoways",
+             index = c("participant", "round"),
+             model = "random",
+             family = binomial('logit')))
 ```
 
 # Experiment 1
@@ -1040,7 +1044,7 @@ Experiment 1 addressed this limitation by adjusting the task queue logic. Specif
 
 ### Perceived Effort
 
-## Hypotheses
+## Hypotheses 
 
 ## Data
 
@@ -1258,87 +1262,6 @@ A list can contain an arbitrary number of tasks and the priority of each task is
 
 ![Sample Queue](images/prioq-illustration.png){width="3.2in"}
 :::
-
-## §General Linear Models of Accuracy
-
-```{r}
-#| label: glm-accuracy
-summary(pglm(formula = Optimal ~ as.numeric(income)*stai,
-             data = trade_off_accuracy,
-             effect = "twoways",
-             index = c("participant", "round"),
-             model = "random",
-             family = binomial('logit')))
-
-summary(pglm(formula = Optimal ~ (Dim.1 + Dim.2)*stai,
-             data = trade_off_accuracy,
-             effect = "twoways",
-             index = c("participant", "round"),
-             model = "random",
-             family = binomial('logit')))
-### With demographics
-summary(pglm(formula = Optimal ~ age + as.numeric(education) + as.numeric(income),
-             data = trade_off_accuracy,
-             effect = "twoways",
-             index = c("participant", "round"),
-             model = "random",
-             family = binomial('logit')))
-
-summary(pglm(formula = Optimal ~ age + as.numeric(education) + poverty_zip,
-             data = trade_off_accuracy,
-             effect = "twoways",
-             index = c("participant", "round"),
-             model = "random",
-             family = binomial('logit')))
-summary(pglm(formula = Optimal ~ age + as.numeric(education) + median_income_zip,
-             data = trade_off_accuracy,
-             effect = "twoways",
-             index = c("participant", "round"),
-             model = "random",
-             family = binomial('logit')))
-```
-
-## ¶Urgency Bias and Deprivation Measures
-
-```{r}
-#| label: img-urg-pca
-
-#####  trade-off decisions correlated with PCA deprivation
-ggplot(trade_off_accuracy, aes(x = Dim.1, y = Urgency)) +
-  labs(x = "Dimension 1", y="Urgent Choices") +
-  geom_jitter(color = "blue", alpha = 0.4, width = 0.03, height = 0.01) +
-  geom_smooth(method = "glm", 
-              method.args = list(family = "binomial"))
-
-#####  trade-off decisions correlated with PCA deprivation
-ggplot(trade_off_accuracy, aes(x = Dim.2, y = Urgency)) +
-  labs(x="Dimension 2", y="Urgent Choices") +
-  geom_jitter(color = "blue", alpha = 0.4, width = 0.03, height = 0.01) +
-  geom_smooth(method = "glm", 
-              method.args = list(family = "binomial"))
-
-
-## Urgency ~ anxiety#income + round
-### With psychological mechanisms
-summary(lm(Urgency ~ income*stai, data = trade_off_accuracy))
-summary(glm(as.numeric(Urgency) ~ income*stai, data = trade_off_accuracy, family = "binomial"))
-### With demographics
-summary(lm(Urgency ~ age + education + income, data = trade_off_accuracy))
-
-# Zip codes
-#plot with Income
-ggplot(trade_off_accuracy, aes(x = S1701_C03_001E, y = as.numeric(Urgency))) +
-  labs(x="ZIP code deprivation score", y="Urgency") +
-  geom_jitter(color = "blue", alpha = 0.4, width = 0.03, height = 0.01) +
-  geom_smooth(method = "glm", 
-              method.args = list(family = "binomial")) 
-ggplot(trade_off_accuracy, aes(x = S1903_C03_001E, y = as.numeric(Urgency))) +
-  labs(x="ZIP code median income", y="Urgency") +
-  geom_jitter(color = "blue", alpha = 0.4, width = 0.03, height = 0.01) +
-  geom_smooth(method = "glm", 
-              method.args = list(family = "binomial"))
-
-```
 
 ## §Dynamic Programming Simulation
 

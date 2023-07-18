@@ -2,6 +2,8 @@
 title: "Poverty and Priority Queueing"
 author: "Marcos Gallo and Kavya Rajagopalan"
 date: "2023-07-10"
+abstract: |
+  Pre-existing literature suggests that relative material scarcity – particularly wealth inequality – is a significant contributing factor in dictating how people behave. We characterize irrational decision-making across impoverished groups by examining the effects of inefficiency in time allocation. We experimentally model time allocation in low SES groups by administering an artificial priority queue where agents must attend to tasks with differing levels of effort, urgency and value. Observations suggest that individuals from low SES groups prioritize urgent tasks while agents from high SES groups prioritize high value tasks.
 execute:
   echo: false
   warning: false
@@ -39,14 +41,6 @@ load("./MTurk_sample_nolimit2.Rdata")
 demograph <- qualtrics[qualtrics$PROLIFIC_PID %in% joint_pilot$participant,]
 
 ```
-
-::: {.callout-important icon="false"}
-## §Abstract
-
-Pre-existing literature suggests that relative material scarcity -- particularly wealth inequality -- is a significant contributing factor in dictating how people behave. We characterize irrational decision-making across impoverished groups by examining the effects of inefficiency in time allocation.
-
-We experimentally model time allocation in low SES groups by administering an artificial priority queue where agents must attend to tasks with differing levels of effort, urgency and value. Observations suggest that individuals from low SES groups prioritize urgent tasks while agents from high SES groups prioritize high value tasks.
-:::
 
 # Introduction
 
@@ -121,9 +115,10 @@ $$ where $t$ is the wait time, and $s$ is a scaling parameter (in the following 
 
 By simulating this queue, we can graph a heatmap with the relationship of the weight of urgency on the priority function ($\alpha$) and cumulative survival rate:
 
-```{r eval=FALSE}
-#| label: simmer-simulation
-#| fig-cap: "Probability of Survival by Urgency Weight"
+```{r}
+#| cache: true
+#| label: img-simmer-simulation
+#| img-cap: "Probability of Survival by Urgency Weight"
 
 urgency_survival_grid <- read_csv("urgency-survival-grid.csv") %>%
   rename(time = mean_time) %>%
@@ -142,7 +137,7 @@ levelplot(mean_survival ~ time * weight, urgency_survival_grid,
 Further, with interevent times, we can calculate the burstiness and memory as a function of urgency weights.
 
 ```{r}
-#| label: simmer-burstiness
+#| label: fig-simmer-burstiness
 #| fig-cap: "Burstiness by Urgency Weight"
 
 urgency_burstiness_grid <- read_csv("urgency-burstiness-grid.csv") 
@@ -256,7 +251,7 @@ In @eq-model the agent calculates the value of state $s' \in S$ (which is the ne
 We build upon this by then generating an optimal protocol for identifying the best set of choices at any stage for maximizing long-term outcomes. Using dynamic programming, a recursive method of taking the outcomes of subgames and applying it to the entire scheme, we identify which tasks should be chosen given stage of the 2-task queue. Given this framework, we can graph the ratio of urgent choices at each given state, as a function of the cost parameter $c_H$ and the discount factor (here $c_L = 0$ for all cases).
 
 ```{r}
-#| label: dyn-pro-simulation-results
+#| label: fig-dynaprog-simulation
 #| fig-cap: "Percentage of Urgent Choices"
 
 urgency_ratio_grid <- read_csv("urgency-ratio-grid.csv")
@@ -272,7 +267,7 @@ levelplot(urgent ~ cost * gamma, urgency_ratio_grid,
 
 ```
 
-@dyn-pro-simulation-results shows that the optimal percentage of urgent choices varies by around 0.10, with lower probabilities centered around low cost parameters and high discount factors.
+@fig-dynaprog-simulation shows that the optimal percentage of urgent choices varies by around 0.10, with lower probabilities centered around low cost parameters and high discount factors.
 
 ## Hypotheses
 
@@ -350,17 +345,17 @@ joint_pilot$education <- ordered_factor(joint_pilot$education)
 #| label: wrangle-stai-demo
 qualtrics <- read_csv("PrioQ - Consolidated_January 13, 2022_18.42.csv")
 qualtrics <- qualtrics[-c(1:2),]
-vars <- c("Q36", "Q37" , "Q39" , "Q40" , "Q42" , "Q45" , "Q46" , "Q47" , "Q50" , "Q51",
-          "Q34" , "Q35" ,"Q38" , "Q41" , "Q43" , "Q44" , "Q48" , "Q49" , "Q52" , "Q53...54", "Q26", "Q27", "Q32")
+vars <- c("Q36", "Q37", "Q39", "Q40", "Q42", "Q45", "Q46", "Q47", "Q50", "Q51",
+          "Q34", "Q35", "Q38", "Q41", "Q43", "Q44", "Q48", "Q49", "Q52", "Q53...54",
+          "Q26", "Q27", "Q32")
 qualtrics <- qualtrics %>%
-  mutate(across(vars, as.numeric))
+  mutate(across(all_of(vars), as.numeric))
 qualtrics <- qualtrics %>%
   mutate(
     stai = (Q36 + Q37 + Q39 + Q40 + Q42 + Q45 + Q46 + Q47 + Q50 + Q51 +
-      5*10 - Q34 - Q35 -Q38 - Q41 - Q43 - Q44 - Q48 - Q49 - Q52 - Q53...54),
+      5*10 - Q34 - Q35 - Q38 - Q41 - Q43 - Q44 - Q48 - Q49 - Q52 - Q53...54),
     age = 2021 - Q26
-  )
-qualtrics <- qualtrics %>%
+  ) %>%
   rename(
     income = Q32,
     education = Q27
@@ -506,55 +501,57 @@ comparisonLONG <- as.data.frame(comparison) %>%
 
 ## Adding poverty measure
 joint_pilot <- joint_pilot %>% 
-  left_join(demograph[,c(2,10:11)], by = "participant")
+  left_join(demograph[,c(2,10:11)], by = "participant") %>%
+  group_by(participant) %>%
+  arrange(points) %>%
+  mutate(round = row_number()) %>%
+  ungroup()
+
+joint_pilot <- demograph %>%
+  dplyr::select("participant","S1701_C03_001E","S1903_C03_001E") %>%
+  right_join(joint_pilot,by = "participant") %>%
+  left_join(comparisonLONG, by = c("participant", "round")) %>%
+  ungroup() %>%
+  mutate(poverty_zip = as.vector(scale(as.numeric(S1701_C03_001E))),
+         median_income_zip = log(as.numeric(S1903_C03_001E)))
 
 trade_off_accuracy <- joint_pilot %>%
   group_by(participant) %>% 
   filter(length(RT) >= 10) %>%
-  mutate(round = row_number()) %>%
-  left_join(comparisonLONG, by = c("participant", "round")) %>%
   filter(u1 != u2, i1 != i2, i1 != u1) %>%
   mutate(Urgency = ifelse(u1 == 2 & choice == "L", 1,
                           ifelse(u2 == 2 & choice == "R", 1, 0 )))
-
-trade_off_accuracy <- demograph %>%
-  dplyr::select("participant","S1701_C03_001E","S1903_C03_001E") %>%
-  right_join(trade_off_accuracy,by = "participant") %>%
-  ungroup() %>%
-  mutate(poverty_zip = scale(as.numeric(S1701_C03_001E)),
-         median_income_zip = scale(as.numeric(S1903_C03_001E)))
-
 ```
 
 ### Demographics
 
 For both Mturk and Prolific, we distinguish high-low income and high-low anxiety by a median split. The high income mean is about 70k, while the low income mean is around 30k $(p<0.001)$. Likewise, the high anxiety mean score is 56.29, while low anxiety mean score is 37.17 $(p<0.001)$.
 
-+------------------+-------+----------------------+----------------------+----------------------+
-| MTurk\           | Mean  | Median               | Min                  | Max                  |
-| N=22 x 20 trials |       |                      |                      |                      |
-+:=================+:======+:=====================+:=====================+:=====================+
-| Age              | 34.53 | 33                   | 19                   | 50                   |
-+------------------+-------+----------------------+----------------------+----------------------+
-| Income           |       | \$40,000 to \$49,999 | Less than \$10,000   | \$90,000 to \$99,999 |
-+------------------+-------+----------------------+----------------------+----------------------+
-| Education        |       | Bachelor's degree    | High school graduate | Master's degree      |
-+------------------+-------+----------------------+----------------------+----------------------+
-| STAI             | 44.21 | 47                   | 20                   | 67                   |
-+------------------+-------+----------------------+----------------------+----------------------+
++------------------+------------+----------------------+----------------------+----------------------+
+| MTurk\           | Mean       | Median               | Min                  | Max                  |
+| N=22 x 20 trials |            |                      |                      |                      |
++:=================+:===========+:=====================+:=====================+:=====================+
+| Age              | 34.53      | 33                   | 19                   | 50                   |
++------------------+------------+----------------------+----------------------+----------------------+
+| Income           |            | \$40,000 to \$49,999 | Less than \$10,000   | \$90,000 to \$99,999 |
++------------------+------------+----------------------+----------------------+----------------------+
+| Education        |            | Bachelor's degree    | High school graduate | Master's degree      |
++------------------+------------+----------------------+----------------------+----------------------+
+| STAI             | 44.21      | 47                   | 20                   | 67                   |
++------------------+------------+----------------------+----------------------+----------------------+
 
-+------------------+-------+----------------------+----------------------+----------------------+
-| Prolific\        | Mean  | Median               | Min                  | Max                  |
-| N=53 x 20 trials |       |                      |                      |                      |
-+:=================+:======+:=====================+:=====================+:=====================+
-| Age              | 30.13 | 28                   | 18                   | 75                   |
-+------------------+-------+----------------------+----------------------+----------------------+
-| Income           |       | \$40,000 to \$49,999 | Less than \$10,000   | \$90,000 to \$99,999 |
-+------------------+-------+----------------------+----------------------+----------------------+
-| Education        |       | Bachelor's degree    | High school graduate | Master's degree      |
-+------------------+-------+----------------------+----------------------+----------------------+
-| STAI             | 45.04 | 45                   | 20                   | 68                   |
-+------------------+-------+----------------------+----------------------+----------------------+
++------------------+------------+----------------------+----------------------+----------------------+
+| Prolific\        | Mean       | Median               | Min                  | Max                  |
+| N=53 x 20 trials |            |                      |                      |                      |
++:=================+:===========+:=====================+:=====================+:=====================+
+| Age              | 30.13      | 28                   | 18                   | 75                   |
++------------------+------------+----------------------+----------------------+----------------------+
+| Income           |            | \$40,000 to \$49,999 | Less than \$10,000   | \$90,000 to \$99,999 |
++------------------+------------+----------------------+----------------------+----------------------+
+| Education        |            | Bachelor's degree    | High school graduate | Master's degree      |
++------------------+------------+----------------------+----------------------+----------------------+
+| STAI             | 45.04      | 45                   | 20                   | 68                   |
++------------------+------------+----------------------+----------------------+----------------------+
 
 : The two samples display similar demographics
 
@@ -581,7 +578,7 @@ For more information, check <https://www2.census.gov/programs-surveys/acs/tech_d
 Given that poverty is a multidimensional variable, we attempt to capture it through a series of questions (see @questionnaires for details). We created several questions about physical, mental, and monetary deprivation. We then summarized these results in a PCA. We use only the top two components, as per the Scree plot:
 
 ```{r}
-#| label: pca-scree
+#| label: img-pcascree
 
 # PCA
 qualtrics[,c(55:141)] <- sapply(qualtrics[,c(55:141)],as.numeric)
@@ -606,6 +603,11 @@ qualtrics <- qualtrics %>%
 
 qualtrics <- qualtrics %>%
   select(PROLIFIC_PID, IPAddress, stai, income, education, age, Dim.1, Dim.2)
+
+```
+
+```{r data for pcacorrelations}
+write_csv(qualtrics, file = "data/fig-pcacorrelations.csv")
 
 ```
 
@@ -683,6 +685,10 @@ We also included demographic variables and participant characteristics (STAI sco
 
 The model accounted for approximately 20.24% of the variance in total points (Adjusted R-squared = 0.132), with an overall significant model fit (F(6,68) = 2.877, p \< .05).
 
+```{r data for totalpoints}
+write_csv(joint_pilot, file = "data/tbl-totalpoints.csv")
+```
+
 ```{r, results='asis'}
 #| label: tbl-totalpoints
 #| tbl-cap: "Regression analysis of total points on participants' choice behavior and demographic variables. The predictors include the percentage of choices where Important, Hard, and Urgent tasks were chosen, participants' STAI score, income level (High vs. Low), and the platform on which the experiment was conducted (Prolific vs. Mturk)."
@@ -691,12 +697,12 @@ library(broom)
 library(stargazer)
 
 joint_pilot <- joint_pilot %>%
-  mutate(chosen_i = ifelse(choice == "L", i1, i2),
-         chosen_e = ifelse(choice == "L", e1, e2),
-         chosen_u = ifelse(choice == "L", u1, u2),
-         not_chosen_i = ifelse(choice == "L", i2, i1),
-         not_chosen_e = ifelse(choice == "L", e2, e1),
-         not_chosen_u = ifelse(choice == "L", u2, u1))
+  mutate(chosen_i = ifelse(choice == "L", i1, i2) - 1,
+         chosen_e = ifelse(choice == "L", e1, e2) - 1,
+         chosen_u = ifelse(choice == "L", u1, u2) - 1,
+         not_chosen_i = ifelse(choice == "L", i2, i1) - 1,
+         not_chosen_e = ifelse(choice == "L", e2, e1) - 1,
+         not_chosen_u = ifelse(choice == "L", u2, u1) - 1)
 
 # Calculate total points per participant
 points_per_participant <- joint_pilot %>%
@@ -745,13 +751,12 @@ stargazer(regression_model, type = "latex", header = FALSE, align = TRUE,
 When we compare an individual's choice of "challenging" tasks: decisions between high urgency - low importance or low importance - high urgency tasks, we observe that high anxiety and low income individuals more often choose high urgency tasks over high value tasks, which corroborates the current non-quantitative literature as can be observed in the plots below.
 
 ```{r}
-#| label: trade-off-results
+#| label: fig-tradeoff-results
 #| fig-cap: "Choice proportions by income and anxiety"
 #| fig-subcap:
 #|   - "Income"
 #|   - "Anxiety"
 #| layout-ncol: 2
-#| column: page-right
 
 joint_pilot %>%
   group_by(platform, high_income) %>%
@@ -807,6 +812,7 @@ Accuracy in trade-off decisions as a function of income and anxiety
 Multiple regression models to test the same hypotheses with different measures of income.
 
 ```{r}
+#| label: proportion-tests
 
 joint_pilot %>%
   mutate(huli = factor(huli,
@@ -864,36 +870,52 @@ Individuals in the low income groups and in the high anxiety groups chose urgent
 
 2.  Multiple regression models to test the same hypotheses with different measures of income.
 
+```{r data for urgencypoverty}
+two_options <- joint_pilot %>%
+  filter(!is.na(participant), !is.na(round)) %>%
+  filter(!is.na(chosen_i), !is.na(chosen_e),
+         !is.na(not_chosen_i), !is.na(not_chosen_e), !is.na(not_chosen_u)) %>%
+  mutate(income = as.numeric(income),
+         logRT = log(as.numeric(RT))) %>%
+  filter(logRT != Inf & logRT != -Inf)
+
+write_csv(two_options, file = "data/tbl-urgencypoverty.csv")
+```
+
 ```{r}
 #| label: tbl-urgencypoverty
 
-pglm(formula = Urgency ~ Dim.1*Dim.2 +
-                         age + education,
-     data = trade_off_accuracy,
+pglm(formula = chosen_u ~ Dim.1*Dim.2 +
+                          age + education + points +
+                          chosen_i + chosen_e + not_chosen_i + not_chosen_e + not_chosen_u,
+     data = two_options,
      effect = "twoways",
      index = c("participant", "round"),
      model = "random",
      family = binomial('logit')) -> urg_bias_pca
 
-pglm(formula = Urgency ~ income*stai +
-                         age + education,
-     data = trade_off_accuracy,
+pglm(formula = chosen_u ~ income*stai +
+                          age + education + points +
+                          chosen_i + chosen_e + not_chosen_i + not_chosen_e + not_chosen_u,
+     data = two_options,
      effect = "twoways",
      index = c("participant", "round"),
      model = "random",
      family = binomial('logit')) -> urg_bias_income
 
-pglm(formula = Urgency ~ S1701_C03_001E*stai +
-                         age + education,
-     data = trade_off_accuracy,
+pglm(formula = chosen_u ~ poverty_zip*stai +
+                          age + education + points +
+                          chosen_i + chosen_e + not_chosen_i + not_chosen_e + not_chosen_u,
+     data = two_options,
      effect = "twoways",
      index = c("participant", "round"),
      model = "random",
      family = binomial('logit')) -> urg_bias_zipdeprivation
 
-pglm(formula = Urgency ~ S1903_C03_001E*stai +
-                         age + education,
-     data = trade_off_accuracy,
+pglm(formula = chosen_u ~ median_income_zip*stai +
+                          age + education + points +
+                          chosen_i + chosen_e + not_chosen_i + not_chosen_e + not_chosen_u,
+     data = two_options,
      effect = "twoways",
      index = c("participant", "round"),
      model = "random",
@@ -913,10 +935,41 @@ Again, people might not mind leaving the High Importance task undone. This is wh
 #| label: tbl-reactiontime
 #| tbl-cap: "Regression analysis of reaction time (RT) on participants' PCs and anxiety measures."
 
-summary(glm(formula = as.numeric(RT) ~ Dim.1*Dim.2 + age + education, data = trade_off_accuracy, family = "gaussian"))
-summary(glm(formula = as.numeric(RT) ~ S1701_C03_001E*stai + age + education, data = trade_off_accuracy, family = "gaussian"))
-summary(glm(formula = as.numeric(RT) ~ Dim.1*stai*Dim.2 + age + education, data = trade_off_accuracy, family = "gaussian"))
-summary(glm(formula = as.numeric(RT) ~ S1903_C03_001E*stai, + age + education data = trade_off_accuracy, family = "gaussian"))
+plm(formula = logRT ~ Dim.1*Dim.2 +
+                      age + education + points +
+                      chosen_i + chosen_e + chosen_u +
+                      not_chosen_i + not_chosen_e + not_chosen_u,
+     data = two_options,
+     effect = "twoways",
+     index = c("participant", "round"),
+     model = "random") -> rt_bias_pca
+
+plm(formula = logRT ~ income*stai +
+                      age + education + points +
+                      chosen_i + chosen_e + chosen_u +
+                      not_chosen_i + not_chosen_e + not_chosen_u,
+     data = two_options,
+     effect = "twoways",
+     index = c("participant", "round"),
+     model = "random") -> rt_bias_income
+
+plm(formula = logRT ~ poverty_zip*stai +
+                      age + education + points +
+                      chosen_i + chosen_e + chosen_u +
+                      not_chosen_i + not_chosen_e + not_chosen_u,
+     data = two_options,
+     effect = "twoways",
+     index = c("participant", "round"),
+     model = "random") -> rt_bias_zipdeprivation
+
+plm(formula = logRT ~ median_income_zip*stai +
+                      age + education + points +
+                      chosen_i + chosen_e + chosen_u +
+                      not_chosen_i + not_chosen_e + not_chosen_u,
+     data = two_options,
+     effect = "twoways",
+     index = c("participant", "round"),
+     model = "random") -> rt_bias_zipincome
 ```
 
 ### Accuracy
@@ -935,6 +988,10 @@ ggplot(dat, aes(x = dens, fill = lines)) +
 
 This score is calculated by first estimating the cost parameters for each participant and then using them with backwards induction to discover the optimal choice at each presented state.
 
+```{r data for accuracy}
+write_csv(Accuracy, file = "data/fig-accuracy.csv")
+```
+
 ```{r}
 #| label: fig-accuracy
 #| fig-cap: "Histogram of Accuracy Proportions"
@@ -952,7 +1009,7 @@ hist(Accuracy$Accuracy, breaks=10)
 Finally, we compare for each participant, how many of their choices are identical to a model that observed the full horizon for the Markov decision process. Each participant is a dot, y axis is the peerage of correct choices in the experiment while x axis is the STAI (anxiety measure). Generally the results are very similar to figure 1.5.
 
 ```{r}
-#| label: aggregate-accuracy-results
+#| label: fig-accuracy-results
 #| fig-cap: "Participant Accuracy by Income and Anxiety"
 #| fig-subcap:
 #|   - "Prolific, Income"
@@ -981,37 +1038,45 @@ It appears that Accuracy does not vary across income and anxiety levels with the
 
 ```{r}
 #| label: tbl-accuracy
-summary(pglm(formula = Optimal ~ income*stai +
-                         age + education,
-             data = trade_off_accuracy,
+pglm(formula = Optimal ~ income*stai +
+                         age + education + points +
+                         chosen_i + chosen_e + chosen_u +
+                         not_chosen_i + not_chosen_e + not_chosen_u,
+             data = two_options,
              effect = "twoways",
              index = c("participant", "round"),
              model = "random",
-             family = binomial('logit')))
+             family = binomial('logit')) -> accuracy_income
 
-summary(pglm(formula = Optimal ~ Dim.1*Dim.2 +
-                         age + education,
-             data = trade_off_accuracy,
+pglm(formula = Optimal ~ Dim.1*Dim.2  +
+                      age + education + points +
+                      chosen_i + chosen_e + chosen_u +
+                      not_chosen_i + not_chosen_e + not_chosen_u,
+             data = two_options,
              effect = "twoways",
              index = c("participant", "round"),
              model = "random",
-             family = binomial('logit')))
+             family = binomial('logit')) -> accuracy_pca
 
-summary(pglm(formula = Optimal ~ poverty_zip*stai +
-                         age + education,
-             data = trade_off_accuracy,
+pglm(formula = Optimal ~ poverty_zip*stai +
+                      age + education + points +
+                      chosen_i + chosen_e + chosen_u +
+                      not_chosen_i + not_chosen_e + not_chosen_u,
+             data = two_options,
              effect = "twoways",
              index = c("participant", "round"),
              model = "random",
-             family = binomial('logit')))
+             family = binomial('logit')) -> accuracy_zipdeprivation
 
-summary(pglm(formula = Optimal ~ median_income_zip*stai +
-                         age + education,
-             data = trade_off_accuracy,
+pglm(formula = Optimal ~ median_income_zip*stai  +
+                      age + education + points +
+                      chosen_i + chosen_e + chosen_u +
+                      not_chosen_i + not_chosen_e + not_chosen_u,
+             data = two_options,
              effect = "twoways",
              index = c("participant", "round"),
              model = "random",
-             family = binomial('logit')))
+             family = binomial('logit')) -> accuracy_zipincome
 ```
 
 # Experiment 1
@@ -1044,7 +1109,7 @@ Experiment 1 addressed this limitation by adjusting the task queue logic. Specif
 
 ### Perceived Effort
 
-## Hypotheses 
+## Hypotheses
 
 ## Data
 

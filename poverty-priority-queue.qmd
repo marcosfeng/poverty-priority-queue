@@ -227,7 +227,7 @@ Our experimental design simulates the environment of an ice cream parlor using a
 
 In the game interface, participants saw a queue of tasks representing ice cream orders on the sides of the screen. Each task varied according to three characteristics: effort, importance, and urgency. These characteristics corresponded to icons on each task image to aid the participants' decision-making process, as depicted in @img-choice.
 
-![Example of two tasks with differing levels of Importance (Value), Effort, and Urgency.](images/tasks_example.png){#img-choice alt="Example of two tasks with differing levels of Importance (Value), Effort, and Urgency."}
+![Example of two tasks with differing levels of Importance (Value), Effort, and Urgency.](images/tasks_example.png){#img-choice}
 
 1\. Effort: We operationalized effort through the number of clicks required to complete an order. More complex orders required more elements on the ice cream, some of which were relatively difficult to discern (e.g., the different types of sprinkles). We deem tasks with more elements, or hard-to-discern elements, more effortful.
 
@@ -530,31 +530,31 @@ trade_off_accuracy <- demograph %>%
 
 For both Mturk and Prolific, we distinguish high-low income and high-low anxiety by a median split. The high income mean is about 70k, while the low income mean is around 30k $(p<0.001)$. Likewise, the high anxiety mean score is 56.29, while low anxiety mean score is 37.17 $(p<0.001)$.
 
-+------------------+------------+----------------------+----------------------+----------------------+
-| MTurk\           | Mean       | Median               | Min                  | Max                  |
-| N=22 x 20 trials |            |                      |                      |                      |
-+:=================+:===========+:=====================+:=====================+:=====================+
-| Age              | 34.53      | 33                   | 19                   | 50                   |
-+------------------+------------+----------------------+----------------------+----------------------+
-| Income           |            | \$40,000 to \$49,999 | Less than \$10,000   | \$90,000 to \$99,999 |
-+------------------+------------+----------------------+----------------------+----------------------+
-| Education        |            | Bachelor's degree    | High school graduate | Master's degree      |
-+------------------+------------+----------------------+----------------------+----------------------+
-| STAI             | 44.21      | 47                   | 20                   | 67                   |
-+------------------+------------+----------------------+----------------------+----------------------+
++------------------+-------+----------------------+----------------------+----------------------+
+| MTurk\           | Mean  | Median               | Min                  | Max                  |
+| N=22 x 20 trials |       |                      |                      |                      |
++:=================+:======+:=====================+:=====================+:=====================+
+| Age              | 34.53 | 33                   | 19                   | 50                   |
++------------------+-------+----------------------+----------------------+----------------------+
+| Income           |       | \$40,000 to \$49,999 | Less than \$10,000   | \$90,000 to \$99,999 |
++------------------+-------+----------------------+----------------------+----------------------+
+| Education        |       | Bachelor's degree    | High school graduate | Master's degree      |
++------------------+-------+----------------------+----------------------+----------------------+
+| STAI             | 44.21 | 47                   | 20                   | 67                   |
++------------------+-------+----------------------+----------------------+----------------------+
 
-+------------------+------------+----------------------+----------------------+----------------------+
-| Prolific\        | Mean       | Median               | Min                  | Max                  |
-| N=53 x 20 trials |            |                      |                      |                      |
-+:=================+:===========+:=====================+:=====================+:=====================+
-| Age              | 30.13      | 28                   | 18                   | 75                   |
-+------------------+------------+----------------------+----------------------+----------------------+
-| Income           |            | \$40,000 to \$49,999 | Less than \$10,000   | \$90,000 to \$99,999 |
-+------------------+------------+----------------------+----------------------+----------------------+
-| Education        |            | Bachelor's degree    | High school graduate | Master's degree      |
-+------------------+------------+----------------------+----------------------+----------------------+
-| STAI             | 45.04      | 45                   | 20                   | 68                   |
-+------------------+------------+----------------------+----------------------+----------------------+
++------------------+-------+----------------------+----------------------+----------------------+
+| Prolific\        | Mean  | Median               | Min                  | Max                  |
+| N=53 x 20 trials |       |                      |                      |                      |
++:=================+:======+:=====================+:=====================+:=====================+
+| Age              | 30.13 | 28                   | 18                   | 75                   |
++------------------+-------+----------------------+----------------------+----------------------+
+| Income           |       | \$40,000 to \$49,999 | Less than \$10,000   | \$90,000 to \$99,999 |
++------------------+-------+----------------------+----------------------+----------------------+
+| Education        |       | Bachelor's degree    | High school graduate | Master's degree      |
++------------------+-------+----------------------+----------------------+----------------------+
+| STAI             | 45.04 | 45                   | 20                   | 68                   |
++------------------+-------+----------------------+----------------------+----------------------+
 
 : The two samples display similar demographics
 

@@ -607,7 +607,7 @@ qualtrics <- qualtrics %>%
 ```
 
 ```{r data for pcacorrelations}
-write_csv(qualtrics, file = "data/fig-pcacorrelations.csv")
+write_csv(qualtrics, file = "data/qualtrics.csv")
 
 ```
 
@@ -686,7 +686,7 @@ We also included demographic variables and participant characteristics (STAI sco
 The model accounted for approximately 20.24% of the variance in total points (Adjusted R-squared = 0.132), with an overall significant model fit (F(6,68) = 2.877, p \< .05).
 
 ```{r data for totalpoints}
-write_csv(joint_pilot, file = "data/tbl-totalpoints.csv")
+write_csv(joint_pilot, file = "data/joint_pilot.csv")
 ```
 
 ```{r, results='asis'}
@@ -879,7 +879,7 @@ two_options <- joint_pilot %>%
          logRT = log(as.numeric(RT))) %>%
   filter(logRT != Inf & logRT != -Inf)
 
-write_csv(two_options, file = "data/tbl-urgencypoverty.csv")
+write_csv(two_options, file = "data/two_options.csv")
 ```
 
 ```{r}
@@ -989,7 +989,7 @@ ggplot(dat, aes(x = dens, fill = lines)) +
 This score is calculated by first estimating the cost parameters for each participant and then using them with backwards induction to discover the optimal choice at each presented state.
 
 ```{r data for accuracy}
-write_csv(Accuracy, file = "data/fig-accuracy.csv")
+write_csv(Accuracy, file = "data/Accuracy.csv")
 ```
 
 ```{r}

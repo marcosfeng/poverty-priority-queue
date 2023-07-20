@@ -3,7 +3,7 @@ title: "Poverty and Priority Queueing"
 author: "Marcos Gallo and Kavya Rajagopalan"
 date: "2023-07-10"
 abstract: |
-  Pre-existing literature suggests that relative material scarcity – particularly wealth inequality – is a significant contributing factor in dictating how people behave. We characterize irrational decision-making across impoverished groups by examining the effects of inefficiency in time allocation. We experimentally model time allocation in low SES groups by administering an artificial priority queue where agents must attend to tasks with differing levels of effort, urgency and value. Observations suggest that individuals from low SES groups prioritize urgent tasks while agents from high SES groups prioritize high value tasks.
+  Pre-existing literature suggests that relative material scarcity – particularly wealth inequality – is a significant contributing factor in dictating how people behave. We characterize irrational decision-making across impoverished groups by examining the effects of inefficiency in time and effort allocation. We experimentally model time allocation in low SES groups by administering an artificial priority queue where agents must attend to tasks with differing levels of effort, urgency and value. Observations suggest that individuals from low SES groups prioritize urgent tasks while agents from high SES groups prioritize high value tasks.
 execute:
   echo: false
   warning: false
@@ -334,7 +334,7 @@ flowchart LR
 
 ## Methodology
 
-Our experimental design simulates the environment of an ice cream parlor using an interactive online game. The game was developed in PsychoPy version 2023.1.3 and hosted on the Pavlovia platform. Participants were ice cream parlor owners whose goal was to maximize profit by completing tasks with varying characteristics.
+Our experimental design simulates the environment of an ice cream parlor using an interactive online game. The game was developed in PsychoPy version 2023.1.3 and hosted on the Pavlovia platform. Participants played the role of ice cream parlor owners whose goal was to maximize profit by completing tasks with varying characteristics.
 
 ### Structure
 
@@ -352,7 +352,7 @@ In each round, participants saw the screen shown in @img-pilot-exp. They were in
 
 ### Simulation
 
-We devised a theoretical model for how we expect rational decision-making to manifest in our priority queuing experiment such that frequency of deviations from rationality can be monitored. To formalize the optimal, or rational, set of behavior for maximizing rewards over long-term exposure in a queue, we developed a closed-form model. We hypothesize that this decision-making process can be summarized by a simple subjective-value function, where every individual determines the priority or preference $\succeq_q$ by the subjective value utility representation. We thus developed a stochastic model, as follows:
+We devised a theoretical model for how we expect rational decision-making to manifest in our priority queuing experiment such that frequency of deviations from rationality can be monitored. To formalize the optimal, or rational, set of behavior for maximizing rewards over long-term exposure in a queue, we developed a closed-form model. We hypothesize that this decision-making process reduces to a simple subjective-value function, where every individual determines the priority or preference $\succeq_q$ by the subjective value utility representation. We thus developed a stochastic model, as follows:
 
 $$
 \begin{aligned} 
@@ -364,9 +364,9 @@ V(s) &= \max\limits_{a}(r(s,a) + \gamma\sum\limits_{S}P(s,a, s')V(s'))\\
 \end{aligned}
 $$
 
-In @eq-model the agent calculates the value of state $s' \in S$ (which is the next state, i.e., next period). $i$ is the reward (in dollars) for completing a task, $c_i$ is the effort cost (estimated in dollar unites), and $r(a,s)$ is the net payoff of completing action $a$ at state $s$. $P$ is the probability of transitioning from state $s$ to another state $(s')$, given that our agents takes action $a$ in state $s$. $V(s')$ is the value of that new state. We subsequently sum these results over all the possible future states. Note we use $\gamma$ as our discount factor. In our normative model, we set the discounting factor to be 1. Note that this model only has two cost parameters $c=\{c_L, c_H\}$.
+In @eq-model the agent calculates the value of state $s' \in S$ (which is the next state, i.e., next period). $i$ is the reward (in dollars) for completing a task, $c_i$ is the effort cost (estimated in dollar unites), and $r(a,s)$ is the net payoff of completing action $a$ at state $s$. $P$ is the probability of transitioning from state $s$ to another state $(s')$, given that our agents takes action $a$ in state $s$. $V(s')$ is the value of that new state. We subsequently sum these results over all the possible future states. Note we use $\gamma$ as our discount factor. In our normative model, we set the discounting factor to be 1, given the tasks are very close to each other in time. Note that this model only has two cost parameters $c=\{c_L, c_H\}$.
 
-We build upon this by then generating an optimal protocol for identifying the best set of choices at any stage for maximizing long-term outcomes. Using dynamic programming, a recursive method of taking the outcomes of subgames and applying it to the entire scheme, we identify which tasks should be chosen given stage of the 2-task queue. Given this framework, we can graph the ratio of urgent choices at each given state, as a function of the cost parameter $c_H$ and the discount factor (here $c_L = 0$ for all cases).
+We build upon this by then generating an optimal protocol for identifying the best set of choices at any stage for maximizing long-term outcomes. Using dynamic programming, a recursive method of taking the outcomes of subgames and applying it to the entire scheme, we identify which tasks should be chosen at any given stage of the 2-task queue. Given this framework, we can graph the ratio of urgent choices at each given state, as a function of the cost parameter $c_H$ and the discount factor (here $c_L = 0$ for all cases).
 
 ```{r}
 #| label: fig-dynaprog-simulation
@@ -675,7 +675,7 @@ For both Mturk and Prolific, we distinguish high-low income and high-low anxiety
 
 ### Measures of Poverty
 
-Although income-based measures have long been the standard for assessing poverty, studies have since determined that purchasing power and standard of living are not accurately measured by such a metric. Rather, relative deprivation and state-trait anxiety measures are often more accurate empirical measurements of an individual's socioeconomic status (SES).
+Although income-based measures have long been the standard for assessing poverty, studies have since determined that purchasing power and standard of living are not accurately measured by such a metric (CITE). Rather, relative deprivation and state-trait anxiety measures are often more accurate empirical measurements of an individual's socioeconomic status (SES).
 
 #### Self-Reported Income
 
@@ -1124,7 +1124,7 @@ hist(Accuracy$Accuracy, breaks=10)
 
 1.  Accuracy in trade-off decisions as a function of income and anxiety
 
-Finally, we compare for each participant, how many of their choices are identical to a model that observed the full horizon for the Markov decision process. Each participant is a dot, y axis is the peerage of correct choices in the experiment while x axis is the STAI (anxiety measure). Generally the results are very similar to figure 1.5.
+Finally, we compare for each participant, how many of their choices are identical to a model that observed the full horizon for the Markov decision process. Each participant is a dot, y axis is the percentage of correct choices in the experiment while x axis is the STAI (anxiety measure). Generally the results are very similar to figure 1.5.
 
 ```{r}
 #| label: fig-accuracy-results
@@ -1405,15 +1405,7 @@ M: Proposal
 
 # References
 
-# Appendix
-
-## The Eisenhower Matrix {#app-eisenhower}
-
-"Who can define for us with accuracy the difference between the long and short term! Especially whenever our affairs seem to be in crisis, we are almost compelled to give our first attention to the urgent present rather than to the important future."
-
-\-\-- Dwight D. Eisenhower, 1961 address to the Century Association
-
-[![Source: https://todoist.com/productivity-methods/eisenhower-matrix](images/eisenhower-matrix.png){width="5.36in"}](https://todoist.com/productivity-methods/eisenhower-matrix)
+# Appendix: Supplementary Models and Analyses
 
 ## Burstiness and Memory in Discreet Event Simulation
 
@@ -1442,11 +1434,7 @@ plt_bursty +
 
 @simmer-burstiness shows that the surviving tasks are indeed around the area of bursty phenomena as reported in the literature. However, there does not seem to be a relationship between urgency weighting and burstiness.
 
-## Pilot Experiment Image
-
-![Game interface for Pilot Experiment. Participants had a queue with two tasks on top of the screen and a series of icons they must press in order to complete a task. The clocks (hearts, in this version) and dollar signs on a task represent the urgency and importance of the task, respectively. The right side of the screen displays a rounds counter (top) and a points counter (bottom).](images/totalice.jpeg){#img-pilot-exp}
-
-## Fantasy and Dread Model {#app-fantasy-dread}
+## Fantasy and Dread Model
 
 $$
 \begin{aligned}
@@ -1462,30 +1450,12 @@ where $z_e, z_p$ correspond to fantasy/dread and a sense of urgency, respectivel
 P() depends on whether unattended task "decays"
 
 ::: {#fig-prob-weighting layout-ncol="2"}
-![Probability Weighting](images/prob-weighting.png){#fig-prob-weight}
+![Probability Weighting](images/prob-weighting.png){#fig-prob-weight alt="Probability Weighting"}
 
-![Probability Example](images/sense-urgency-illustration.png){#fig-sense-urg}
+![Probability Example](images/sense-urgency-illustration.png){#fig-sense-urg alt="Probability Example"}
 
 Example of Subjective Probabilities
 :::
-
-## Illustration: Priority Queuing
-
-::: {#fig-prioq layout-ncol="2"}
-A list can contain an arbitrary number of tasks and the priority of each task is an integer drawn from some distribution. The tasks are set to arrive with the rate $\lambda$ following a Poisson dynamics with exponential arrival time distribution and they are executed with rate $\mu$ by always choosing the one with the highest priority.
-
-![Sample Queue](images/prioq-illustration.png){width="3.2in"}
-:::
-
-## §Dynamic Programming Simulation
-
-## §Bayesian Model for Cost Estimation
-
-### Model
-
-### Estimation
-
-### Code
 
 ## Priority Queuing Simulation
 
@@ -1630,7 +1600,7 @@ survival <- prob_survival %>%
 
 ```
 
-### Dynamic Programming Simulation
+## Dynamic Programming Simulation
 
 ```{r dyn-pro-simulation, eval=FALSE, include=TRUE}
 
@@ -1879,9 +1849,9 @@ write.csv(ratios_grid,"./urgency-ratio-grid.csv")
 
 ```
 
-### Bayesian Model for Cost Estimation
+## Bayesian Model for Cost Estimation
 
-#### Model
+### Model
 
 ```{stan cost-model, eval=FALSE, include=TRUE, output.var="my_model"}
 data {
@@ -1987,7 +1957,7 @@ model {
 }
 ```
 
-#### Model Data
+### Model Data
 
 ```{r cost-model-data, eval=FALSE, include=TRUE}
 # Data Wrangling ----------------------------------------------------------
@@ -2218,7 +2188,7 @@ model_data <- list( N = length(unique(data$participant)), #number of part
 
 ```
 
-#### Estimation
+### Estimation
 
 ```{r cost-model-estimation, eval=FALSE, include=TRUE}
 
@@ -2231,6 +2201,28 @@ Prolific1_Stan_results <- sampling(object = my_model, data = model_data,
 
 ```
 
-## Questionnaires {#questionnaires}
+# Appendix: Images
 
-The remaining pages include the questionnaires we will administer to participants in the next experiment iterations.''
+## The Eisenhower Matrix {#app-eisenhower}
+
+"Who can define for us with accuracy the difference between the long and short term! Especially whenever our affairs seem to be in crisis, we are almost compelled to give our first attention to the urgent present rather than to the important future."
+
+\-\-- Dwight D. Eisenhower, 1961 address to the Century Association
+
+![Source: https://todoist.com/productivity-methods/eisenhower-matrix](images/eisenhower-matrix.png){alt="Source: https://todoist.com/productivity-methods/eisenhower-matrix" width="5.36in"}
+
+## Pilot Experiment Image
+
+![Game interface for Pilot Experiment. Participants had a queue with two tasks on top of the screen and a series of icons they must press in order to complete a task. The clocks (hearts, in this version) and dollar signs on a task represent the urgency and importance of the task, respectively. The right side of the screen displays a rounds counter (top) and a points counter (bottom).](images/totalice.jpeg){#img-pilot-exp alt="Game interface for Pilot Experiment. Participants had a queue with two tasks on top of the screen and a series of icons they must press in order to complete a task. The clocks (hearts, in this version) and dollar signs on a task represent the urgency and importance of the task, respectively. The right side of the screen displays a rounds counter (top) and a points counter (bottom)."}
+
+## Priority Queuing
+
+A list can contain an arbitrary number of tasks and the priority of each task is an integer drawn from some distribution. The tasks are set to arrive with the rate $\lambda$ following a Poisson dynamics with exponential arrival time distribution and they are executed with rate $\mu$ by always choosing the one with the highest priority.
+
+![Sample Queue](images/prioq-illustration.png){alt="Sample Queue" width="3.2in"}
+
+# Appendix: Documentation
+
+## Questionnaires
+
+## IRB

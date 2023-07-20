@@ -56,11 +56,58 @@ We argue that the poor are caught in an "urgency trap," where neglect of nonurge
 
 This phenomenon is closely related to the theory of poverty traps. This framework defines a self-perpetuating phenomena that arise when an economy is caught within a cycle that suffers from persistent undevelopment. In this paper, we model poverty traps as an equilibrium which favors disutility over iterative cycles. To determine causal relationships between such outcomes and the behavior of low SES (type 1) agents, we examine cases of suboptimality that are distinct from high SES (type 2) agents. To assess self-reinforcing behavior intrinsic to poverty traps, we classify and compare the choice behavior of type 1 agents in regards to their time allocation.
 
-## Priority Queuing
+### Priority Queues, Urgency and Importance
 
-Time allocation is often modeled through priority queues, models to represent ordinal choices of tasks attended to based on some subjective value or utility function. Triaging bays often treat queues as a function of urgency and order of arrival, whilst donor matching programs facilitate queues based on a point-system which weights time, severity and likelihood of survival.
+Although some scientists have proposed a "Scarcity" view of poverty (Mullainathan & Shafir, 2014), their conclusions have not withstood the scrutiny of science, leaving the causes and mechanisms of these phenomena largely unexplained (O'Donnell et al., 2021). We seek a more rigorous understanding of how relative-poverty can be self-perpetuating through poor time allocation. We explain prioritization of day-to-day tasks as an attempt to balance two requirements: (1) maximize life satisfaction given one's limited resources, and (2) minimize the potentially harmful effects of leaving tasks undone change with time. We call the former requirement "importance" and the latter "urgency" (Bratterud et al., 2020).
 
-Two critical Priority Queuing models are developed by Cobham and Barabasi. While Cobham's model treats a queue as an infinite list of tasks, with varying task arrival times and execution rates, the Barabasi model treats the queue as a finite size list with waiting times ($\tau_w$).
+The Eisenhower Matrix (see @app-eisenhower for details), a simple tool for determining optimal long-term decisions, is a simplification of how individuals determine their queue for attending to daily tasks. This framework uses dimensions of urgency (time scarcity) and importance (expected value maximization) as primary motivations for which tasks require completion. We intend to characterize the mapping between urgency $U$ and importance $I$ , namely $\{ U,I \} \mapsto \mathbb{R}$. As discussed in @sec-poverty, the literature speculates the influence of effort costs in decision-making - thereby suggesting Eisenhower Matrices should be modified to account for the added parameter.
+
+# Theory
+
+In this section, we present a novel decision-making model that underpins various real-life activities, from mundane daily choices to high-stakes strategic decisions. When individuals face multiple action options, they select the one that maximizes perceived value or utility. Our model integrates urgency, importance, and value, drawing on principles from decision theory, the Eisenhower matrix, and Markov Decision Processes (MDPs) (Puterman, 1994; Eisenhower, 1961).
+
+## **Conceptual Framework**
+
+In our model, urgency refers to the time-sensitivity of a decision or the period until a choice is no longer viable. This concept captures the temporal aspect of decision-making, reflecting that opportunities for action often have a limited lifespan. For example, deciding to invest in a rapidly changing market or respond to a time-limited offer requires considering urgency. Importance is the value of a decision state, contingent on future states and transition probabilities. This concept captures the strategic aspect of decision-making, reflecting the reality that the consequences of a decision often depend on future events and conditions. For example, investing in education or training may be important because it affects future career opportunities and earning potential (Howard, 1960). Value is the present-discounted reward from choosing an action, incorporating the opportunity cost of a choice, which is the value of the best choice one must forego. This concept captures the economic aspect of decision-making, reflecting that resources such as time, money, and effort are limited and that choosing one action can often mean giving up the opportunity to choose another (Bellman, 1957). The optimal policy balances immediate rewards with future rewards, considering urgency, importance, and likelihood. It depends only on current, not past, states (Bellman, 1957).
+
+### Model Components
+
+The model comprises several components inspired by the structure of MDPs, a mathematical framework for modeling decision-making in situations where outcomes are partly random and partly under the control of a decision-maker (Howard, 1960).
+
+**State Space**: The current situation or context. Each state is associated with a set of possible actions. The state space captures the situational aspect of decision-making, reflecting that the available choices often depend on the current circumstances. For example, deciding to invest in a particular market depends on the current market conditions (Sutton & Barto, 2018).
+
+**Action Space**: The available actions in a given state. Each action leads to a transition to a new state. The action space captures the behavioral aspect of decision-making, reflecting the reality that different actions can lead to different outcomes. For example, the decision to invest in a risky asset can lead to a high return or a significant loss (Daw et al., 2005).
+
+**Transition Probabilities**: The likelihood of transitioning from one state to another, given a particular action. Transition probabilities capture the inherent uncertainty and randomness in real-world decision-making scenarios. For example, the decision to invest in a risky asset involves uncertainty about the future state of the market (Daw et al., 2005).
+
+**Rewards**: The outcomes or results of a particular action from a given state. Rewards can be 1) immediate or delayed, and 2) positive (benefits) or negative (costs). The concept of rewards captures the motivational aspect of decision-making, reflecting that the desire to achieve positive outcomes and avoid negative ones can often drive decisions (Sutton & Barto, 2018).
+
+**Discount Factor**: Reduces the value of future rewards to reflect that individuals value immediate rewards more highly than future ones. The discount factor encapsulates the decision maker's time preference or discount rate. For example, investing in a long-term project involves discounting the future benefits to reflect their present value (Bellman, 1957).
+
+**Policy**: This strategy defines which action to take in each state. The policy can be deterministic (always choosing the same action in a given state) or stochastic (choosing among several actions with specific probabilities). The concept of policy captures the strategic aspect of decision-making, reflecting that decisions often involve a sequence of actions over time (Puterman, 1994).
+
+### Comparison to the Two-Step Task
+
+The two-step task is a well-established paradigm in cognitive neuroscience used to assess two types of reinforcement learning: model-free and model-based learning. Model-free learning depends on the direct association between actions and their outcomes. In contrast, model-based learning involves planning and decision-making through a mental model of the task structure (Daw et al., 2005). The proposed decision-making model can be related to the two-step task, providing a richer understanding of the dynamics involved in these types of learning. In the two-step task, participants make two sequential decisions that navigate them through two "stages" defined by different stimuli. The first-stage choices lead to one of two second stages with varying probabilities, and each second-stage choice is associated with some probability of receiving a reward. The goal of the subject is to maximize rewards in the second stage, which requires continuous learning and adaptation to the changing reward probabilities.
+
+For example, consider the first stage with an initial state that includes two choices: "buying a phone" or "taking a course." The transition probabilities are defined by the likelihood of moving to the second stage, given the first-stage choice. For instance, choosing "taking a course" could lead more often to a state where one gets a promotion (State 2a), while "buying a phone" could lead more often to a state where one does not get promoted and keeps the same job (State 2b). In the second stage, the state spaces include another choice, such as "buying a car." In State 2a (getting a promotion), the decision maker could choose "buying a phone" or "buying a car," where the car would be brand new and fancy, reflecting the increased financial resources in this state. In State 2b (keeping the same job), the decision maker could choose "taking a course" or "buying a car," where the car would be cheap and used, reflecting the lower financial resources in this state. In this context, both stages have rewards associated with the actions that are not a result of the transition to future states. Specifically, buying a phone would lead to immediate subjective value (e.g., the thrill of having a new gadget), and so would education (e.g., the fulfillment of getting a diploma or gaining knowledge). The value of each action, however, is the sum of its associated reward and the value of all future states weighted by their respective transition probabilities. The policy in this context would be the strategy that defines which action to take in each state. For instance, the decision maker might adopt a policy of always choosing the action with the highest immediate reward or adopt a more complex strategy that considers each action's urgency, importance, and value. Key in this decision is also the discount factor, which reflects the decision maker's time preference or discount rate. For instance, the decision maker might value the immediate pleasure of buying a phone more highly than the potential future benefit of a promotion (Daw et al., 2005).
+
+```{mermaid}
+graph TD
+    A[First Stage: Buy Phone or Take Course] -->|70%| B[Second Stage: Keep Job]
+    A -->|30%| C[Second Stage: Get Promotion]
+    B --> D[Choices: Take Course or Buy Used Car]
+    C --> E[Choices: Buy Phone or Buy New Car]
+
+```
+
+### Priority Queuing
+
+In our two-step task example, we observed how the unchosen task was "transferred" to the next state. This characteristic is a crucial feature of a priority queueing model, which we will delve into to enrich our understanding of decision-making dynamics further.
+
+Priority queueing models often represent ordinal choices of tasks attended to based on some subjective value or utility function. These models are prevalent in various real-world scenarios, such as triaging bays, which treat queues as a function of urgency and order of arrival, and donor matching programs, which facilitate queues based on a point system that weights time, severity, and likelihood of survival.
+
+Cobham and Barabasi have developed two critical priority queueing models. Cobham's model treats a queue as an infinite list of tasks with varying task arrival times and execution rates. On the other hand, the Barabasi model treats the queue as a finite size list with waiting times ($\tau_w$). The mathematical expression for the waiting time distribution in the Barabasi model is as follows:
 
 $$
 P(\tau_w) = \left\{
@@ -69,51 +116,42 @@ P(\tau_w) = \left\{
             \frac{1-p^2}{4p(\tau_w - 1)}[(\frac{1+p}{2})^{\tau_w-1} - (\frac{1-p}{2})^{\tau_w - 1}],
             \end{array}
             \right.
-$$ {#eq-prio-q}
+$$
 
-We observe that mathematically as $p \rightarrow 0$, this distribution reduces to an inverse poisson distribution.Ultimately this expression is independent of the priority distribution - suggesting that the alginment of task priorities has no role on the time for these respective tasks to be executed.
+Interestingly, as \$p \\rightarrow 0\$, this distribution reduces to an inverse Poisson distribution. This expression is independent of the priority distribution, suggesting that the alignment of task priorities has no role in the time for these respective tasks to be executed.
 
-Unfortunately, the preexisting models for priority queues are limited in regards to applications. There is negligible literature about priority queuing in marginalized groups and in regards to how priority queuing is rationalizable.
+Despite their powerful predictions, these existing models for priority queues have limitations in their applications. The literature is scarce about priority queuing in marginalized groups and how priority queuing is rationalizable. Some literature describes priority queues as a double-sided matching market with queues that depend on priorities and impatient customers (Castro et al., 2020). In this literature, customers of high value are matched prior to those of low value. Likewise, impatient customers can leave the queue if they are not matched immediately with a customer of their priority. This behavior is representative of many real-life cases but does not align with the behavior that the extended literature from Role Strain suggests about the decision-making choices of individuals from low SES. There is an apparent disconnect between how the average individual prioritizes tasks and how individuals from low SES do.
 
-One set of literature describes priority queues as a double-sided matching market with queues that depend on priorities and also impatient customers (Castro et al 2020). In this literature, customers of high value are matched prior to those of low value, and likewise impatient customers can leave the queue if they are not matched immediately with a customer of their priority. In such queues, customers are matched according to the order they arrive in and the available participants in the other market. A notable feature of this literature is that customers of high priority are perceived as more preferred than customers who are highly impatient. Essentially after the steady-state build up of customers in the queue increases, high priority customers are queued and low-priority customers are told to wait. While this behavior is representative of many cases in real life, it does not particularly align with the behavior that the extended literature from Role Strain suggests about the decision-making choices of individuals from low SES. There is clearly a disconnect in how the average individual prioritizes tasks and likewise how poor individuals do as well.
+In our model, we aim to bridge this gap by integrating the principles of priority queueing into the decision-making process. By considering each task's urgency, importance, and value, we can create a more nuanced and realistic representation of how individuals allocate their time and resources. This approach allows us to capture the complexities of decision-making in a way that traditional models cannot, providing a more comprehensive understanding of the dynamics involved in model-free and model-based learning.
 
-### Urgency and Importance
-
-Although some scientists have proposed a "Scarcity" view of poverty (Mullainathan & Shafir, 2014), their conclusions have not withstood the scrutiny of science, leaving the causes and mechanisms of these phenomena largely unexplained (O'Donnell et al., 2021). We seek a more rigorous understanding of how relative-poverty can be self-perpetuating through poor time allocation. We explain prioritization of day-to-day tasks as an attempt to balance two requirements: (1) maximize life satisfaction given one's limited resources, and (2) minimize the potentially harmful effects of leaving tasks undone change with time. We call the former requirement "importance" and the latter "urgency" (Bratterud et al., 2020).
-
-The Eisenhower Matrix (see @app-eisenhower for details), a simple tool for determining optimal long-term decisions, is a simplification of how individuals determine their queue for attending to daily tasks. This framework uses dimensions of urgency (time scarcity) and importance (expected value maximization) as primary motivations for which tasks require completion. We intend to characterize the mapping between urgency $U$ and importance $I$ , namely $\{ U,I \} \mapsto \mathbb{R}$. As discussed in @sec-poverty, the literature speculates the influence of effort costs in decision-making - thereby suggesting Eisenhower Matrices should be modified to account for the added parameter.
-
-# Theory
+In the next sections, we will explore how this integration of priority queueing into our model can provide new insights into the decision-making process, particularly in the context of individuals from low SES.
 
 ## Simulation
 
-Priority Queues models are a tangible mechanism for capturing the choices and inter-event time agents require in regards to decision-making for daily tasks. Using the pre-existing literature surrounding poverty, we simulate an artificial priority queue, using a priority function
+Priority queue models offer a tangible mechanism for capturing the choices and inter-event times that agents require when making decisions about daily tasks. Drawing on the existing literature surrounding poverty, we simulate an artificial priority queue using a priority function:
 
 $$
 \text{Priority} = \alpha U + (1- \alpha) I
 $$ {#eq-prio}
 
-where $U, I, \alpha$ are "urgency," "importance," and the urgency weight, respectively.
+where $U, I, \alpha$ represent "urgency," "importance," and the urgency weight, respectively.
 
-Our first step is to run a discrete-event simulation (DES) to uncover the relationship between $\alpha$ , probability of survival, and burstiness measures. DES is a technique for modelling stochastic, dynamic and discretely evolving systems. In this framework, consider:
+Our first step is to run a discrete-event simulation (DES) to uncover the relationship between $\alpha$, the probability of survival, and burstiness measures. DES is a technique for modeling stochastic, dynamic, and discretely evolving systems, making it a powerful tool for understanding complex decision-making processes (Banks, J., Carson, J. S., Nelson, B. L., & Nicol, D. M. (2005). Discrete-Event System Simulation. Prentice Hall.). In this framework, we consider:
 
-1.  An individual who is able to finish any job
+1.  An individual who is capable of completing any job,
+2.  A ready supply of jobs with no prospect of any shortages,
+3.  Jobs are allocated a priority when they arrive in the queue according to @eq-prio,
+4.  The time taken to complete a job is variable but independent of the task.
 
-2.  A ready supply of jobs with no prospect of any shortages
+We define the completion time for the different activities as random draws from an exponential distribution with $\lambda = 5$. Similarly, the interarrival times for tasks are from an exponential distribution of $\lambda = 5$. Each incoming task receives $U, I \sim \text{Unif}(0,1)$ and a priority according to @eq-prio. Tasks are completed in the order of priority.
 
-3.  Jobs are allocated a priority when they arrive in the queue according to @eq-prio
-
-4.  The time taken to complete a job is variable but independent of the task
-
-We define the completion time for the different activities as random draws from an exponential distribution with $\lambda = 5$. Likewise, the interarrival times for tasks are from an exponential distribution of $\lambda = 5$. Each incoming task receives $U, I \sim Unif(0,1)$ and a priority according to @eq-prio. Tasks are completed in the order of priority.
-
-Importantly, each task contains a survival rate as a function of its importance. The higher the urgency, the more likely the task is to fail (or die off). This feature internalizes the fact that urgent tasks may bring imminent negative consequences. The survival probability of a task is given by a Weibull distribution with a monomial function:
+Importantly, each task contains a survival rate as a function of its importance. The higher the urgency, the more likely the task will fail (or die off). This feature internalizes the fact that urgent tasks may bring imminent negative consequences. A Weibull distribution with a monomial function gives the survival probability of a task:
 
 $$
 \Pr (\text{survival}|\alpha = s(1+U),\beta=1) = 1 - e^{(-t/\alpha)^\beta}
-$$ where $t$ is the wait time, and $s$ is a scaling parameter (in the following simulations calibrated to be 100). As such, each task contains a survival probability, which is then accumulated throughout the ask, such that the cumulative survival rate of later tasks are smaller than those of earlier ones.
+$$where $t$ is the wait time, and $s$ is a scaling parameter (in the following simulations, calibrated to 100). As such, each task contains a survival probability, which is then accumulated throughout the task, such that the cumulative survival rate of later tasks are smaller than those of earlier ones.
 
-By simulating this queue, we can graph a heatmap with the relationship of the weight of urgency on the priority function ($\alpha$) and cumulative survival rate:
+By simulating this queue, we can graph a heatmap with the relationship of the weight of urgency on the priority function (\$\\alpha\$) and cumulative survival rate:
 
 ```{r}
 #| cache: true
@@ -132,60 +170,141 @@ levelplot(mean_survival ~ time * weight, urgency_survival_grid,
 
 ```
 
-@simmer-simulation shows that those with higher urgency weights are more likely to survive longer in the queue. <!--# How does SV relate to the weight? (tradeoff: important tasks vs. risk of survival) -->
+@img-simmer-simulation shows that those with higher urgency weights are more likely to survive longer in the queue. This finding suggests that the weight of urgency in the priority function plays a significant role in determining the survival probability of tasks in the queue. This finding underscores the importance of considering both urgency and importance when prioritizing tasks, particularly in contexts where survival rates are critical, such as in decision-making scenarios faced by individuals living in poverty.
 
-Further, with interevent times, we can calculate the burstiness and memory as a function of urgency weights.
+## Integrating Our Model with Poverty {#sec-poverty}
 
-```{r}
-#| label: fig-simmer-burstiness
-#| fig-cap: "Burstiness by Urgency Weight"
+Integrating our model with poverty is crucial in understanding its complex dynamics and effects on various aspects of life. Poverty is not just a state of financial deprivation but a multifaceted issue that affects health, education, and overall quality of life (Barrett et al., 2016). Our model aims to capture the combined effect of these complexities.
 
-urgency_burstiness_grid <- read_csv("urgency-burstiness-grid.csv") 
+We integrate poverty by considering it a multidimensional variable that influences and is influenced by various factors: 1) Poverty can affect health outcomes by limiting access to healthcare services and nutritious food. In turn, poor health can exacerbate poverty by reducing a person's ability to work and earn income; 2) Social factors can be determinants of poverty. These include education, employment, and social support, which can significantly influence a person's likelihood of falling into poverty; 3) Poverty is not a fixed state but a condition that changes with time and circumstances. People can move in and out of poverty over time. Though past research has explored the dynamics of these three phenomena, we offer a novel integration of these physical, mental, social, and temporal determinants into our priority queueing model.
 
-plt_bursty <-
-  ggplot(urgency_burstiness_grid,
-         aes(x = M, y = B)) +
-  geom_jitter(aes(color = weights),
-              size = 1,
-              alpha = 0.8) +
-  labs(color = "Urgency Weight") +
-  scale_color_viridis(option = "D")
+### Temporal Discounting
 
-plt_bursty +
-  geom_hline(yintercept = 0) +
-  geom_vline(xintercept = 0)
+Temporal discounting, as a behavioral economic concept, plays a pivotal role in our model, particularly in poverty. It refers to the well-established tendency to value immediate rewards at the expense of future outcomes (Frederick et al., 2002). This bias is often associated with lower wealth. It is more pronounced in populations with lower socioeconomic status (SES) (Ruggeri et al., 2022, The globalizability of temporal discounting. Nature Human Behaviour).
 
+In our model, we incorporate temporal discounting as a critical factor influencing the decision-making process of individuals in poverty. The model allows for flexibility in the rate of temporal discounting, and individuals with lower SES are likely to have higher rates. In the context of poverty, temporal discounting can exacerbate financial difficulties. For instance, individuals facing financial strain may opt for immediate, smaller rewards instead of larger, delayed ones, potentially perpetuating a cycle of poverty (Haushofer & Fehr, 2014, On the psychology of poverty. Science).
+
+To illustrate this, consider the decision-making process in our model. The decision-maker, who is in a state of poverty, is faced with two choices: "Work an extra shift" or "Attend a free community college class." The former offers an immediate reward, while the latter promises a future benefit. According to previous findings, some decision-makers in low SES are likely to choose the immediate reward due to the higher rate of temporal discounting. In many cases, the immediate need for financial resources outweighs the potential future benefits of attending a class. Our model captures this behavioral preference through a discount factor, denoted by $\gamma$.
+
+However, this decision-making process is dynamic. It evolves as the decision-maker's circumstances change and as they gain more information about the potential future benefits of their actions. For instance, if the decision-maker learns that attending a class could significantly increase their future income, they might be more inclined to choose this option, even if it means forgoing the immediate reward of working an extra shift. This ability to foresee or predict future states is central to our model, and the following section will address it.
+
+### Foreseeing Future States
+
+Individuals with lower SES often face uncertainty and instability, which can cloud the decision-making process, making it difficult to foresee the long-term consequences of their actions (Mullainathan & Shafir, 2013). This uncertainty is not merely a passive process but an active one. A study by Peters and Büchel (2010) found that the ability to vividly imagine future events can reduce temporal discounting.
+
+Individuals likely learn to imagine future events in their social environments. Notably, community trust plays a significant role in this temporal discounting. Research by Farah and Hook (2017) suggests that SES significantly predicts high temporal discounting, particularly in environments characterized by low community trust (Farah & Hook, 2017, Trust and the poverty trap. Proceedings of the National Academy of Sciences). This finding implies that trust within a community can serve as a buffer against temporal discounting, encouraging individuals to make more beneficial decisions in the long term. Perhaps one channel through which this modulation occurs is learning from one's peers' experiences and expanding their set of imagined possible states, particularly for actions with small immediate rewards.
+
+McIvor and Paton (2007) present an interesting example of social influences in future state prediction. Specifically, they look at preparedness for natural hazards and show that people are more likely to take precautions against earthquakes if they are part of a community that encourages safety measures and if they believe that taking action will have a positive impact on their safety. This finding suggests that the relationship between individuals and their community, including their trust in community institutions, can significantly influence their ability to visualize and predict future states (McIvor and Paton, 2007, Preparing for natural hazards: normative and attitudinal influences).
+
+### Transition Probabilities
+
+Transition probabilities, which determine the likelihood of moving from one state to another, play a crucial role in our model. These probabilities influence individuals' choices based on their actions' potential outcomes, and correctly estimating them is essential to maximizing value.
+
+In the context of decision-making strategies, psychologists have identified two primary approaches: model-free and model-based strategies. Model-free strategies do not rely on transition probabilities but evaluate actions based solely on their reward history (Daw et al., 2005). On the other hand, model-based strategies rely on transition probabilities, using a cognitive model of potential actions and their consequences to make goal-directed choices (Daw et al., 2005). The balance between these two strategies can be fluid and contextually sensitive, with the reliance on a given strategy depending on the cognitive and affective demands placed on the individual (Otto, Gershman, et al., 2013, The curse of planning: dissecting multiple reinforcement-learning systems by taxing the central executive; Otto, Raio, Chiang, Phelps, & Daw, 2013, Working-memory capacity protects model-based learning from stress. ).
+
+Previous research has found that factors such as stress and education levels can affect the proportion of model-free and model-based strategies used in decision-making. Research suggests stress can also impact decision-making, leading to a greater reliance on model-free strategies (Schwabe & Wolf, 2013, tress and multiple memory systems: from 'thinking' to 'doing'). Furthermore, education levels can influence the ability to use model-based strategies, with higher education levels associated with greater use (Worthy et al., 2011, Heterogeneity of strategy use in the Iowa gambling task: A comparison of win-stay/lose-shift and reinforcement learning models).
+
+### Urgency
+
+Our model is beneficial for analyzing the decisions of individuals in low-SES (Socioeconomic Status) environments. Here, we build on the two-stage decision-making model by incorporating urgency. In the first stage of our model, the decision-maker, an individual encounters two choices: "Work an extra shift" or "Attend a free community college class." The choice of "Work an extra shift" predominantly leads to a state where the individual has extra money (State 2a), while "Attend a free community college class" more frequently leads to a state where the individual gains new skills (State 2b). The urgency component is crucial in this stage. The opportunity to work an extra shift is fleeting, available only on the current day. If not seized, this opportunity will expire, and the potential for additional income will be lost. Conversely, the community college class, part of a recurring weekly course, presents a less urgent choice. The individual could attend the class the following week, but missing classes could lead to a cumulative knowledge gap, jeopardizing the overall benefit of the course. In the second stage, the state space expands to include another choice. In State 2a (having extra money), the individual could choose between "Buy groceries" or "Pay utility bills." In State 2b (gaining new skills), the individual could opt to "Apply for a better job" or "Start a small business." Urgency is also a pivotal factor in the second stage. The utility bill payment is due imminently, and failure to pay will discontinue essential services. On the other hand, buying groceries, while a recurring necessity, may not have the same urgency. However, a prolonged delay in this action could lead to health and well-being implications, underscoring its medium-term urgency.
+
+```{mermaid}
+flowchart TD
+   subgraph "State s"
+   A1[Buy Phone]
+   A2[Take Course]
+   end
+   subgraph C[State s'2: Get Promotion]
+   E[Buy Phone and Used Car \n or\n Take Course]
+   end
+   subgraph B[State s'1: Keep Job]
+   D[Buy Phone \n or\n Buy Used Car]
+   end
+   A1 -->|70%| B
+   A1 -.->|30%| C
+   A2 -.->|30%| B
+   A2 -->|70%| C
 ```
 
-@simmer-burstiness shows that the surviving tasks are indeed around the area of bursty phenomena as reported in the literature. However, there does not seem to be a relationship between urgency weighting and burstiness.
+To illustrate the role of urgency in decision-making, we will use a mathematical representation of our model. We will consider a simplified version of the two-stage decision-making scenario described above, focusing on the first stage, where the decision-maker must choose between "Work an extra shift" or "Attend a free community college class."
 
-## Relating to Poverty {#sec-poverty}
+Let us denote the state of the decision-maker by $s$ and the set of available actions by $A(s) = \{\text{``Work an extra shift"}, \text{``Attend a class"}\}$. The urgency of action $a \in A(s)$ is the time limit $T_a$, after which the action is no longer available.
 
-The literature suggests that the persistence of generational poverty is propagated by countless environmental, physical and psychological factors known as "Poverty Traps" (Barrett et al 2016). Though the dynamics of these negative feedback loops are heavily researched, the commonly invoked mechanism suggests that these traps exist due to a country, person or economy being unable to accumulate enough capital for incomes to rise. However, more recent literature suggests that investing additional capital within an environment will not raise the long-term steady-state income level (Kraay et al 2014) - contradicting the commonly held position. Many studies also investigate whether S-shaped curves, a great predicator of temporally dynamic relationships between income and assets, are indicative of poverty traps. However, this type of analysis has frequently yielded incorrect assessments of poverty-trapping due to a proclivity for numerical errors that such an approach poses. Given the misleading nature of many theoretical approaches to characterize poverty traps, the limited strain of literature addressing this topic has recently begun veering in the direction of seeking behavioral prescriptions.
+The decision-maker's policy $\pi$ determines the action to take in each state. The policy is a function of the current state and time, $\pi(s, t)$, and it changes over time as the urgency of the actions changes.
 
-Our analysis of poverty traps will explore how self-reinforcing behaviors in priority queues represent distinct facets of poverty traps.
+The value $V(s, t)$ of a state $s$ at time $t$ is the expected future reward when following policy $\pi$, discounted over time:
+
+$$V(s, t) = \mathbb{E}_{\pi}\left[R(s_t, a_t) + \gamma \sum_{s' \in S} P(s' | s_t, a_t) V(s', t+1)\right],$$
+
+where $R(s_t, a_t)$ is the immediate reward from taking action $a_t$ in state $s_t$, $P(s' | s_t, a_t)$ is the transition probability from state $s_t$ to state $s'$ given action $a_t$, and $\gamma \in [0, 1]$ is the discount factor that determines the present value of future rewards.
+
+The urgency of an action affects the value of a state by limiting the time available to take the action. As the deadline $T_a$ approaches, the decision-maker's available time budget decreases, constraining the set of feasible actions.
+
+Now, consider the case where "Work an extra shift" is an "immediate-reward task" with a high reward of $R_{\text{work}} = 100$ and a short deadline of $T_{\text{work}} = 1$ day. If the decision-maker does not work the extra shift within one day, they will miss the opportunity to earn additional income. However, this action does not significantly change the future state values, as working an extra shift does not lead to a permanent increase in income.
+
+On the other hand, "Attend a class" is a "future-reward task" with a lower immediate reward of $R_{\text{class}} = 10$ and a longer deadline of $T_{\text{class}} = 7$ days. If the decision-maker does not attend the class within a week, they will miss the opportunity to gain new skills, which could lead to better job opportunities and higher future state values.
+
+The optimal policy $\pi^*$ balances the immediate rewards with the future rewards, considering the actions' urgency and potential future benefits. It is given by:
+
+$$\pi^*(s, t) = \arg\max_{a \in A(s)} Q(s, a, t),$$
+
+where $Q(s, a, t)$ is the action-value function that represents the expected future reward from taking action $a$ in state $s$ at time $t$:
+
+$$Q(s, a, t) = R(s, a) + \gamma \sum_{s'} P(s' | s, a) V(s', t+1),$$
+
+where $P(s' | s, a)$ is the transition probability from state $s$ to state $s'$ given action $a$.
+
+In this case, if the decision-maker follows the optimal policy, they will choose "Work an extra shift" on the first day due to its high immediate reward and urgency and then "Attend a class" on the subsequent days to maximize the potential future benefits. This example illustrates how the urgency of tasks and the distinction between immediate and future rewards can influence the optimal decision-making policy. By incorporating urgency into the decision-making model, we can capture the temporal dynamics of real-life decisions and provide a more accurate representation of the decision-making process.
 
 ### Suboptimal Time Allocation
 
-A particular facet of "poverty traps" can be attributed to the inefficiency of daily task management. Individuals are described as making a sequence of decisions and bargains in order to reduce the strain of their daily demands and roles in a process similar to that of an economic decision: Allocating limited resources such as energy, time, emotions, and goods (Goode, 1960) in different ways. For individuals who belonging to a higher socioeconomic class (SEC), delegating these roles becomes far easier, and the bandwidth to tackle other tasks increases significantly. The converse is true however as well: the poorer one is, the more uncontrolled demand there is on both time and money.
+Inefficient time allocation of daily tasks is another factor that can contribute to the persistence of poverty. Individuals make a sequence of decisions and bargains to reduce the strain of their daily demands and roles in a process similar to an economic decision: Allocating limited resources such as energy, time, emotions, and goods in different ways (Goode, 1960). For individuals from a higher SES, delegating these roles becomes far more manageable, and the bandwidth to tackle other tasks increases significantly. The converse is true, however: the poorer one is, the more uncontrolled demand for time and money.
+
+A recent study by Jachimowicz et al. (2022) provides a compelling illustration of this phenomenon. The authors found that financial scarcity is associated with greater distress intensity in everyday life. They propose that financial resources allow individuals to reduce the distressing impact of everyday hassles, increasing one's life satisfaction. This research suggests that financial scarcity shrinks the sense that one can use economic resources to reduce the adverse impact of daily hassles. While money may not necessarily buy happiness, it reduces the intensity of stressors experienced in daily life---and thereby increases life satisfaction.
+
+In the context of our model, suboptimal time allocation can exacerbate the effects of poverty, leading to a cycle of immediate-reward task selection and persistent financial scarcity. The immediate reward of completing a task and reducing the day's demands can outweigh the potential future benefits of tasks that require more time and effort. This feature is particularly true for individuals facing financial scarcity who may not have the luxury of investing time in tasks with delayed rewards.
+
+The ability to delegate tasks significantly alleviates this burden. Delegation allows individuals to offload tasks to others, freeing up their time and mental resources. This advantage is especially beneficial for urgent tasks, which can consume a disproportionate amount of time and attention. However, the ability to delegate is often a privilege reserved for those with sufficient financial resources. For individuals facing financial scarcity, the cost of delegation may be prohibitive.
+
+By incorporating these dynamics into our model, we can better understand the decision-making processes of individuals in different socioeconomic circumstances.
 
 ### Role Strain
 
-Role strain, the "effort" dimension or subjective value individuals attribute to completing arbitrary tasks, is observed to be higher among the poor (Hopper et al 2020). Formulated in 1960 by Columbia sociologist William Goode, this theory argues that individuals cannot meet all role demands, and through a series of role decisions and bargains, they strive to adjust these demands. In this process, they allocate scarce resources\--role energies, time, emotions, goods\--among the role obligations they have to fulfill. In other words, individuals seek to minimize their perceived role strain (the cognitive and emotional effort of carrying out their duties).
+Introduced by sociologist William Goode in 1960, the concept of role strain motivates our theoretical framework. Goode proposed that individuals, faced with an impossibility of satisfying all role demands, engage in role decisions and bargains to modulate these demands. This process necessitates allocating limited resources such as time, emotions, and goods across various role obligations. The ultimate goal is to minimize perceived role strain, defined as the cognitive and emotional exertion involved in fulfilling duties (Goode, 1960).
 
-Adding tasks to already demanding circumstances will only add to role strain, while adding an extra participant to assist with tasks will instead diminish the strain. A hypothesized cause of poverty traps is the proclivity for the impoverished to over-commit to high urgency tasks, thereby neglecting or under-commiting to high effort or high importance tasks. Goode concurs with this assessment, claiming that conflicts among task choices typically arise through role conflict (when two roles have demands which are mutually exclusive) or role overload (when an individual is too resource scarce to meet the demands of multiple roles). The latter holds more weight in our research goals, an assertion we further investigate.
+Role strain is particularly salient among individuals experiencing poverty, who often grapple with an elevated effort dimension or the subjective value ascribed to task completion. Morris and Coley's 2004 study on role strain correlates among mothers revealed many factors that amplify "strain" in this demographic, many of which are income-related (Morris & Coley, 2004). A separate study on family caregivers of adult cancer patients in Kenya further exemplifies this phenomenon. The researchers discovered that these caregivers, typically under financial strain, experienced significant role strain due to the simultaneous management of multiple responsibilities (Mugenda et al., 2020). These findings underscore the disproportionate burden of role strain borne by those in poverty, who must navigate a labyrinth of tasks and roles with scarce resources.
+
+Adding tasks to already demanding circumstances intensifies role strain, while providing social support to assist with tasks can mitigate it (Lewis, 1989 <https://www.jstor.org/stable/2784697).> A proposed cause of poverty traps is the tendency of impoverished individuals to overcommit to high-urgency tasks, thereby neglecting or under-committing to high-effort or high-importance tasks.
+
+Goode's theory differentiates between role conflict, where two roles present mutually exclusive demands, and role overload, where an individual lacks the resources to meet the demands of multiple roles. The latter is particularly pertinent to our research objectives. Role overload arises when an individual is tasked with fulfilling multiple roles concurrently and struggles to meet these roles' demands. For instance, a full-time student may concurrently struggle to care for young children (Nickerson, C. (2023) <https://www.simplypsychology.org/what-is-role-strain-in-sociology.html).>
+
+Our model seeks to elucidate how task overload influences decision-making processes and outcomes, contributing to our understanding of poverty dynamics.
 
 ### Scarcity
 
-Notably, time and resource scarcity are positively correlated with socioeconomic class. Essentially, a paucity of goods is intrinsic to individuals who are poor. The behavioral patterns which emerge as a result, align with the expected results from Role Strain literature. In countless replication studies, it has been determined that scarcity yields an increase in focus during task completion. The most prominent replication exercise conducted five experiments in which different resources were withheld in order to induce a scarcity complex (Shah et al 2012). In each game, participants were awarded a differing number of "guesses," or "attempts" as a source of currency in order to simulate either resource abundance or scarcity across players. It was observed that when players were more resource scarce, focus on the task increased as a response to the limited opportunities for success that were available. Although the efficiency and accuracy at tasks completion improved for such players, a byproduct was an increase in stress as well. This same outcome has been confirmed in alternative literature (de Bruijn et al 2021), when it was determined that for individuals who have less resources, their daily tasks become increasingly taxing and necessitate more attention (Adamkovič et al 2022).
+The intricate interplay between poverty and cognitive function is critical to socioeconomic studies. Individuals from lower socioeconomic strata often grapple with a dearth of resources, significantly influencing their behavioral patterns and cognitive abilities. This observation has sparked investigations into the so-called "scarcity mindset," a psychological state hypothesized to precipitate three primary cognitive effects: attentional drift, pronounced trade-off thinking, and diminished mental bandwidth (de Bruijn & Antonides, 2022). These cognitive shifts, in turn, can elucidate common behavioral characteristics observed among those of low socioeconomic standing, including overborrowing, more consistent consumption decisions, and increased time discounting and risk aversion (de Bruijn & Antonides, 2022).
 
-### Cognitive Load
+For instance, experiments designed to induce a scarcity mindset by deliberately limiting resources revealed that participants demonstrated heightened focus on tasks due to the limited opportunities for success (Shah et al., 2012; Shah et al., 2019). While this increased focus improved efficiency and accuracy in task completion, it also increased borrowing and elevated stress levels, making tasks increasingly taxing and requiring more attention. However, other studies suggest that further evidence is required to substantiate these conclusions (de Bruijn & Antonides, 2022).
 
-The cognitive fatigue that such tasks cause individuals to endure can become overwhelming. Countless literature suggests that in the aftermath of highly strenuous tasks caused by induced scarcity, attentional shifts become more commonplace. However, other studies claim that there may not be enough information to thoroughly arrive at this conclusion. Nonetheless, nearly all of the current literature converges to the understanding that poverty inadvertently results in overborrowing of resources -- particularly of those that are scarce. This phenomenon is exemplified with debt -- low SES individuals with a lower credit score are at higher risk for requesting loans.
+Moreover, the assertion that poverty reduces mental bandwidth and increases time discounting and risk aversion requires further empirical support (O'Donnell et al., 2021). Current studies only partially align with empirical data and need more precision for a comprehensive understanding (de Bruijn & Antonides, 2022). Notably, a replication study by Shah et al. (2019) examined how different forms of scarcity affect attention and borrowing behavior, finding no evidence that scarcity on one task leads to cognitive fatigue on subsequent tasks, thereby contradicting the results from Shah et al. (2012).
 
-## Relating to Anxiety
+In a more recent study, Madsen et al. (2022) conducted a field experiment using Danish unemployed social assistance recipients to test the psychological consequences of scarcity. The researchers randomly assigned survey recipients to three groups: (a) those surveyed before receiving social assistance benefits, (b) those surveyed after receiving them, and (c) those surveyed in the middle of the month. Interestingly, they found no impact of the scarcity manipulation (those surveyed before payment) on the mindsets of social welfare recipients. However, they did find that subjective scarcity, or "the feeling of having too little," correlated positively with an increased focus on problem-solving but negatively with psychological well-being, mastery, and job search self-efficacy.
 
-In this study, we propose that the behavioral deviations brought by overweighting urgency are mediated by affect. Specifically, it is through stress or anxiety that these shifts occur. Previously, Morris and Coley (2004, <https://psycnet.apa.org/record/2004-18349-003>) examined correlates of role strain among mothers. They find a variety of factors that increase the "strain" in this population. By extension, we propose three channels though which role strain may increase the urgency bias, as follows:
+The relationship between poverty and cognitive function is complex and multifaceted. While scarcity can lead to heightened focus and efficiency in task completion, it also induces a scarcity mindset that can lead to suboptimal decisions and behaviors. Our theory builds on this literature and suggests that people must balance their current and future expenses when they have limited budgets and uncertain incomes. This strain can be challenging and requires attention, executive control, and working memory, leaving fewer cognitive resources for other less urgent tasks. As such, we seek to understand the mechanisms underlying these effects and how they may perpetuate poverty.
+
+## Affective States
+
+The present study proposes that the behavioral deviations observed in individuals living in poverty, specifically the overweighting of urgency, are mediated by affective states such as stress and anxiety. This proposition is rooted in the understanding that stress and anxiety can significantly influence decision-making processes. For instance, a meta-analysis by Starcke and Brand (2016) found that stress generally increases risk-taking.
+
+Indeed, individuals of low socioeconomic status (SES) often report feeling overwhelmed, which can exacerbate stress and anxiety. A study by Williams (2018) on populations of color, who often experience low SES, found that race-related stressors can significantly affect mental health, leading to higher levels of psychological distress. Similarly, a study by Heers and Lipps (2022) found that almost one fifth of parents reported feeling overwhelmed by homeschooling obligations during the Covid-19 pandemic, with women, mid-aged and lower-educated individuals, as well as those with young children and a lower income, being particularly affected. This feeling of being overwhelmed did not cause changes in life satisfaction, stress, and negative affect, but it did lead to a decrease in positive affect.
+
+The intricate relationship between poverty and mental health has been the subject of extensive research, with numerous studies suggesting a bidirectional link between the two. Poverty can exacerbate mental health issues due to the stress and strain of living in financial hardship. In contrast, mental health issues can lead to poverty due to reduced productivity and employment opportunities (Lund et al., 2010). Ridley et al. (2020) further corroborated this relationship, highlighting the detrimental impact of mental illness on economic outcomes.
+
+As mentioned, the stress and tension arising from role strain are central to our hypothesis. Morris and Coley (2004) identified several factors that increase role strain among mothers, including low income, lack of social support, low education, lack of health insurance, and reliance on government welfare.
+
+Similarly, Stack and Meredith (2018) found that single parents are at high risk of financial hardship, leading to poor mental health and low psychological well-being. Single parents often experience higher levels of chronic stress, loneliness, and depression, despite making extensive efforts to meet their financial obligations.
+
+Thus, our proposed model suggests two channels through which role strain may increase the urgency bias. The first channel posits that the subjective experience of strain, which can be exacerbated by factors such as low income, lack of social support, and reliance on government welfare, can lead to an urgency bias in decision-making. The second channel suggests that the stress and anxiety resulting from role strain can also lead to an urgency bias.
 
 ```{mermaid}
 %%| fig-width: 5
@@ -199,18 +318,17 @@ flowchart LR
   B --> H(Stress and Anxiety)
   G --> I(Urgency Bias)
   H --> I
-  B --> I
 ```
 
 # Literature Review
 
 ## Research Questions
 
-1.  To what extent does Socioeconomic Status influence task prioritization, and what is the mediating role of role strain in this process?
+1.  How do urgency and importance shape task selection, and what are the underlying cognitive processes that drive these effects?
 
-2.  What are the key affective mechanisms that contribute to suboptimal time allocation, and how do they interact with cognitive and environmental factors?
+2.  To what extent does Socioeconomic Status influence task prioritization, and what is the mediating role of role strain in this process?
 
-3.  How do urgency and importance shape task selection, and what are the underlying cognitive processes that drive these effects?
+3.  What are the key affective mechanisms that contribute to suboptimal time allocation, and how do they interact with cognitive and environmental factors?
 
 # Pilot Experiment
 
@@ -607,7 +725,7 @@ qualtrics <- qualtrics %>%
 ```
 
 ```{r data for pcacorrelations}
-write_csv(qualtrics, file = "data/fig-pcacorrelations.csv")
+write_csv(qualtrics, file = "data/qualtrics.csv")
 
 ```
 
@@ -686,7 +804,7 @@ We also included demographic variables and participant characteristics (STAI sco
 The model accounted for approximately 20.24% of the variance in total points (Adjusted R-squared = 0.132), with an overall significant model fit (F(6,68) = 2.877, p \< .05).
 
 ```{r data for totalpoints}
-write_csv(joint_pilot, file = "data/tbl-totalpoints.csv")
+write_csv(joint_pilot, file = "data/joint_pilot.csv")
 ```
 
 ```{r, results='asis'}
@@ -879,7 +997,7 @@ two_options <- joint_pilot %>%
          logRT = log(as.numeric(RT))) %>%
   filter(logRT != Inf & logRT != -Inf)
 
-write_csv(two_options, file = "data/tbl-urgencypoverty.csv")
+write_csv(two_options, file = "data/two_options.csv")
 ```
 
 ```{r}
@@ -989,7 +1107,7 @@ ggplot(dat, aes(x = dens, fill = lines)) +
 This score is calculated by first estimating the cost parameters for each participant and then using them with backwards induction to discover the optimal choice at each presented state.
 
 ```{r data for accuracy}
-write_csv(Accuracy, file = "data/fig-accuracy.csv")
+write_csv(Accuracy, file = "data/Accuracy.csv")
 ```
 
 ```{r}
@@ -1130,6 +1248,10 @@ Refer to @questionnaires for our current iteration of comprehensive measurements
 ### Accuracy
 
 # Discussion
+
+### Intergenerational Poverty
+
+People likely learn how to estimate transition probabilities from parents and peers. If people in this support network are not themselves proficient in estimating, then the individual is left to their own devices. Further, affective states can be passed down generations (e.g., anxiety, stress, depression).
 
 # Future Directions: Experiment 2
 
@@ -1292,6 +1414,33 @@ M: Proposal
 \-\-- Dwight D. Eisenhower, 1961 address to the Century Association
 
 [![Source: https://todoist.com/productivity-methods/eisenhower-matrix](images/eisenhower-matrix.png){width="5.36in"}](https://todoist.com/productivity-methods/eisenhower-matrix)
+
+## Burstiness and Memory in Discreet Event Simulation
+
+Further, with interevent times, we can calculate the burstiness and memory as a function of urgency weights.
+
+```{r}
+#| label: fig-simmer-burstiness
+#| fig-cap: "Burstiness by Urgency Weight"
+
+urgency_burstiness_grid <- read_csv("urgency-burstiness-grid.csv") 
+
+plt_bursty <-
+  ggplot(urgency_burstiness_grid,
+         aes(x = M, y = B)) +
+  geom_jitter(aes(color = weights),
+              size = 1,
+              alpha = 0.8) +
+  labs(color = "Urgency Weight") +
+  scale_color_viridis(option = "D")
+
+plt_bursty +
+  geom_hline(yintercept = 0) +
+  geom_vline(xintercept = 0)
+
+```
+
+@simmer-burstiness shows that the surviving tasks are indeed around the area of bursty phenomena as reported in the literature. However, there does not seem to be a relationship between urgency weighting and burstiness.
 
 ## Pilot Experiment Image
 

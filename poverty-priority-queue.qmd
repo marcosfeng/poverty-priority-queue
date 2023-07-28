@@ -18,6 +18,7 @@ format:
     include-in-header:
       - text: |
           \usepackage{dcolumn}
+jupyter: python3
 ---
 
 ```{r init, warning=FALSE, include=FALSE}
@@ -149,7 +150,9 @@ Importantly, each task contains a survival rate as a function of its importance.
 
 $$
 \Pr (\text{survival}|\alpha = s(1+U),\beta=1) = 1 - e^{(-t/\alpha)^\beta}
-$$where $t$ is the wait time, and $s$ is a scaling parameter (in the following simulations, calibrated to 100). As such, each task contains a survival probability, which is then accumulated throughout the task, such that the cumulative survival rate of later tasks are smaller than those of earlier ones.
+$$
+
+where $t$ is the wait time, and $s$ is a scaling parameter (in the following simulations, calibrated to 100). As such, each task contains a survival probability, which is then accumulated throughout the task, such that the cumulative survival rate of later tasks are smaller than those of earlier ones.
 
 By simulating this queue, we can graph a heatmap with the relationship of the weight of urgency on the priority function (\$\\alpha\$) and cumulative survival rate:
 
@@ -1209,7 +1212,7 @@ In line with the pilot study, the game interface for Experiment 1 presented part
 
 1.  Effort: As in the pilot study, we operationalized effort through the number of clicks required to complete an order, with more complex orders demanding more effort.
 
-2.  Importance (value): The representation of importance remained consistent with the pilot study, with dollar signs indicating the subjective value of a task. However, the point-to-cash conversion rate was adjusted, with each point now worth \$0.10, allowing participants to earn up to \$4.00 based on their total points.
+2.  Importance (value): The representation of importance remained consistent with the pilot study, with dollar signs indicating the subjective value of a task. However, with each point now worth \$0.05, participants now earn up to \$4.00 based on their total points.
 
 3.  Urgency: The urgency of tasks was conveyed similarly to the pilot study, with clock icons indicating the degree of urgency. However, low-urgency tasks now remained in the queue for four rounds before being replaced, and, unlike high-urgency tasks, there was no penalty if low-urgency tasks disappeared after four rounds.
 
@@ -1240,6 +1243,71 @@ As seen in @pca-measure, Revisit questionnaire to address variance problems. One
 Refer to @questionnaires for our current iteration of comprehensive measurements.
 
 ## Results
+
+```{r}
+#| label: processing data
+
+# Function to convert a factor variable into an ordered factor
+ordered_factor <- function(fact_var) {
+  categories <- levels(fact_var)
+  n_cat <- length(categories)
+  cont <- matrix(data = 0, nrow = n_cat, ncol = (n_cat - 1))
+  cont[col(cont) < row(cont)] <- 1
+  rownames(cont) <- categories
+  colnames(cont) <- paste(categories[2:n_cat], categories[1:(n_cat - 1)], sep = " vs. ")
+  contrasts(fact_var) <- cont
+  return(fact_var)
+}
+
+# Process the final_data dataframe
+final_data %>%
+  group_by(PROLIFIC_PID) %>%
+  mutate(
+    high_income = 
+      case_when(as.numeric(Age) >= median(as.numeric(Age), na.rm = TRUE) ~ 1,
+                as.numeric(Age)  < median(as.numeric(Age), na.rm = TRUE) ~ 0),
+    high_anxiety = 
+      case_when(Max_Points >= median(Max_Points, na.rm = TRUE) ~ 1,
+                Max_Points  < median(Max_Points, na.rm = TRUE) ~ 0)
+  ) %>%
+  mutate(
+    high_income = factor(high_income,
+                         ordered = TRUE,
+                         labels = c("Low Income", "High Income")),
+    high_anxiety = factor(high_anxiety,
+                          ordered = TRUE,
+                          labels = c("Low Anxiety", "High Anxiety"))
+  ) %>%
+  mutate(
+    # Process each Processed_CSV_Data in each row
+    Processed_CSV_Data = map(Processed_CSV_Data, ~ {
+      df <- .
+
+      # Extract the indeces which differ for each variable
+      df$heart = (df$u1 != df$u2)
+      df$dollar = (df$i1 != df$i2)
+      df$effort = (df$e1 != df$e2)
+      df$left_choice = (df$choice == "L")
+      df$right_choice = (df$choice == "R")
+      df$split = (df$u1 != df$u2 & df$i1 != df$i2 & df$u1 != df$i1)
+      df$ui_leftsplit = df$left_choice*df$split
+      df$ui_rightsplit = df$right_choice*df$split
+
+      # Find the means of the values
+      df$huli = case_when(df$split == 0 ~ NA,
+                          df$ui_leftsplit == 1 & df$u1 == 2 ~ 1,
+                          df$ui_rightsplit == 1 & df$u2 == 2 ~ 1,
+                          df$ui_leftsplit == 1 & df$u1 == 1 ~ 0,
+                          df$ui_rightsplit == 1 & df$u2 == 1 ~ 0)
+      df$luhi = case_when(df$split == 0 ~ NA,
+                          df$ui_leftsplit == 1 & df$i1 == 2 ~ 1,
+                          df$ui_rightsplit == 1 & df$i2 == 2 ~ 1,
+                          df$ui_leftsplit == 1 & df$i1 == 1 ~ 0,
+                          df$ui_rightsplit == 1 & df$i2 == 1 ~ 0)
+      df
+    })
+
+```
 
 ### Choice
 
@@ -1450,9 +1518,9 @@ where $z_e, z_p$ correspond to fantasy/dread and a sense of urgency, respectivel
 P() depends on whether unattended task "decays"
 
 ::: {#fig-prob-weighting layout-ncol="2"}
-![Probability Weighting](images/prob-weighting.png){#fig-prob-weight alt="Probability Weighting"}
+![Probability Weighting](images/prob-weighting.png){#fig-prob-weight}
 
-![Probability Example](images/sense-urgency-illustration.png){#fig-sense-urg alt="Probability Example"}
+![Probability Example](images/sense-urgency-illustration.png){#fig-sense-urg}
 
 Example of Subjective Probabilities
 :::
@@ -1601,6 +1669,115 @@ survival <- prob_survival %>%
 ```
 
 ## Dynamic Programming Simulation
+
+In this analysis, we constructed a Markov Decision Process (MDP) model of the game, then used dynamic programming to solve the MDP and derive an optimal policy – the best course of action at each state. To derive a dynamic programming strategy to optimally play the game, we must clearly define the state, action, and reward at each step in the game.
+
+1.  **State**: The state of the game at any given time can be represented by the current tasks in the queue, each of which is characterized by its effort, importance (value), and urgency. Additionally, the state should also include the round number because the available tasks and their urgency can change from round to round.
+
+2.  **Action**: An action in this game is the selection of a task from the queue.
+
+3.  **Reward**: The reward is the profit (points) gained from completing a task, which is determined by its value (importance).
+
+With these definitions, we can formulate the optimal policy of the game using dynamic programming. The goal is to maximize the total profit over the game.
+
+We denote the state at round $i$ as $s_i$ and an action at round $i$ as $a_i$. The reward of taking action $a_i$ at state $s_i$ is denoted as $r(s_i, a_i)$. The state-transition function, which describes the new state after taking an action, is denoted as $T(s_i, a_i)$. Our aim is to find the policy $\pi^*$ that maximizes the total reward:
+
+$$
+ \pi^* = \arg\max_{\pi} \sum_{i=1}^{40} r(s_i, \pi(s_i))
+$$
+
+The Bellman equation for this game can be written as:
+
+$$
+V(s) = \max_{a} \left( r(s, a) + V(T(s, a)) \right)
+$$
+
+This equation states that the value of a state $s$ is the maximum over all actions $a$ of the immediate reward $r(s, a)$ plus the value of the state resulting from taking action $a$, $V(T(s, a))$.
+
+The crux of this methodology revolves around the Value Iteration algorithm, which involves iteratively updating the value function (the expected cumulative reward from each state) until convergence. To find the optimal policy, we use backward induction; that is, we start at the end of the game and work backward, iteratively computing the value function for each state until we reach the start of the game. At each state, the optimal action is the one that maximizes the immediate reward plus the value of the next state.
+
+Interestingly, after a sufficient number of iterations (over 100 trials), we observed a steady state in the value function, whereby the expected cumulative reward was nearly identical across all states. This convergence suggests that as we approach infinity, the long-term expected reward is almost the same, irrespective of the state under an optimal policy.
+
+Notably, this does not imply that the policy for each state will be identical. However, as is common in many Markov Decision Processes, the task-based game has a level of inherent balance, where we have structured the potential outcomes of different actions to ensure a relatively even distribution of long-term rewards across various states.
+
+Above all, these findings underline the complexity of decision-making processes and the intricate dynamics in this and other task-based games. In practice, the large number of possible states in this game (due to the different combinations of tasks and their characteristics) might make exact dynamic programming infeasible for humans. As such, approximation methods such as function approximation or reinforcement learning techniques are necessary.
+
+```{python}
+import pandas as pd
+import ast
+
+# Load the transition probabilities from the CSV file
+transition_df = pd.read_csv('./dyn_prog/transition_df.csv')
+# Define the discount factor
+gamma = 0.9
+# Maximum number of rounds
+num_rounds = 40
+# Cost and Reward
+costH = 0.5
+costL = 0.1
+rewardH = 2
+rewardL = 1
+
+def reward(state, action):
+    # Split the state into tasks
+    tasks = state.split(',')
+    # The task is chosen based on the action
+    if len(tasks) < 2 or tasks[action] == '<NA>':
+      return None
+    # Calculate Cost
+    cost = costH if tasks[action][1] == 'H' else costL
+    # Calculate the reward
+    if tasks[action][0] == 'H':
+      return rewardH - cost
+    elif tasks[action][0] == 'L':
+      return rewardL - cost
+    else:
+      return None
+
+# Create empty dataframes to store the values and actions for each state and round
+value_df = pd.DataFrame(index=transition_df['Unnamed: 0'], columns=range(1, num_rounds + 1))
+policy_df = pd.DataFrame(index=transition_df['Unnamed: 0'], columns=range(1, num_rounds + 1))
+
+# Fill in the last column of the value matrix with the reward for each state-action pair at the final time step
+for state in transition_df['Unnamed: 0']:
+    Q = []
+    for action in [0, 1]:
+        r = reward(state, action)
+        if r is not None:  # If the action is valid
+            Q.append(r)
+        else:  # If the action is not valid
+            Q.append(0)
+    value_df.loc[state, num_rounds] = max(Q)
+    policy_df.loc[state, num_rounds] = Q.index(max(Q))  # The action that yields the maximum reward
+
+# Work backwards, iteratively filling in each column of the matrix
+for round in reversed(range(1, num_rounds)):  # From (num_rounds - 1) to 1
+    for state in transition_df['Unnamed: 0']:
+        # Identify the index of the current state
+        idx = transition_df.index[transition_df['Unnamed: 0'] == state][0]
+        # Calculate the expected cumulative reward for each possible action
+        Q = []
+        for action in [0, 1]:
+            r = reward(state, action)
+            if r is not None:  # If the action is valid
+                transition_probs = ast.literal_eval(transition_df.iloc[idx, action + 1])
+                Q.append(r + gamma * sum(transition_probs.get(next_state, 0) * value_df.loc[next_state, round + 1]
+                                         for next_state in transition_df['Unnamed: 0']))
+            else:  # If the action is not valid
+                Q.append(0)
+        # Update the value function and the policy
+        value_df.loc[state, round] = max(Q)
+        policy_df.loc[state, round] = Q.index(max(Q))  # The action that yields the maximum expected cumulative reward
+
+value_df.to_csv('./dyn_prog/value_df.csv')
+policy_df.to_csv('./dyn_prog/policy_df.csv')
+
+```
+
+```{python}
+
+```
+
 
 ```{r dyn-pro-simulation, eval=FALSE, include=TRUE}
 
@@ -1999,7 +2176,6 @@ transitions <- expand.grid(choices,states)
 # Remaining task (last 3 characters) is in the next state, but no NA
 transitions$prob <- NA
 ## Non-urgent tasks:
-## Note this is also transitioning to NA and TR states. Fix it in line 91 and __
 transitions[str_detect(str = str_sub(transitions$Var1,-3), pattern = "0"),]$prob <- 
   str_detect(str = transitions[str_detect(str = str_sub(transitions$Var1,-3), pattern = "0"),]$Var2,
              pattern = str_sub(transitions[str_detect(str = str_sub(transitions$Var1,-3), pattern = "0"),]$Var1,-3))
@@ -2209,17 +2385,17 @@ Prolific1_Stan_results <- sampling(object = my_model, data = model_data,
 
 \-\-- Dwight D. Eisenhower, 1961 address to the Century Association
 
-![Source: https://todoist.com/productivity-methods/eisenhower-matrix](images/eisenhower-matrix.png){alt="Source: https://todoist.com/productivity-methods/eisenhower-matrix" width="5.36in"}
+![Source: https://todoist.com/productivity-methods/eisenhower-matrix](images/eisenhower-matrix.png){width="5.36in"}
 
 ## Pilot Experiment Image
 
-![Game interface for Pilot Experiment. Participants had a queue with two tasks on top of the screen and a series of icons they must press in order to complete a task. The clocks (hearts, in this version) and dollar signs on a task represent the urgency and importance of the task, respectively. The right side of the screen displays a rounds counter (top) and a points counter (bottom).](images/totalice.jpeg){#img-pilot-exp alt="Game interface for Pilot Experiment. Participants had a queue with two tasks on top of the screen and a series of icons they must press in order to complete a task. The clocks (hearts, in this version) and dollar signs on a task represent the urgency and importance of the task, respectively. The right side of the screen displays a rounds counter (top) and a points counter (bottom)."}
+![Game interface for Pilot Experiment. Participants had a queue with two tasks on top of the screen and a series of icons they must press in order to complete a task. The clocks (hearts, in this version) and dollar signs on a task represent the urgency and importance of the task, respectively. The right side of the screen displays a rounds counter (top) and a points counter (bottom).](images/totalice.jpeg){#img-pilot-exp}
 
 ## Priority Queuing
 
 A list can contain an arbitrary number of tasks and the priority of each task is an integer drawn from some distribution. The tasks are set to arrive with the rate $\lambda$ following a Poisson dynamics with exponential arrival time distribution and they are executed with rate $\mu$ by always choosing the one with the highest priority.
 
-![Sample Queue](images/prioq-illustration.png){alt="Sample Queue" width="3.2in"}
+![Sample Queue](images/prioq-illustration.png){width="3.2in"}
 
 # Appendix: Documentation
 

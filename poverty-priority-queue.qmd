@@ -945,7 +945,7 @@ joint_pilot %>%
             alternative = "greater",
             order = c("Low Income", "High Income")) -> pooled_income_test
 
-joint_pilot %>%
+joint_pilot %>% 
   mutate(huli = factor(huli,
                        ordered = FALSE,
                        levels = c(1,0),
@@ -1100,8 +1100,8 @@ We also obtain a comparison of the choices participants make and the optimal, or
 ```{r}
 #| label: fig-costs
 #| fig-cap: "Histogram of Estimated Costs per Participant"
-dat <- data.frame(dens = c(costs$cH, costs$cL)
-                  , lines = rep(c("cH", "cL"), each = nrow(costs)))
+dat <- data.frame(dens = c(costs$cH, costs$cL), 
+                  lines = rep(c("cH", "cL"), each = nrow(costs)))
 ggplot(dat, aes(x = dens, fill = lines)) + 
   #geom_histogram() +
   geom_density(alpha = 0.5)

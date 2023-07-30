@@ -30,6 +30,9 @@ vignettes/*.pdf
 .DS_Store
 Icon
 
+python-environment
+python-environment/*
+
 /.quarto/
 
 Icon

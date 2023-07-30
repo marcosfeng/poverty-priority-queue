@@ -2,9 +2,9 @@
 library(tidyverse)
 
 # Load the data
-data1 <- read_csv("data_exp1//Icecream 2023 Prolific_July 20, 2023_16.04.csv")
-data2 <- read_csv("data_exp1/Icecream 2023 Prolific_July 20, 2023_16.03.csv")
-prolific <- read_csv("data_exp1/prolific_export_64a8538371bd4b80e0e7088d.csv")
+data1 <- read_csv("data/Exp1/Icecream 2023 Prolific_July 20, 2023_16.04.csv")
+data2 <- read_csv("data/Exp1/Icecream 2023 Prolific_July 20, 2023_16.03.csv")
+prolific <- read_csv("data/Exp1/prolific_export_64a8538371bd4b80e0e7088d.csv")
 
 # Remove the first two rows from both dataframes
 data1 <- data1[-c(1,2), ]
@@ -39,7 +39,7 @@ columns_to_keep <- c("Progress", "Duration (in seconds)", "Finished", "RecordedD
 united_data <- united_data %>% select(all_of(columns_to_keep))
 
 # Get a list of all unzipped files
-files <- list.files("data_exp1/pavlovia/", pattern = "*.csv", full.names = TRUE)
+files <- list.files("data/Exp1/pavlovia/", pattern = "*.csv", full.names = TRUE)
 
 # Initialize an empty list to store the CSV dataframes
 csv_dataframes <- list()
@@ -66,14 +66,14 @@ united_data$CSV_Data <- united_data$PROLIFIC_PID %>% map(~csv_dataframes[[.]])
 united_data <- united_data %>%
   filter(!is.na(PROLIFIC_PID))
 
-# Function to extract maximum points from the embedded DataFrame
-extract_max_points <- function(df) {
-  if(!is.null(df) && "points" %in% names(df)) {
-    return(max(df$points, na.rm = TRUE))
-  } else {
-    return(NA)
-  }
-}
+# # Function to extract maximum points from the embedded DataFrame
+# extract_max_points <- function(df) {
+#   if(!is.null(df) && "points" %in% names(df)) {
+#     return(max(df$points, na.rm = TRUE))
+#   } else {
+#     return(NA)
+#   }
+# }
 
 # # Apply the function to each embedded DataFrame in the 'CSV_Data' column
 # united_data <- united_data %>%
@@ -81,64 +81,6 @@ extract_max_points <- function(df) {
 # 
 # # Extract the required columns
 # extracted_data <- select(united_data, PROLIFIC_PID, Progress, Max_Points)
-
-# Load necessary libraries
-library(dplyr)
-library(purrr)
-library(stringr)
-
-# Process each CSV data in each row
-united_data <- united_data %>%
-  mutate(Processed_CSV_Data = map(CSV_Data, ~ {
-    df <- .
-    
-    # Correcting for choice lag
-    df$RT <- lead(str_extract(string = df$mouse.time, pattern = "(?<=\\[).+?(?=,)"))
-    df$choice <- ""
-    df[str_detect(df$mouse.clicked_name, "task1"),]$choice <- "L"
-    df[str_detect(df$mouse.clicked_name, "task2"),]$choice <- "R"
-    df$choice <- lead(df$choice)
-    
-    # Delete trials with no action (adding task to queue)
-    df <- df[!is.na(df$RT),]
-    
-    # Keep only variables of interest
-    df <- df %>%
-      select(participant, left, right, choice, points, RT)
-    
-    df$i1 <- NA
-    df$e1 <- NA
-    
-    df$i2 <- NA
-    df$e2 <- NA
-    
-    df$u1 <- str_detect(df$left, "U")
-    df$u2 <- str_detect(df$right, "U")
-    df[str_detect(df$left, "none"), ]$u1 <- NA
-    df[str_detect(df$right, "none"), ]$u2 <- NA
-    
-    df$i1 <- str_detect(df$left, "2.png")
-    df$i2 <- str_detect(df$right, "2.png")
-    df[str_detect(df$left, "none"), ]$i1 <- NA
-    df[str_detect(df$right, "none"), ]$i2 <- NA
-    
-    df$e1 <- str_detect(df$left, "sp")
-    df$e2 <- str_detect(df$right, "sp")
-    df[str_detect(df$left, "none"), ]$e1 <- NA
-    df[str_detect(df$right, "none"), ]$e2 <- NA
-    
-    df$u1 <- as.numeric(df$u1)
-    df$u2 <- as.numeric(df$u2)
-    df$i1 <- as.numeric(df$i1)
-    df$i2 <- as.numeric(df$i2)
-    df$e1 <- as.numeric(df$e1)
-    df$e2 <- as.numeric(df$e2)
-    
-    df
-  }))
-
-
-
 
 
 

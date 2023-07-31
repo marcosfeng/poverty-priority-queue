@@ -2,6 +2,8 @@ import pandas as pd
 import numpy as np
 import os
 import json
+import matplotlib.pyplot as plt
+import matplotlib.patches as patches
 
 # Function to extract task features
 def extract_features(task):
@@ -46,50 +48,58 @@ for filename in os.listdir(source_folder):
 ####################################################################################################
 # Calculate the fixation points
 
+# Define the ROIs with a buffer for measurement error
+buffer = 1.8  # Adjust this value as needed
 
-# Define the boundaries for the regions of interest
 regions = {
-    "top_left": [-0.4, 0.78, 0.1 * 2.5, 0.1 * 3], 
-    "top_right": [0.4, 0.78, 0.1 * 2.5, 0.1 * 3], 
-    "bottom_left": [-0.5, -0.238, 0.23 * 2, 0.45 * 2.5],
-    "bottom_right": [0.5, -0.238, 0.23 * 2, 0.45 * 2.5]
+    "top_left": [-0.4, 0.78, 0.4 * buffer, 0.2 * buffer], 
+    "top_right": [0.4, 0.78, 0.4 * buffer, 0.2 * buffer], 
+    "bottom_left": [-0.5, -0.238, 0.23 * buffer, 0.45 * buffer],
+    "bottom_right": [0.5, -0.238, 0.23 * buffer, 0.45 * buffer]
 }
 
-# Lists of common screen resolutions
-common_horizontal_resolutions = [1024, 1280, 1366, 1600, 1920, 2048, 2560, 2880, 3840, 4096, 5120, 7680, 8192]
-common_vertical_resolutions = [576, 720, 768, 800, 900, 1024, 1080, 1200, 1440, 1536, 1600, 1800, 1920, 2160, 2400, 2880, 3200, 3840, 4320, 4800, 5120, 5760, 6144]
-
+# Define common resolution pairs
+common_resolutions = [(1024, 576), (1280, 720), (1366, 768),
+                      (1600, 900), (1920, 1080), (2048, 1152),
+                      (2560, 1440), (2880, 1620), (3840, 2160),
+                      (4096, 2304), (5120, 2880), (7680, 4320),
+                      (8192, 4608), (1440, 900), (2560, 1600),
+                      (2880, 1800), (3072, 1920)]
 # Function to round to nearest resolution
-def round_to_nearest_resolution(n, resolution_list):
-    # Find the resolution in the list that is closest to n
-    closest_resolution = min(resolution_list, key=lambda x:abs(x-n))
+def round_to_nearest_resolution(x, y, resolution_list):
+    # Find the resolution in the list that is closest to x and y
+    closest_resolution = min(resolution_list, key=lambda res: np.sqrt((x - res[0])**2 + (y - res[1])**2))
     return closest_resolution
 
 def idt(fixations, w_thresh, d_thresh):
     """Apply the I-DT algorithm to a list of fixations."""
     w = w_thresh
     fixation_sequences = []
+    i = 0
+    j = 0
 
-    for i in range(len(fixations)):
-        if i + w > len(fixations):
-            break
+    while j < len(fixations):
+        j = i + 1
+        while j < len(fixations) and fixations[j][2] - fixations[i][2] < w:
+            j += 1
 
-        window = fixations[i:i+w]
+        window = fixations[i:j]
         d = np.sqrt((max(p[0] for p in window) - min(p[0] for p in window))**2 +
                     (max(p[1] for p in window) - min(p[1] for p in window))**2)
 
         if d <= d_thresh:
-            w += 1
+            w += 2
             continue
 
-        if w > w_thresh:
-            fixation_sequences.append(window[:-1])
+        if j - i > 1:
+            fixation_sequences.append(window)
 
+        i = j
         w = w_thresh
 
     return fixation_sequences
 
-def process_fixations_scaled(fixation_data):
+def process_fixations_scaled(fixation_data, max_x, max_y):
     """Process a list of fixations with coordinates scaled to [-1, 1] and trial start time set to 0."""
     fixations = json.loads(fixation_data)
     first_fixation = None
@@ -116,8 +126,8 @@ def process_fixations_scaled(fixation_data):
         fixation_data.append((x, y, timestamp))
 
     # Apply the I-DT algorithm to find fixation sequences
-    w_thresh = 50  # Minimum window size (ms)
-    d_thresh = 0.1  # Dispersion threshold (normalized units)
+    w_thresh = 200  # Minimum window size (ms)
+    d_thresh = 0.05  # Dispersion threshold (normalized units)
     fixation_path = idt(fixation_data, w_thresh, d_thresh)
 
     # Time spent in each region
@@ -132,7 +142,86 @@ def process_fixations_scaled(fixation_data):
 
     return first_fixation, last_fixation, total_time_in_regions, fixation_path
 
+df_test = pd.read_csv('/Users/marcosgallo/Documents/GitHub/poverty-priority-queue/data/Exp1/processed/5b745fb794c93d00010fc4c6_prioq-eyetrack_2023-07-19_18h12.32.493.csv')
+
+# Extract all fixations from all rows
+all_fixations = [json.loads(row) for row in df_test['rawFixations']]
+
+# Flatten the list of lists
+all_fixations = [fixation for sublist in all_fixations for fixation in sublist]
+
+# Find the max x and y values
+max_x = max(fixation['x'] for fixation in all_fixations)
+max_y = max(fixation['y'] for fixation in all_fixations)
+# Round the maxima to plausible screen resolution values
+max_x, max_y = round_to_nearest_resolution(max_x, max_y, common_resolutions)
+
 # Apply the function and create new columns
-df_test[['first_fixation', 'last_fixation', 'time_in_regions', 'path']] = pd.DataFrame(df_test['rawFixations'].apply(process_fixations_scaled).tolist(), index=df_test.index)
+df_test[['first_fixation', 'last_fixation', 'time_in_regions', 'path']] = pd.DataFrame(df_test['rawFixations'].apply(lambda x: process_fixations_scaled(x, max_x, max_y)).tolist(), index=df_test.index)
 
 df_test.head()
+
+# Extract the fixation sequences from the first row
+fixation_sequences = df_test.loc[1, 'path']
+
+# First, let's make the circles just dots and all the same size.
+fig, ax = plt.subplots(figsize=(15,10))
+
+# Add the image
+img = plt.imread('/Users/marcosgallo/Documents/GitHub/poverty-priority-queue/images/exp_example.png')
+ax.imshow(img, extent=[-1, 1, -1, 1])
+
+# Add the ROIs
+for region, (center_x, center_y, size_x, size_y) in regions.items():
+    rect = patches.Rectangle((center_x - size_x / 2, center_y - size_y / 2),
+                             size_x, size_y,
+                             linewidth=1, edgecolor='w', facecolor='white', alpha=0.5)
+    ax.add_patch(rect)
+
+# Add the fixation sequences
+for fixation_sequence in fixation_sequences:
+    x_values = [fixation[0] for fixation in fixation_sequence]
+    y_values = [fixation[1] for fixation in fixation_sequence]
+    
+    # Calculate the center of the fixation sequence (average fixation point)
+    center_x = sum(x_values) / len(x_values)
+    center_y = sum(y_values) / len(y_values)
+    
+    # Add the dot at the center of the fixation sequence
+    ax.plot(center_x, center_y, 'bo', markersize=8)
+
+# Add lines between consecutive fixation sequences
+for i in range(len(fixation_sequences) - 1):
+    x_values_i = [fixation[0] for fixation in fixation_sequences[i]]
+    y_values_i = [fixation[1] for fixation in fixation_sequences[i]]
+    x_values_j = [fixation[0] for fixation in fixation_sequences[i+1]]
+    y_values_j = [fixation[1] for fixation in fixation_sequences[i+1]]
+
+    center_x_i = sum(x_values_i) / len(x_values_i)
+    center_y_i = sum(y_values_i) / len(y_values_i)
+    center_x_j = sum(x_values_j) / len(x_values_j)
+    center_y_j = sum(y_values_j) / len(y_values_j)
+
+    ax.plot([center_x_i, center_x_j], [center_y_i, center_y_j], 'r--')
+
+# Mark the first and last fixations
+first_fixation = fixation_sequences[0]
+last_fixation = fixation_sequences[-1]
+
+x_values_first = [fixation[0] for fixation in first_fixation]
+y_values_first = [fixation[1] for fixation in first_fixation]
+x_values_last = [fixation[0] for fixation in last_fixation]
+y_values_last = [fixation[1] for fixation in last_fixation]
+
+center_x_first = sum(x_values_first) / len(x_values_first)
+center_y_first = sum(y_values_first) / len(y_values_first)
+center_x_last = sum(x_values_last) / len(x_values_last)
+center_y_last = sum(y_values_last) / len(y_values_last)
+
+ax.plot(center_x_first, center_y_first, 'go', markersize=12)  # First fixation in green
+ax.plot(center_x_last, center_y_last, 'ro', markersize=12)  # Last fixation in red
+
+plt.xlim([-1, 1])
+plt.ylim([-1, 1])
+#plt.gca().invert_yaxis()  # Match the image orientation
+plt.show()

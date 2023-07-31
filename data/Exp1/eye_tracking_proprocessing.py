@@ -44,48 +44,95 @@ for filename in os.listdir(source_folder):
         data.to_csv(destination_file_path, index=False)
 
 ####################################################################################################
-# Function to calculate the fixation points
+# Calculate the fixation points
+
 
 # Define the boundaries for the regions of interest
 regions = {
-    "top_left": [-0.4, 0.78, 0.2, 0.2],
-    "top_right": [0.4, 0.78, 0.2, 0.2],
-    "bottom_left": [-0.5, -0.238, 0.2, 0.2],
-    "bottom_right": [0.5, -0.238, 0.2, 0.2]
+    "top_left": [-0.4, 0.78, 0.1 * 2.5, 0.1 * 3], 
+    "top_right": [0.4, 0.78, 0.1 * 2.5, 0.1 * 3], 
+    "bottom_left": [-0.5, -0.238, 0.23 * 2, 0.45 * 2.5],
+    "bottom_right": [0.5, -0.238, 0.23 * 2, 0.45 * 2.5]
 }
 
-def process_fixations(fixation_data):
-    """Process a list of fixations."""
+# Lists of common screen resolutions
+common_horizontal_resolutions = [1024, 1280, 1366, 1600, 1920, 2048, 2560, 2880, 3840, 4096, 5120, 7680, 8192]
+common_vertical_resolutions = [576, 720, 768, 800, 900, 1024, 1080, 1200, 1440, 1536, 1600, 1800, 1920, 2160, 2400, 2880, 3200, 3840, 4320, 4800, 5120, 5760, 6144]
+
+# Function to round to nearest resolution
+def round_to_nearest_resolution(n, resolution_list):
+    # Find the resolution in the list that is closest to n
+    closest_resolution = min(resolution_list, key=lambda x:abs(x-n))
+    return closest_resolution
+
+def idt(fixations, w_thresh, d_thresh):
+    """Apply the I-DT algorithm to a list of fixations."""
+    w = w_thresh
+    fixation_sequences = []
+
+    for i in range(len(fixations)):
+        if i + w > len(fixations):
+            break
+
+        window = fixations[i:i+w]
+        d = np.sqrt((max(p[0] for p in window) - min(p[0] for p in window))**2 +
+                    (max(p[1] for p in window) - min(p[1] for p in window))**2)
+
+        if d <= d_thresh:
+            w += 1
+            continue
+
+        if w > w_thresh:
+            fixation_sequences.append(window[:-1])
+
+        w = w_thresh
+
+    return fixation_sequences
+
+def process_fixations_scaled(fixation_data):
+    """Process a list of fixations with coordinates scaled to [-1, 1] and trial start time set to 0."""
     fixations = json.loads(fixation_data)
     first_fixation = None
     last_fixation = None
     total_time_in_regions = {region: 0 for region in regions}
-    fixation_path = []
+    
+    # Get the timestamp of the first fixation
+    start_time = fixations[0]['timestamp'] if fixations else 0
 
+    fixation_data = []
     for fixation in fixations:
-        x = fixation['x']
-        y = fixation['y']
-        timestamp = fixation['timestamp']
+        # Scale the x and y coordinates
+        x = fixation['x'] / max_x * 2 - 1
+        y = fixation['y'] / max_y * 2 - 1
+
+        # Adjust the timestamp to start from 0
+        timestamp = fixation['timestamp'] - start_time
 
         # First and last fixation
         if first_fixation is None:
             first_fixation = (x, y)
         last_fixation = (x, y)
 
-        # Fixation path
-        if len(fixation_path) == 0 or timestamp - fixation_path[-1][2] >= 250:
-            fixation_path.append((x, y, timestamp))
+        fixation_data.append((x, y, timestamp))
 
-        # Time spent in each region
-        for region, (center_x, center_y, size_x, size_y) in regions.items():
-            if (center_x - size_x / 2 <= x <= center_x + size_x / 2 and
-                center_y - size_y / 2 <= y <= center_y + size_y / 2):
-                if len(fixation_path) >= 2:
-                    total_time_in_regions[region] += fixation_path[-1][2] - fixation_path[-2][2]
+    # Apply the I-DT algorithm to find fixation sequences
+    w_thresh = 50  # Minimum window size (ms)
+    d_thresh = 0.1  # Dispersion threshold (normalized units)
+    fixation_path = idt(fixation_data, w_thresh, d_thresh)
+
+    # Time spent in each region
+    for region, (center_x, center_y, size_x, size_y) in regions.items():
+        for fixation_sequence in fixation_path:
+            for fixation in fixation_sequence:
+                x, y, _ = fixation
+                if (center_x - size_x / 2 <= x <= center_x + size_x / 2 and
+                    center_y - size_y / 2 <= y <= center_y + size_y / 2):
+                    if len(fixation_sequence) >= 2:
+                        total_time_in_regions[region] += fixation_sequence[-1][2] - fixation_sequence[0][2]
 
     return first_fixation, last_fixation, total_time_in_regions, fixation_path
 
-# Apply the function and check for errors
-df_test = pd.read_csv("data/Exp1/processed/5a2adf6a8e00a000019864fb_prioq-eyetrack_2023-07-19_22h44.40.711.csv")
-df_test['processed_fixations'] = df_test['rawFixations'].apply(process_fixations)
+# Apply the function and create new columns
+df_test[['first_fixation', 'last_fixation', 'time_in_regions', 'path']] = pd.DataFrame(df_test['rawFixations'].apply(process_fixations_scaled).tolist(), index=df_test.index)
+
 df_test.head()

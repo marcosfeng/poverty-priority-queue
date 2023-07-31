@@ -5,49 +5,6 @@ import json
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 
-# Function to extract task features
-def extract_features(task):
-    if pd.isna(task):
-        return np.nan, np.nan, np.nan
-    u = int('-U' in task)
-    i = int('2.png' in task)
-    e = int('-sp' in task)
-    return u, i, e
-
-# Source and destination folders
-source_folder = './data/Exp1/pavlovia'
-destination_folder = './data/Exp1/processed'
-
-# Loop through all CSV files in the source folder
-for filename in os.listdir(source_folder):
-    if filename.endswith('.csv'):
-        source_file_path = os.path.join(source_folder, filename)
-        
-        # Load the data
-        data = pd.read_csv(source_file_path)
-
-        # Remove the calibration trials (mouse.x is NA) or any trials where mouse.x is "[]"
-        data = data.dropna(subset=['mouse.x'])
-        data = data[data['mouse.x'] != "[]"]
-
-        # Add the columns: u1 u2 i1 i2 e1 e2
-        data[['u1', 'i1', 'e1']] = pd.DataFrame(data['left'].apply(extract_features).tolist(), index=data.index)
-        data[['u2', 'i2', 'e2']] = pd.DataFrame(data['right'].apply(extract_features).tolist(), index=data.index)
-
-        # Add a choice column (whether they selected task 1 or task 2)
-        data['choice'] = data['mouse.clicked_name'].apply(lambda x: 1 if x == 'task1_poly' else 2 if x == 'task2_poly' else np.nan)
-        
-        # Remove the specified columns
-        columns_to_drop = ['RoundLeft'] + list(data.loc[:, 'date':'calibration_y'].columns) + list(data.loc[:, 'ic_trials.thisRepN':'path'].columns)
-        data = data.drop(columns=columns_to_drop, errors='ignore')
-        
-        # Save the processed data to the destination folder
-        destination_file_path = os.path.join(destination_folder, filename)
-        data.to_csv(destination_file_path, index=False)
-
-####################################################################################################
-# Calculate the fixation points
-
 # Define the ROIs with a buffer for measurement error
 buffer = 1.8  # Adjust this value as needed
 
@@ -65,6 +22,16 @@ common_resolutions = [(1024, 576), (1280, 720), (1366, 768),
                       (4096, 2304), (5120, 2880), (7680, 4320),
                       (8192, 4608), (1440, 900), (2560, 1600),
                       (2880, 1800), (3072, 1920)]
+
+# Function to extract task features
+def extract_features(task):
+    if pd.isna(task):
+        return np.nan, np.nan, np.nan
+    u = int('-U' in task)
+    i = int('2.png' in task)
+    e = int('-sp' in task)
+    return u, i, e
+
 # Function to round to nearest resolution
 def round_to_nearest_resolution(x, y, resolution_list):
     # Find the resolution in the list that is closest to x and y
@@ -142,86 +109,66 @@ def process_fixations_scaled(fixation_data, max_x, max_y):
 
     return first_fixation, last_fixation, total_time_in_regions, fixation_path
 
-df_test = pd.read_csv('/Users/marcosgallo/Documents/GitHub/poverty-priority-queue/data/Exp1/processed/5b745fb794c93d00010fc4c6_prioq-eyetrack_2023-07-19_18h12.32.493.csv')
+# Source and destination folders
+source_folder = './data/Exp1/pavlovia'
+destination_folder = './data/Exp1/processed'
 
-# Extract all fixations from all rows
-all_fixations = [json.loads(row) for row in df_test['rawFixations']]
+# Loop through all CSV files in the source folder
+for filename in os.listdir(source_folder):
+    if filename.endswith('.csv'):
+        source_file_path = os.path.join(source_folder, filename)
+        
+        # Load the data
+        data = pd.read_csv(source_file_path)
+        
+        # Add the 'RoundLeft' column to the data
+        data['RoundLeft'] = data['RoundLeft'][0]
+        # Remove the calibration trials (mouse.x is NA) or any trials where mouse.x is "[]"
+        data = data.dropna(subset=['mouse.x'])
+        data = data[data['mouse.x'] != "[]"]
 
-# Flatten the list of lists
-all_fixations = [fixation for sublist in all_fixations for fixation in sublist]
+        # Add the columns: u1 u2 i1 i2 e1 e2
+        data[['u1', 'i1', 'e1']] = pd.DataFrame(data['left'].apply(extract_features).tolist(), index=data.index)
+        data[['u2', 'i2', 'e2']] = pd.DataFrame(data['right'].apply(extract_features).tolist(), index=data.index)
 
-# Find the max x and y values
-max_x = max(fixation['x'] for fixation in all_fixations)
-max_y = max(fixation['y'] for fixation in all_fixations)
-# Round the maxima to plausible screen resolution values
-max_x, max_y = round_to_nearest_resolution(max_x, max_y, common_resolutions)
+        # Add a choice column (whether they selected task 1 or task 2)
+        data['choice'] = data['mouse.clicked_name'].apply(lambda x: 1 if 'task1_poly' in x else 2 if 'task2_poly' in x else np.nan)
 
-# Apply the function and create new columns
-df_test[['first_fixation', 'last_fixation', 'time_in_regions', 'path']] = pd.DataFrame(df_test['rawFixations'].apply(lambda x: process_fixations_scaled(x, max_x, max_y)).tolist(), index=df_test.index)
+        # Extract all fixations from all rows
+        all_fixations = [json.loads(row) for row in data['rawFixations']]
 
-df_test.head()
+        # Remove the specified columns
+        columns_to_drop = (list(data.loc[:, 'date':'calibration_y'].columns) 
+                         + list(data.loc[:, 'ic_trials.thisRepN':'path'].columns)
+                         + ["calibrationClick.clicked_name", "mouse.x",
+                            "mouse.y", "mouse.leftButton", "mouse.midButton",
+                            "mouse.rightButton", "mouse.time", "mouse.clicked_name"])
+                            
+        # Check if there are at least two rows where all fixations are the same
+        rows_with_same_fixations = [len(set((fixation['x'], fixation['y'])
+                                            for fixation in fixations)) == 1
+                                            for fixations in all_fixations]
+        if rows_with_same_fixations.count(True) >= 2:
+            # Save the processed data to the destination folder
+            data = data.drop(columns=columns_to_drop, errors='ignore')
+            destination_file_path = os.path.join(destination_folder, filename)
+            data.to_csv(destination_file_path, index=False)
+            continue
 
-# Extract the fixation sequences from the first row
-fixation_sequences = df_test.loc[1, 'path']
+        # Flatten the list of lists
+        all_fixations = [fixation for sublist in all_fixations for fixation in sublist]
 
-# First, let's make the circles just dots and all the same size.
-fig, ax = plt.subplots(figsize=(15,10))
+        # Find the max x and y values
+        max_x = max(fixation['x'] for fixation in all_fixations)
+        max_y = max(fixation['y'] for fixation in all_fixations)
+        # Round the maxima to plausible screen resolution values
+        max_x, max_y = round_to_nearest_resolution(max_x, max_y, common_resolutions)
 
-# Add the image
-img = plt.imread('/Users/marcosgallo/Documents/GitHub/poverty-priority-queue/images/exp_example.png')
-ax.imshow(img, extent=[-1, 1, -1, 1])
-
-# Add the ROIs
-for region, (center_x, center_y, size_x, size_y) in regions.items():
-    rect = patches.Rectangle((center_x - size_x / 2, center_y - size_y / 2),
-                             size_x, size_y,
-                             linewidth=1, edgecolor='w', facecolor='white', alpha=0.5)
-    ax.add_patch(rect)
-
-# Add the fixation sequences
-for fixation_sequence in fixation_sequences:
-    x_values = [fixation[0] for fixation in fixation_sequence]
-    y_values = [fixation[1] for fixation in fixation_sequence]
-    
-    # Calculate the center of the fixation sequence (average fixation point)
-    center_x = sum(x_values) / len(x_values)
-    center_y = sum(y_values) / len(y_values)
-    
-    # Add the dot at the center of the fixation sequence
-    ax.plot(center_x, center_y, 'bo', markersize=8)
-
-# Add lines between consecutive fixation sequences
-for i in range(len(fixation_sequences) - 1):
-    x_values_i = [fixation[0] for fixation in fixation_sequences[i]]
-    y_values_i = [fixation[1] for fixation in fixation_sequences[i]]
-    x_values_j = [fixation[0] for fixation in fixation_sequences[i+1]]
-    y_values_j = [fixation[1] for fixation in fixation_sequences[i+1]]
-
-    center_x_i = sum(x_values_i) / len(x_values_i)
-    center_y_i = sum(y_values_i) / len(y_values_i)
-    center_x_j = sum(x_values_j) / len(x_values_j)
-    center_y_j = sum(y_values_j) / len(y_values_j)
-
-    ax.plot([center_x_i, center_x_j], [center_y_i, center_y_j], 'r--')
-
-# Mark the first and last fixations
-first_fixation = fixation_sequences[0]
-last_fixation = fixation_sequences[-1]
-
-x_values_first = [fixation[0] for fixation in first_fixation]
-y_values_first = [fixation[1] for fixation in first_fixation]
-x_values_last = [fixation[0] for fixation in last_fixation]
-y_values_last = [fixation[1] for fixation in last_fixation]
-
-center_x_first = sum(x_values_first) / len(x_values_first)
-center_y_first = sum(y_values_first) / len(y_values_first)
-center_x_last = sum(x_values_last) / len(x_values_last)
-center_y_last = sum(y_values_last) / len(y_values_last)
-
-ax.plot(center_x_first, center_y_first, 'go', markersize=12)  # First fixation in green
-ax.plot(center_x_last, center_y_last, 'ro', markersize=12)  # Last fixation in red
-
-plt.xlim([-1, 1])
-plt.ylim([-1, 1])
-#plt.gca().invert_yaxis()  # Match the image orientation
-plt.show()
+        # Apply the function and create new columns
+        data[['first_fixation', 'last_fixation', 'time_in_regions', 'fixation_path']] = pd.DataFrame(data['rawFixations'].apply(lambda x: process_fixations_scaled(x, max_x, max_y)).tolist(), index=data.index)
+        
+        print(data['path'])
+        # Save the processed data to the destination folder
+        data = data.drop(columns=columns_to_drop, errors='ignore')
+        destination_file_path = os.path.join(destination_folder, filename)
+        data.to_csv(destination_file_path, index=False)

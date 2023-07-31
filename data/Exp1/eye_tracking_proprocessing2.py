@@ -5,7 +5,6 @@ import json
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 
-
 # Define the ROIs with a buffer for measurement error
 buffer = 1.8  # Adjust this value as needed
 
@@ -111,22 +110,19 @@ def process_fixations_scaled(fixation_data, max_x, max_y):
     return first_fixation, last_fixation, total_time_in_regions, fixation_path
 
 # Source and destination folders
-source_folder = '/Users/marcosgallo/Documents/GitHub/poverty-priority-queue/data/Exp1/pavlovia'
-destination_folder = '/Users/marcosgallo/Documents/GitHub/poverty-priority-queue/data/Exp1/processed'
+source_folder = './data/Exp1/pavlovia'
+destination_folder = './data/Exp1/processed'
 
-# Get the total number of files
-total_files = len(os.listdir(source_folder))
 # Loop through all CSV files in the source folder
 for i, filename in enumerate(os.listdir(source_folder)):
     if filename.endswith('.csv'):
-        # Progress update
-        print(f"Processing file {i+1} of {total_files}: {filename}")
-
         source_file_path = os.path.join(source_folder, filename)
         
         # Load the data
         data = pd.read_csv(source_file_path)
-
+        
+        # Add the 'RoundLeft' column to the data
+        data['RoundLeft'] = data['RoundLeft'][0]
         # Remove the calibration trials (mouse.x is NA) or any trials where mouse.x is "[]"
         data = data.dropna(subset=['mouse.x'])
         data = data[data['mouse.x'] != "[]"]
@@ -136,21 +132,25 @@ for i, filename in enumerate(os.listdir(source_folder)):
         data[['u2', 'i2', 'e2']] = pd.DataFrame(data['right'].apply(extract_features).tolist(), index=data.index)
 
         # Add a choice column (whether they selected task 1 or task 2)
-        data['choice'] = data['mouse.clicked_name'].apply(lambda x: 1 if x == 'task1_poly' else 2 if x == 'task2_poly' else np.nan)
-        
-        # Remove the specified columns
-        columns_to_drop = ['RoundLeft'] + list(data.loc[:, 'date':'calibration_y'].columns) + list(data.loc[:, 'ic_trials.thisRepN':'path'].columns)
-        data = data.drop(columns=columns_to_drop, errors='ignore')
+        data['choice'] = data['mouse.clicked_name'].apply(lambda x: 1 if 'task1_poly' in x else 2 if 'task2_poly' in x else np.nan)
 
         # Extract all fixations from all rows
         all_fixations = [json.loads(row) for row in data['rawFixations']]
 
+        # Remove the specified columns
+        columns_to_drop = (list(data.loc[:, 'date':'calibration_y'].columns) 
+                         + list(data.loc[:, 'ic_trials.thisRepN':'path'].columns)
+                         + ["calibrationClick.clicked_name", "mouse.x",
+                            "mouse.y", "mouse.leftButton", "mouse.midButton",
+                            "mouse.rightButton", "mouse.time", "mouse.clicked_name"])
+                            
         # Check if there are at least two rows where all fixations are the same
         rows_with_same_fixations = [len(set((fixation['x'], fixation['y'])
                                             for fixation in fixations)) == 1
                                             for fixations in all_fixations]
         if rows_with_same_fixations.count(True) >= 2:
             # Save the processed data to the destination folder
+            data = data.drop(columns=columns_to_drop, errors='ignore')
             destination_file_path = os.path.join(destination_folder, filename)
             data.to_csv(destination_file_path, index=False)
             continue
@@ -168,5 +168,6 @@ for i, filename in enumerate(os.listdir(source_folder)):
         data[['first_fixation', 'last_fixation', 'time_in_regions', 'path']] = pd.DataFrame(data['rawFixations'].apply(lambda x: process_fixations_scaled(x, max_x, max_y)).tolist(), index=data.index)
 
         # Save the processed data to the destination folder
+        data = data.drop(columns=columns_to_drop, errors='ignore')
         destination_file_path = os.path.join(destination_folder, filename)
         data.to_csv(destination_file_path, index=False)

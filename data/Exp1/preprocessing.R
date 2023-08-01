@@ -39,7 +39,7 @@ columns_to_keep <- c("Progress", "Duration (in seconds)", "Finished", "RecordedD
 united_data <- united_data %>% select(all_of(columns_to_keep))
 
 # Get a list of all unzipped files
-files <- list.files("data/Exp1/pavlovia/", pattern = "*.csv", full.names = TRUE)
+files <- list.files("data/Exp1/processed/", pattern = "*.csv", full.names = TRUE)
 
 # Initialize an empty list to store the CSV dataframes
 csv_dataframes <- list()

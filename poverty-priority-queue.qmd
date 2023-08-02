@@ -1234,6 +1234,49 @@ Experiment 1 addressed this limitation by adjusting the task queue logic. Specif
 
 ## Data
 
+```{r load-data-and-analysis, message=FALSE, warning=FALSE}
+# Load the data
+df <- read_csv('df.csv')
+
+# Identify missing data
+df <- df %>%
+  mutate(across(c(Q3, Q4, Q7, Q10, Q12, Q13, Q17, Q18, Q21, Q22, Q77, Q78, Q81, Q84, Q86, Q87, Q91, Q92, Q95, Q96), function(x) 5 - x),
+         across(c(Q99, Q101, Q104, Q105, Q108, Q111, Q112, Q114, Q117), function(x) 5 - x),
+         SAI_pre = rowSums(select(df, Q3:Q22), na.rm = TRUE),
+         SAI_post = rowSums(select(df, Q76:Q96), na.rm = TRUE),
+         TAI_post = rowSums(select(df, Q98:Q118), na.rm = TRUE)) %>%
+  select(starts_with('Q'), SAI_pre, SAI_post, TAI_post)
+
+# Set up the predictorMatrix
+predictorMatrix <- make.predictorMatrix(df)
+
+# Perform multiple imputation to fill missing values using MICE with FCS
+imputed_data <- mice(df, m=5, maxit = 50, method = 'pmm', seed = 500, predictorMatrix = predictorMatrix)
+
+# Complete the data with the imputed values
+completed_data <- complete(imputed_data, 1)
+
+# Compute factor scores for three different sets of questions
+labor_market_earnings <- fa(completed_data[23:32], nfactors = 1, rotate = "varimax")
+wealth <- fa(completed_data[33:46], nfactors = 1, rotate = "varimax")
+food_insecurity <- fa(completed_data[49:61], nfactors = 1, rotate = "varimax")
+
+# Print factor loadings
+print(labor_market_earnings$loadings)
+print(wealth$loadings)
+print(food_insecurity$loadings)
+
+# Scree plot
+scree(labor_market_earnings)
+scree(wealth)
+scree(food_insecurity)
+
+# Eigenvalues
+print(labor_market_earnings$values)
+print(wealth$values)
+print(food_insecurity$values)
+
+
 ### Demographics
 
 ### Comprehensive Measures of Poverty
@@ -1670,7 +1713,7 @@ survival <- prob_survival %>%
 
 ## Dynamic Programming Simulation
 
-In this analysis, we constructed a Markov Decision Process (MDP) model of the game, then used dynamic programming to solve the MDP and derive an optimal policy – the best course of action at each state. To derive a dynamic programming strategy to optimally play the game, we must clearly define the state, action, and reward at each step in the game.
+In this analysis, we constructed a Markov Decision Process (MDP) model of the game, then used dynamic programming to solve the MDP and derive an optimal policy -- the best course of action at each state. To derive a dynamic programming strategy to optimally play the game, we must clearly define the state, action, and reward at each step in the game.
 
 1.  **State**: The state of the game at any given time can be represented by the current tasks in the queue, each of which is characterized by its effort, importance (value), and urgency. Additionally, the state should also include the round number because the available tasks and their urgency can change from round to round.
 
@@ -1777,7 +1820,6 @@ policy_df.to_csv('./dyn_prog/policy_df.csv')
 ```{python}
 
 ```
-
 
 ```{r dyn-pro-simulation, eval=FALSE, include=TRUE}
 

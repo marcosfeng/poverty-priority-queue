@@ -4,7 +4,8 @@ library(tidyverse)
 # Load the data
 data1 <- read_csv("data/Exp1/Icecream 2023 Prolific_July 20, 2023_16.04.csv")
 data2 <- read_csv("data/Exp1/Icecream 2023 Prolific_July 20, 2023_16.03.csv")
-prolific <- read_csv("data/Exp1/prolific_export_64a8538371bd4b80e0e7088d.csv")
+prolific <- read_csv("data/Exp1/prolific_export_64a8538371bd4b80e0e7088d.csv") %>%
+  filter(Age != "CONSENT_REVOKED")
 
 # Remove the first two rows from both dataframes
 data1 <- data1[-c(1,2), ]
@@ -18,7 +19,6 @@ united_data <- full_join(united_data, prolific, by = c("PROLIFIC_PID" = "Partici
 
 # Replace "Prefer not to answer" and "DATA_EXPIRED" with NA
 united_data <- united_data %>%
-  select(all_of(columns_to_keep)) %>%
   mutate(across(everything(), ~ifelse(. %in% c("Prefer not to answer",
                                                "Prefer not to anwer",
                                                "DATA_EXPIRED"), NA, .)))
@@ -159,31 +159,31 @@ united_data <- united_data %>%
                                        Q32)))
 
 # Define the columns to keep
-columns_to_keep <- c("Progress", "Duration (in seconds)", "Finished", "RecordedDate", "IPAddress", "LocationLatitude", 
-                     "LocationLongitude", "Q3", "Q4", "Q5", "Q6", "Q7", "Q8", "Q9", "Q10", "Q11", "Q12", 
-                     "Q13", "Q14", "Q15", "Q16", "Q17", "Q18", "Q19", "Q20", "Q21", "Q22", "Q23", "Q24", 
-                     "AnnualSalary","WeeklyHours", "Q33_1", "Q33_2", "Q33_3", 
-                     "Q33_4", "Q33_5", "Q33_6", "Q34", "Q35", "Q36", "Q37", "Q38", "Q39", "Q40", "Q41", 
-                     "Q42", "Q43", "attention_check_1", "Q44", "Q45", "Q46_1", "Q46_2", "Q46_3", "Q46_4", 
-                     "Q46_5", "Q46_6", "Q46_7", "Q47_1", "Q47_2", "Q47_3", "Q47_4", "Q47_5", "Q47_6", "Q47_7", 
-                     "Q47_8", "Q47_9", "Q48_1", "Q48_2", "Q48_3", "Q48_4", "Q48_5", "Q48_6", "Q48_7", "Q49_1", 
-                     "Q49_2", "Q49_3", "Q50", "attention_check_2", "Q51", "Q52", "Q53", "Q54", "Q55", "Q56_1", 
-                     "Q56_2", "Q56_3", "Q57", "Q58", "Q59", "Q60", "Q61", "Q77", "Q78", "Q79", "Q80", "Q81",
-                     "Q82", "Q83", "Q84", "Q85", "Q86", "Q87", "Q88", "Q89", "Q90", "Q91", "Q92", "Q93", "Q94",
-                     "Q95", "Q96", "Q97", "Q99", "Q100", "Q101", "Q102", "Q103", "Q104", "Q105", "Q106", "Q107", 
-                     "Q108", "Q109", "Q110", "Q111", "Q112", "Q113", "Q114", "Q115", "Q116", "Q117", "Q118", 
-                     "PROLIFIC_PID", "Total approvals", "Age", "Sex", "Ethnicity simplified", "Country of birth", 
+columns_to_keep <- c("Progress", "Duration (in seconds)", "IPAddress",
+                     "LocationLatitude", "LocationLongitude", "Q3", "Q4", "Q5",
+                     "Q6", "Q7", "Q8", "Q9", "Q10", "Q11", "Q12", "Q13", "Q14",
+                     "Q15", "Q16", "Q17", "Q18", "Q19", "Q20", "Q21", "Q22",
+                     "Q23", "Q24", "AnnualSalary","WeeklyHours", "Q33_1",
+                     "Q33_2", "Q33_3", "Q33_4", "Q33_5", "Q33_6", "Q34", "Q36",
+                     "ResidenceValue","Q44", "Q45", "Q46_1", "Q46_2", "Q46_3",
+                     "Q46_4", "Q46_5", "Q46_6", "Q46_7", "Q47_1", "Q47_2",
+                     "Q47_3", "Q47_4", "Q47_5", "Q47_6", "Q47_7", "Q47_8",
+                     "Q47_9", "Q48_1", "Q48_2", "Q48_3", "Q48_4", "Q48_5",
+                     "Q48_6", "Q48_7", "Q49_1", "Q49_2", "Q49_3", "Q50", "Q51",
+                     "Q52", "Q53", "Q54", "Q55", "Q56_1", "Q56_2", "Q56_3",
+                     "Q57", "Q58", "Q59", "Q60", "Q61", "Q77", "Q78", "Q79",
+                     "Q80", "Q81","Q82", "Q83", "Q84", "Q85", "Q86", "Q87",
+                     "Q88", "Q89", "Q90", "Q91", "Q92", "Q93", "Q94","Q95",
+                     "Q96", "Q97", "Q99", "Q100", "Q101", "Q102", "Q103",
+                     "Q104", "Q105", "Q106", "Q107", "Q108", "Q109", "Q110",
+                     "Q111", "Q112", "Q113", "Q114", "Q115", "Q116", "Q117",
+                     "Q118", "PROLIFIC_PID", "Total approvals", "attention",
+                     "Age","Sex", "Ethnicity simplified", "Country of birth",
                      "Student status")
-
   
 united_data <- united_data %>%
   filter(!is.na(attention)) %>% # Remove observations where both are 0
-  select(-Q38)
-
-
-
-
-
+  select(all_of(columns_to_keep))
 
 # Get a list of all unzipped files
 files <- list.files("data/Exp1/processed/", pattern = "*.csv", full.names = TRUE)
@@ -212,7 +212,10 @@ united_data$CSV_Data <- united_data$PROLIFIC_PID %>% map(~csv_dataframes[[.]])
 
 united_data <- united_data %>%
   filter(!is.na(PROLIFIC_PID))
-  
+
+df <- united_data
+save(df, file = "./data/Exp1/df.Rdata")
+# write_csv(df, file = "./data/Exp1/df.csv")
 
 # # Function to extract maximum points from the embedded DataFrame
 # extract_max_points <- function(df) {
@@ -230,8 +233,7 @@ united_data <- united_data %>%
 # # Extract the required columns
 # extracted_data <- select(united_data, PROLIFIC_PID, Progress, Max_Points)
 
-save(united_data, file = "./data/Exp1/df.Rdata")
-write_csv(united_data, file = "./data/Exp1/df.csv")
+
 
 
 

@@ -30,6 +30,7 @@ library(rstan)
 library(pglm)
 library(factoextra)
 library(psych)
+library(gt)
 
 # © 1998-2023 RANDOM.ORG
 # 
@@ -690,13 +691,13 @@ Though the simplest measure to collect, self-reported incomes has a number of li
 
 #### ZIP code Measures
 
-To remove measurement error from self-reported income, we use median income and poverty measures by the zip code of each participant, as provided by Qualtrics (which collects IP addresses of each participant).
+To supplement the self-reported income data and account for any potential measurement errors, we employed additional economic indicators based on participants' ZIP codes. The Internet Protocol (IP) addresses collected automatically by Qualtrics were used to determine the ZIP code of each participant's location. From these ZIP codes, we extracted relevant economic data, including median income and poverty measures, which provided a broader context for each participant's socioeconomic status.
 
-Our poverty measures are from the American Community Survey (ACS). The Census Bureau uses a set of dollar value thresholds that vary by family size and composition to determine who is in poverty, with thresholds (income cutoffs) arranged in a two-dimensional matrix (income and family size, from one person to nine or more people).
+The poverty measures in our analysis come from the American Community Survey (ACS) conducted by the U.S. Census Bureau. The ACS determines poverty status based on a set of income thresholds that vary by family size and composition. It provides a comprehensive and nuanced understanding of poverty by incorporating the complexity of family structures and income levels into its poverty thresholds.
 
-Our median income data is based on the distribution of the total number of households and families including those with no income.
+The median income data we used is also sourced from the ACS. This data reflects the median income distribution across all households and families within each ZIP code, including those with no income. As a result, it provides a robust measure of the overall economic status of the communities in which our participants reside.
 
-For more information, check <https://www2.census.gov/programs-surveys/acs/tech_docs/subject_definitions/2021_ACSSubjectDefinitions.pdf>
+For a more detailed understanding of these measures, please refer to the ACS Subject Definitions document available at [this link](https://www2.census.gov/programs-surveys/acs/tech_docs/subject_definitions/2021_ACSSubjectDefinitions.pdf).
 
 #### ¶Composite Measure (PCA)
 
@@ -1227,15 +1228,17 @@ Experiment 1 addressed this limitation by adjusting the task queue logic. Specif
 
 ![Game interface for Experiment 1. Participants have a queue, with a task on each side, and a series of icons they must press in order to complete a task. The clocks and dollar signs on a task represent the urgency and importance of the task, respectively. The top of the screen displays a points counter and a rounds counter.](images/exp_example.png){#img-exp}
 
-## Power Analysis
+<!-- ## Power Analysis -->
 
-### Behavioral Measures
+<!-- ### Behavioral Measures -->
 
-### Perceived Effort
+<!-- ### Perceived Effort -->
 
 ## Hypotheses
 
 ## Data
+
+Our experiment was conducted on the Prolific platform. In total, we acquired data from N = 115 participants, each of whom completed the modified experimental paradigm and revised questionnaires designed to explore the relationships between financial status, anxiety, and decision-making under uncertainty.
 
 ```{r load-data-and-analysis, message=FALSE, warning=FALSE}
 library(mice)
@@ -1417,9 +1420,72 @@ df <- df %>%
 
 ### Demographics
 
+Our experiment involved participants with various income levels and anxiety scores. @tbl-exp1-demo summarizes the demographics of the participants. Regarding income, we observed a significant difference between high-income and low-income participants (p = 0.05). The mean income for the high-income group was approximately \$146,012.57, while for the low-income group, it was around \$17,571.42. This substantial income disparity within our sample reflects the economic diversity of the participants, ranging from those experiencing financial hardship to those with more substantial financial resources.
+For anxiety scores, as measured by the State-Trait Anxiety Inventory (STAI), we observed stark differences between the high- and low-anxiety groups, both pre- and post-experiment. Before the experiment, the mean State Anxiety score for the high-anxiety group was 48.38, compared to 39.97 for the low-anxiety group (p < 0.001). Similar patterns were observed post-experiment, with a mean State Anxiety score of 48.81 for the high anxiety group and 38.23 for the low anxiety group (p < 0.001). The Trait Anxiety scores followed a similar pattern, with a mean of 48.65 for the high-anxiety group and 39.43 for the low-anxiety group (p < 0.001).
 
+``` {r}
+#| label: tbl-exp1-demo
+#| tbl-cap: "Descriptive statistics for income and anxiety scores. Mean values are provided for high- and low-income groups and high- and low-anxiety groups. The p-values from t-tests comparing high and low groups are also included."
 
-### Comprehensive Measures of Poverty
+df <- df %>%
+  mutate(SAI_post = case_when(SAI_post == 0 ~ NA,
+                              .default = SAI_post),
+         TAI_post = case_when(TAI_post == 0 ~ NA,
+                              .default = TAI_post))
+
+# Calculate the median of AnnualSalary and Anxiety scores
+median_salary <- median(df$AnnualSalary, na.rm = TRUE)
+median_SAI_pre <- median(df$SAI_pre, na.rm = TRUE)
+median_SAI_post <- median(df$SAI_post, na.rm = TRUE)
+median_TAI_post <- median(df$TAI_post, na.rm = TRUE)
+
+# Create two new columns to distinguish high-low income and high-low anxiety
+df$IncomeGroup <- ifelse(df$AnnualSalary > median_salary, 'High', 'Low')
+df$AnxietyGroup_SAI_pre <- ifelse(df$SAI_pre > median_SAI_pre, 'High', 'Low')
+df$AnxietyGroup_SAI_post <- ifelse(df$SAI_post > median_SAI_post, 'High',
+                                   ifelse(!is.na(df$SAI_post),'Low',NA))
+df$AnxietyGroup_TAI_post <- ifelse(df$TAI_post > median_TAI_post, 'High',
+                                   ifelse(!is.na(df$TAI_post),'Low',NA))
+
+# Perform t-tests to compare means of high and low income groups and high and low anxiety groups
+t_test_income <- t.test(df$AnnualSalary[df$IncomeGroup == 'High'], df$AnnualSalary[df$IncomeGroup == 'Low'])
+t_test_anxiety_SAI_pre <- t.test(df$SAI_pre[df$AnxietyGroup_SAI_pre == 'High'], df$SAI_pre[df$AnxietyGroup_SAI_pre == 'Low'])
+t_test_anxiety_SAI_post <- t.test(df$SAI_post[df$AnxietyGroup_SAI_post == 'High'], df$SAI_post[df$AnxietyGroup_SAI_post == 'Low'])
+t_test_anxiety_TAI_post <- t.test(df$TAI_post[df$AnxietyGroup_TAI_post == 'High'], df$TAI_post[df$AnxietyGroup_TAI_post == 'Low'])
+
+# Calculate mean of each group
+mean_high_income <- mean(df$AnnualSalary[df$IncomeGroup == 'High'], na.rm = TRUE)
+mean_low_income <- mean(df$AnnualSalary[df$IncomeGroup == 'Low'], na.rm = TRUE)
+mean_high_anxiety_SAI_pre <- mean(df$SAI_pre[df$AnxietyGroup_SAI_pre == 'High'], na.rm = TRUE)
+mean_low_anxiety_SAI_pre <- mean(df$SAI_pre[df$AnxietyGroup_SAI_pre == 'Low'], na.rm = TRUE)
+mean_high_anxiety_SAI_post <- mean(df$SAI_post[df$AnxietyGroup_SAI_post == 'High'], na.rm = TRUE)
+mean_low_anxiety_SAI_post <- mean(df$SAI_post[df$AnxietyGroup_SAI_post == 'Low'], na.rm = TRUE)
+mean_high_anxiety_TAI_post <- mean(df$TAI_post[df$AnxietyGroup_TAI_post == 'High'], na.rm = TRUE)
+mean_low_anxiety_TAI_post <- mean(df$TAI_post[df$AnxietyGroup_TAI_post == 'Low'], na.rm = TRUE)
+
+# Reshape the results data frame
+results_reshaped <- data.frame(
+  Group = c("Income", "State Anxiety (pre-experiment)", "State Anxiety (post-experiment)", "Trait Anxiety"),
+  Mean_High = c(mean_high_income, mean_high_anxiety_SAI_pre, mean_high_anxiety_SAI_post, mean_high_anxiety_TAI_post),
+  Mean_Low = c(mean_low_income, mean_low_anxiety_SAI_pre, mean_low_anxiety_SAI_post, mean_low_anxiety_TAI_post),
+  p_value = c(t_test_income$p.value, t_test_anxiety_SAI_pre$p.value, t_test_anxiety_SAI_post$p.value, t_test_anxiety_TAI_post$p.value)
+)
+
+# Format the table
+gt(results_reshaped) %>%
+  fmt_number(columns = c(Mean_High, Mean_Low), decimals = 2) %>%
+  fmt_scientific(columns = c(p_value), decimals = 3, drop_trailing_zeros = FALSE) %>%
+  tab_style(style = cell_borders(sides = "bottom"), locations = cells_body(rows = 4)) %>%
+  cols_label(
+    Group = "Group",
+    Mean_High = "Mean High",
+    Mean_Low = "Mean Low",
+    p_value = "p-value"
+  )
+
+```
+
+### Comprehensive Poverty Measures
 
 To develop a more nuanced measure of poverty, we revisited our questionnaire to address variance issues (@pca-measure). We contemplated expanding our sample to include more lower-income individuals or introducing new questions to elicit more variance. Our current iteration of comprehensive measurements is available in @questionnaires.
 
@@ -1472,6 +1538,104 @@ The derived factors, based on their highest loadings, represent the following co
 3. **Factor 3 (PA3)**: This factor had the highest loadings on questions related to home ownership. Thus, we interpret Factor 3 as a "Housing Status" factor. This factor had a negative correlation with Factor 1 (PA1) and a slight positive correlation with Factor 2 (PA2).
 
 The correlation of the factor scores with the factors for PA1, PA2, and PA3 were 0.99, 0.94, and 0.91, respectively, indicating high accuracy of the factor scores. Similarly, the multiple R square of scores with factors for PA1, PA2, and PA3 were 0.98, 0.88, and 0.83, respectively, suggesting a strong relationship between the observed variables and the extracted factors. The minimum correlation of possible factor scores were 0.97, 0.77, and 0.67 for PA1, PA2, and PA3, respectively, further supporting the adequacy of the factor scores.
+
+### Zip Code Poverty Measures
+
+Similar to our pilot study, we validated participants' income reports by analyzing economic data from their ZIP codes. We used the American Community Survey to obtain poverty and median income measures, allowing us to analyze the impact of geographic and community-level factors on individual experiences of poverty.
+
+``` {r}
+#| label: fig-exp1-zip-poverty
+#| fig-cap: "Income and Poverty Levels by ZIP Code"
+
+# Load the ip to zip code data
+ip2zip <- read_csv("data/ZIPcode/ip2zip_exp1.csv")
+
+# Merge the demographics data with the ip to zip code data
+df <- merge(y = df,
+           x = ip2zip,
+           by.y = "IPAddress",
+           by.x = "IP")
+
+# Load the poverty data
+poverty <- read_csv("data/ZIPcode/ACSST5Y2019.S1701_data_with_overlays_2021-12-21T174024.csv")
+
+# Process the poverty data
+poverty <- poverty %>%
+  dplyr::select(NAME, S1701_C03_001E) %>%
+  mutate(ZIP = as.numeric(str_sub(NAME, start= -5))) %>%
+  dplyr::select(-NAME)
+
+# Merge the demographics data with the poverty data
+df <- df %>%
+  left_join(poverty, by = "ZIP")
+
+# Load the income data
+income <- read_csv("data/ZIPcode/ACSST5Y2019.S1903_data_with_overlays_2021-11-16T180635.csv")
+
+# Process the income data
+income <- income %>%
+  dplyr::select(NAME, S1903_C03_001E) %>%
+  mutate(ZIP = as.numeric(str_sub(NAME, start= -5))) %>%
+  dplyr::select(-NAME)
+
+# Merge the demographics data with the income data and remove the IP column for privacy
+df <- df %>%
+  dplyr::select(-"IP") %>%
+  left_join(income, by = "ZIP") %>%
+  mutate(
+    zip_poverty = as.numeric(S1701_C03_001E),
+    zip_income = as.numeric(S1903_C03_001E)
+  ) %>%
+  select(!c(S1701_C03_001E, S1903_C03_001E))
+
+# Generate summary statistics
+summary_stats <- df %>%
+  summarise(
+    mean_income = mean(zip_income, na.rm = TRUE),
+    mean_poverty_rate = mean(zip_poverty, na.rm = TRUE),
+  )
+
+library(ggmap)
+library(maps)
+library(maptools)
+
+# Add a new column for the transformed poverty level
+df$zip_poverty_log <- log1p(df$zip_poverty)
+# Define the colors and breakpoints
+colors <- c("blue","blue","white", "red","red")
+breaks <- quantile(df$zip_poverty_log, probs = c(0, 0.25, 0.5, 0.75, 1), na.rm = TRUE)
+# Create a color gradient function
+color_gradient <- colorRampPalette(colors)
+# Get the US map data
+us_map <- map_data("state")
+# Generate the plot
+ggplot() +
+  # Draw the map
+  geom_polygon(data = us_map, aes(x = long, y = lat, group = group), fill = "white", color = "black") +
+  # Add the points
+  geom_point(data = df[!is.na(df$zip_poverty),],
+             aes(x = Long, y = Lat, size = zip_income, color = zip_poverty_log)) +
+  # Define the color scale
+  scale_color_gradientn(colors = color_gradient(100), 
+                        breaks = breaks, 
+                        labels = round(breaks, 2),
+                        guide = "colorbar") +
+  # Define the size scale
+  scale_size_continuous(range = c(1, 5)) +
+  # Add labels for the color and size scales
+  labs(color = "Poverty Level", size = "Median Income") +
+  # Set the plot theme
+  theme_minimal() +
+  # Remove the grid lines
+  theme(panel.grid.major = element_blank(), 
+        panel.grid.minor = element_blank(),
+        axis.text = element_blank(), 
+        axis.ticks = element_blank()) +
+  # Remove the axis labels
+  labs(x = "", y = "")
+
+
+```
 
 ## Results
 
@@ -1541,6 +1705,406 @@ final_data %>%
 ```
 
 ### Choice
+
+
+### Task Performance
+
+We compiled data on each participant's selection and non-selection of each type of task (Important, Hard, and Urgent), then computed the frequency with which each participant picked a particular task type when given an option. @tbl-totalpoints indicates that the decision to complete Important tasks significantly affected the total points a participant amassed (Estimate = 16.098, p \< .001). Specifically, a ten percentage point rise in the ratio of selected Important tasks (two points, as opposed to one point) resulted in an increase of 1.6 points in the overall score. However, the percentage of times a participant chose Hard or Urgent tasks did not significantly explain the total points accumulated (Estimate = -7.563, p = .371 for Hard tasks; Estimate = 6.539, p = .142 for Urgent tasks).
+
+We also included demographic variables and participant characteristics (STAI score, income level, and platform) as control variables in the regression model, but none showed a significant relationship with total points.
+
+The model accounted for approximately 20.24% of the variance in total points (Adjusted R-squared = 0.132), with an overall significant model fit (F(6,68) = 2.877, p \< .05).
+
+```{r, results='asis'}
+#| label: tbl-totalpoints
+#| tbl-cap: "Regression analysis of total points on participants' choice behavior and demographic variables. The predictors include the percentage of choices where Important, Hard, and Urgent tasks were chosen, participants' STAI score, income level (High vs. Low), and the platform on which the experiment was conducted (Prolific vs. Mturk)."
+
+library(stargazer)
+
+joint_pilot <- joint_pilot %>%
+  mutate(chosen_i = ifelse(choice == "L", i1, i2) - 1,
+         chosen_e = ifelse(choice == "L", e1, e2) - 1,
+         chosen_u = ifelse(choice == "L", u1, u2) - 1,
+         not_chosen_i = ifelse(choice == "L", i2, i1) - 1,
+         not_chosen_e = ifelse(choice == "L", e2, e1) - 1,
+         not_chosen_u = ifelse(choice == "L", u2, u1) - 1)
+
+# Calculate total points per participant
+points_per_participant <- joint_pilot %>%
+  group_by(participant) %>%
+  summarise(total_points = max(points),
+            stai = first(stai),
+            high_income = first(high_income),
+            platform = first(platform))
+
+# Calculate the percentage of times when the urgent, important and effortful options were chosen
+choice_percentages <- joint_pilot %>%
+  mutate(
+    urgent_chosen = ifelse(chosen_u > not_chosen_u, 1, 0),
+    important_chosen = ifelse(chosen_i > not_chosen_i, 1, 0),
+    effort_chosen = ifelse(chosen_e > not_chosen_e, 1, 0)
+  ) %>%
+  group_by(participant) %>%
+  summarise(perc_urgent_chosen = mean(urgent_chosen, na.rm = TRUE),
+            perc_important_chosen = mean(important_chosen, na.rm = TRUE),
+            perc_effort_chosen = mean(effort_chosen, na.rm = TRUE))
+
+performance <- inner_join(points_per_participant, choice_percentages, by = "participant")
+
+# Run regression
+regression_model <- lm(total_points ~ perc_important_chosen + 
+                         perc_effort_chosen + perc_urgent_chosen +
+                         stai + high_income + platform, data = performance)
+
+# summary_stats <- summary(regression_model)
+
+stargazer(regression_model, type = "latex", header = FALSE, align = TRUE,
+          covariate.labels = c("Percentage of Important task chosen",
+                               "Percentage of Hard task chosen",
+                               "Percentage of Urgent task chosen",
+                               "STAI Score",
+                               "Low Income",
+                               "Platform: Prolific (vs. Mturk)"),
+          dep.var.labels = c("Total Points"),
+          star.cutoffs = c(.05, .01, .001), 
+          star.char = c("*", "**", "***"))
+
+```
+
+### Trade-off Decisions
+
+When we compare an individual's choice of "challenging" tasks: decisions between high urgency - low importance or low importance - high urgency tasks, we observe that high anxiety and low income individuals more often choose high urgency tasks over high value tasks, which corroborates the current non-quantitative literature as can be observed in the plots below.
+
+```{r}
+#| label: fig-tradeoff-results
+#| fig-cap: "Choice proportions by income and anxiety"
+#| fig-subcap:
+#|   - "Income"
+#|   - "Anxiety"
+#| layout-ncol: 2
+
+joint_pilot %>%
+  group_by(platform, high_income) %>%
+  filter(!is.na(high_income)) %>%
+  summarise(choose_urg = sum(huli, na.rm = TRUE),
+            total = sum(!is.na(huli)),
+            mean_huli  = mean(huli, na.rm = TRUE)) %>%
+  mutate(se = sqrt((mean_huli * (1-mean_huli)) / total)) %>%
+  
+  ggplot(aes(platform, mean_huli, fill = high_income),
+         alpha=0.7) + 
+  geom_col(position = "dodge") +
+  labs(title="Choice Frequency of Urgent vs Non-urgent Tasks",
+       x ="Platform",
+       y = "Frequency of urgent/not important choices",
+       fill = "") +
+  scale_fill_brewer() +
+  theme_minimal() +
+  geom_errorbar(aes(ymin = mean_huli - se, ymax = mean_huli + se),
+                width=0.4,
+                alpha=0.9,
+                position = position_dodge(0.9)) + 
+  geom_hline(yintercept=0.5, linetype=2)
+
+
+joint_pilot %>%
+  group_by(platform, high_anxiety) %>%
+  filter(!is.na(high_anxiety)) %>%
+  summarise(choose_urg = sum(huli, na.rm = TRUE),
+            total = sum(!is.na(huli)),
+            mean_huli  = mean(huli, na.rm = TRUE)) %>%
+  mutate(se = sqrt((mean_huli * (1-mean_huli)) / total)) %>%
+  
+  ggplot(aes(platform, mean_huli, fill = high_anxiety),
+         alpha=0.7) + 
+  geom_col(position = "dodge") +
+  labs(title="Choice Frequency of Urgent vs Non-urgent Tasks",
+       x ="Platform",
+       y = "Frequency of urgent/not important choices",
+       fill = "") +
+  scale_fill_brewer() +
+  theme_minimal() +
+  geom_errorbar(aes(ymin = mean_huli - se, ymax = mean_huli + se),
+                width=0.4,
+                alpha=0.9,
+                position = position_dodge(0.9)) + 
+  geom_hline(yintercept=0.5, linetype=2)
+
+```
+
+Accuracy in trade-off decisions as a function of income and anxiety
+
+Multiple regression models to test the same hypotheses with different measures of income.
+
+```{r}
+#| label: proportion-tests
+
+joint_pilot %>%
+  mutate(huli = factor(huli,
+                       ordered = FALSE,
+                       levels = c(1,0),
+                       labels = c("High Urgency, Low Importance",
+                                  "Low Urgency, High Importance"))) %>%
+  prop_test(formula = huli ~ high_income,
+            alternative = "greater",
+            order = c("Low Income", "High Income")) -> pooled_income_test
+
+joint_pilot %>% 
+  mutate(huli = factor(huli,
+                       ordered = FALSE,
+                       levels = c(1,0),
+                       labels = c("High Urgency, Low Importance",
+                                  "Low Urgency, High Importance"))) %>%
+  prop_test(formula = huli ~ high_anxiety,
+            alternative = "less",
+            order = c("Low Anxiety", "High Anxiety")) -> pooled_anxiety_test
+
+joint_pilot %>%
+  filter(high_income == "Low Income") %>%
+  mutate(huli = factor(huli,
+                       ordered = FALSE,
+                       levels = c(1,0),
+                       labels = c("High Urgency, Low Importance",
+                                  "Low Urgency, High Importance"))) %>%
+  prop_test(formula = huli ~ NULL,
+            success = "High Urgency, Low Importance",
+            p = 0.5,
+            alternative = "greater") -> low_income_test
+
+joint_pilot %>%
+  filter(high_anxiety == "High Anxiety") %>%
+  mutate(huli = factor(huli,
+                       ordered = FALSE,
+                       levels = c(1,0),
+                       labels = c("High Urgency, Low Importance",
+                                  "Low Urgency, High Importance"))) %>%
+  prop_test(formula = huli ~ NULL,
+            success = "High Urgency, Low Importance",
+            p = 0.5,
+            alternative = "greater") -> high_anxiety_test
+
+```
+
+Percent of urgent choices (vs. important) as a function of income and anxiety.
+
+### General Urgency Bias
+
+Individuals in the low income groups and in the high anxiety groups chose urgent tasks more often than important tasks. This result is not consistent for high income or low anxiety groups. Future graphs in this document will show that the difference-in-difference is not as clear.
+
+1.  
+
+2.  Multiple regression models to test the same hypotheses with different measures of income.
+
+```{r data for urgencypoverty}
+two_options <- joint_pilot %>%
+  filter(!is.na(participant), !is.na(round)) %>%
+  filter(!is.na(chosen_i), !is.na(chosen_e),
+         !is.na(not_chosen_i), !is.na(not_chosen_e), !is.na(not_chosen_u)) %>%
+  mutate(income = as.numeric(income),
+         logRT = log(as.numeric(RT))) %>%
+  filter(logRT != Inf & logRT != -Inf)
+
+write_csv(two_options, file = "data/Pilot/two_options.csv")
+```
+
+```{r}
+#| label: tbl-urgencypoverty
+
+pglm(formula = chosen_u ~ Dim.1*Dim.2 +
+                          age + education + points +
+                          chosen_i + chosen_e + not_chosen_i + not_chosen_e + not_chosen_u,
+     data = two_options,
+     effect = "twoways",
+     index = c("participant", "round"),
+     model = "random",
+     family = binomial('logit')) -> urg_bias_pca
+
+pglm(formula = chosen_u ~ income*stai +
+                          age + education + points +
+                          chosen_i + chosen_e + not_chosen_i + not_chosen_e + not_chosen_u,
+     data = two_options,
+     effect = "twoways",
+     index = c("participant", "round"),
+     model = "random",
+     family = binomial('logit')) -> urg_bias_income
+
+pglm(formula = chosen_u ~ poverty_zip*stai +
+                          age + education + points +
+                          chosen_i + chosen_e + not_chosen_i + not_chosen_e + not_chosen_u,
+     data = two_options,
+     effect = "twoways",
+     index = c("participant", "round"),
+     model = "random",
+     family = binomial('logit')) -> urg_bias_zipdeprivation
+
+pglm(formula = chosen_u ~ median_income_zip*stai +
+                          age + education + points +
+                          chosen_i + chosen_e + not_chosen_i + not_chosen_e + not_chosen_u,
+     data = two_options,
+     effect = "twoways",
+     index = c("participant", "round"),
+     model = "random",
+     family = binomial('logit')) -> urg_bias_zipincome
+
+```
+
+It seems that when controlling for Dim 1 and 2, some effects become significant. Multicollinearity might be a problem, although correlations between STAI and PCA components are not higher than 0.6 (see correlation plots above). These results might be a result of a separation between State and Trait Anxiety. Although we only included the State questions of STAI, state and trait scores are likely correlated. PCA dimensions 1 and 2 may control for this confounding effect.
+
+We review the Key Results from the first pages: urgent choices do seem to be above 50% for key groups, but the differences-in-differences across income and anxiety levels are not significant.
+
+Again, people might not mind leaving the High Importance task undone. This is what some friends have called the "insurance ice cream." That is, if I leave this High Importance task in my queue, I can use it when I get a task that is High Effort but Low Urgency.
+
+### Reaction Time
+
+```{r}
+#| label: tbl-reactiontime
+#| tbl-cap: "Regression analysis of reaction time (RT) on participants' PCs and anxiety measures."
+
+plm(formula = logRT ~ Dim.1*Dim.2 +
+                      age + education + points +
+                      chosen_i + chosen_e + chosen_u +
+                      not_chosen_i + not_chosen_e + not_chosen_u,
+     data = two_options,
+     effect = "twoways",
+     index = c("participant", "round"),
+     model = "random") -> rt_bias_pca
+
+plm(formula = logRT ~ income*stai +
+                      age + education + points +
+                      chosen_i + chosen_e + chosen_u +
+                      not_chosen_i + not_chosen_e + not_chosen_u,
+     data = two_options,
+     effect = "twoways",
+     index = c("participant", "round"),
+     model = "random") -> rt_bias_income
+
+plm(formula = logRT ~ poverty_zip*stai +
+                      age + education + points +
+                      chosen_i + chosen_e + chosen_u +
+                      not_chosen_i + not_chosen_e + not_chosen_u,
+     data = two_options,
+     effect = "twoways",
+     index = c("participant", "round"),
+     model = "random") -> rt_bias_zipdeprivation
+
+plm(formula = logRT ~ median_income_zip*stai +
+                      age + education + points +
+                      chosen_i + chosen_e + chosen_u +
+                      not_chosen_i + not_chosen_e + not_chosen_u,
+     data = two_options,
+     effect = "twoways",
+     index = c("participant", "round"),
+     model = "random") -> rt_bias_zipincome
+```
+
+### Accuracy
+
+We also obtain a comparison of the choices participants make and the optimal, or rational, protocol we generated. This is done by estimating a hierarchical Bayesian model...
+
+```{r}
+#| label: fig-costs
+#| fig-cap: "Histogram of Estimated Costs per Participant"
+dat <- data.frame(dens = c(costs$cH, costs$cL), 
+                  lines = rep(c("cH", "cL"), each = nrow(costs)))
+ggplot(dat, aes(x = dens, fill = lines)) + 
+  #geom_histogram() +
+  geom_density(alpha = 0.5)
+```
+
+This score is calculated by first estimating the cost parameters for each participant and then using them with backwards induction to discover the optimal choice at each presented state.
+
+```{r data for accuracy}
+write_csv(Accuracy, file = "data/Pilot/Accuracy.csv")
+```
+
+```{r}
+#| label: fig-accuracy
+#| fig-cap: "Histogram of Accuracy Proportions"
+
+hist(Accuracy$Accuracy, breaks=10)
+
+```
+
+@fig-accuracy highlights how participants typically make optimal decisions (when given 'challenging' tasks) with a probability in between 0.5 and 0.6. This is generally what we expect to observe.
+
+#### Accuracy, Anxiety, and Income
+
+1.  Accuracy in trade-off decisions as a function of income and anxiety
+
+Finally, we compare for each participant, how many of their choices are identical to a model that observed the full horizon for the Markov decision process. Each participant is a dot, y axis is the percentage of correct choices in the experiment while x axis is the STAI (anxiety measure). Generally the results are very similar to figure 1.5.
+
+```{r}
+#| label: fig-accuracy-results
+#| fig-cap: "Participant Accuracy by Income and Anxiety"
+#| fig-subcap:
+#|   - "Prolific, Income"
+#|   - "Prolific, Anxiety"
+#| layout-ncol: 2
+#| column: page-right
+ggplot(Accuracy, aes(x=income, y=Accuracy)) +
+  geom_point() +
+  stat_smooth(method=loess) +
+  geom_label(x=6, y=.8,
+             label=paste("Correlation:",
+                         round(cor(Accuracy$Accuracy, Accuracy$income), 2)))
+
+ggplot(Accuracy, aes(x=stai, y=Accuracy)) +
+  geom_point() +
+  stat_smooth(method=loess) +
+  geom_label(x=30, y=.8,
+             label=paste("Correlation:",
+                         round(cor(Accuracy$stai, Accuracy$Accuracy), 2)))
+
+```
+
+It appears that Accuracy does not vary across income and anxiety levels with these measures. Some possibilities of this fact might include that, since time discounting here is virtually 0, leaving the important task behind will not affect participants as much (depending, of course, of the estimated cost parameters).
+
+#### General Linear Models of Accuracy
+
+```{r}
+#| label: tbl-accuracy
+pglm(formula = Optimal ~ income*stai +
+                         age + education + points +
+                         chosen_i + chosen_e + chosen_u +
+                         not_chosen_i + not_chosen_e + not_chosen_u,
+             data = two_options,
+             effect = "twoways",
+             index = c("participant", "round"),
+             model = "random",
+             family = binomial('logit')) -> accuracy_income
+
+pglm(formula = Optimal ~ Dim.1*Dim.2  +
+                      age + education + points +
+                      chosen_i + chosen_e + chosen_u +
+                      not_chosen_i + not_chosen_e + not_chosen_u,
+             data = two_options,
+             effect = "twoways",
+             index = c("participant", "round"),
+             model = "random",
+             family = binomial('logit')) -> accuracy_pca
+
+pglm(formula = Optimal ~ poverty_zip*stai +
+                      age + education + points +
+                      chosen_i + chosen_e + chosen_u +
+                      not_chosen_i + not_chosen_e + not_chosen_u,
+             data = two_options,
+             effect = "twoways",
+             index = c("participant", "round"),
+             model = "random",
+             family = binomial('logit')) -> accuracy_zipdeprivation
+
+pglm(formula = Optimal ~ median_income_zip*stai  +
+                      age + education + points +
+                      chosen_i + chosen_e + chosen_u +
+                      not_chosen_i + not_chosen_e + not_chosen_u,
+             data = two_options,
+             effect = "twoways",
+             index = c("participant", "round"),
+             model = "random",
+             family = binomial('logit')) -> accuracy_zipincome
+```
+
+
 
 ### Reaction Time
 
@@ -2606,16 +3170,28 @@ Prolific1_Stan_results <- sampling(object = my_model, data = model_data,
 
 ## Factor Analysis for Experiment 1
 
-The figure below offers a visual representation of the imputation process. The left plot represents the mean of the imputed values across iterations, while the right plot shows the corresponding standard deviations. The intermingling of different imputation streams indicates a successful multiple imputation process, suggesting that the chains have converged. Additionally, we expect no visible trends in the later iterations, indicating that the imputations have reached a stable solution.
+@fig-mice offers a visual representation of the imputation process. The intermingling of different imputation streams indicates a successful multiple imputation process, suggesting that the chains have converged. Additionally, we expect no visible trends in the later iterations, indicating that the imputations have reached a stable solution.
 
 ``` {r}
 #|label: fig-mice
-#|fig-cap: ""
+#|fig-cap: "Visual representation of the MICE imputation process. The left plot shows the mean of the imputed values across iterations, while the right plot displays the corresponding standard deviations. The intermingling of different imputation streams suggests successful convergence of the chains."
 
 plot(imputed_data)
 
 ```
-In the following steps, we will conduct Factor Analysis on the complete datasets generated by the MICE procedure. This approach allows us to minimize the impact of missing data and maximize the accuracy and reliability of our Factor Analysis results.
+
+Next, we conducted Factor Analysis on the complete datasets generated by the MICE procedure. The output below shows the factor loadings, which represent the correlations between the observed variables and the factors. High absolute values indicate a strong relationship with the factor. Next, we will examine the factor loadings in a more interpretable format by creating a loading plot. @fig-exp1-loadings displays the loadings of each variable on each factor, facilitating the interpretation of the factors. Variables with high loadings on the same factor are likely to be related to each other and represent the same underlying construct.
+
+``` {r}
+#|label: fig-exp1-loadings
+#|fig-cap: "Heatmap of factor loadings for Experiment 1. Each row corresponds to a variable, and each column corresponds to a factor. The color of each cell indicates the loading of the variable on the factor, with red indicating high positive loadings, and white indicating negative loadings."
+
+# Extract the loadings
+loadings <- as.matrix(poverty3$loadings)
+# Create the heatmap
+heatmap(loadings)
+
+```
 
 # Appendix: Images
 

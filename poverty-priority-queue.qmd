@@ -31,6 +31,7 @@ library(pglm)
 library(factoextra)
 library(psych)
 library(gt)
+library(stargazer)
 
 # © 1998-2023 RANDOM.ORG
 # 
@@ -819,8 +820,6 @@ write_csv(joint_pilot, file = "data/Pilot/joint_pilot.csv")
 #| label: tbl-totalpoints
 #| tbl-cap: "Regression analysis of total points on participants' choice behavior and demographic variables. The predictors include the percentage of choices where Important, Hard, and Urgent tasks were chosen, participants' STAI score, income level (High vs. Low), and the platform on which the experiment was conducted (Prolific vs. Mturk)."
 
-library(stargazer)
-
 joint_pilot <- joint_pilot %>%
   mutate(chosen_i = ifelse(choice == "L", i1, i2) - 1,
          chosen_e = ifelse(choice == "L", e1, e2) - 1,
@@ -858,7 +857,14 @@ regression_model <- lm(total_points ~ perc_important_chosen +
 
 # summary_stats <- summary(regression_model)
 
-stargazer(regression_model, type = "latex", header = FALSE, align = TRUE,
+reduced_model <- lm(total_points ~ perc_important_chosen +
+                      perc_effort_chosen + perc_urgent_chosen,
+                    data = performance)
+
+stargazer(regression_model, reduced_model, 
+          type = "latex", 
+          header = FALSE, 
+          align = TRUE,
           covariate.labels = c("Percentage of Important task chosen",
                                "Percentage of Hard task chosen",
                                "Percentage of Urgent task chosen",
@@ -867,7 +873,9 @@ stargazer(regression_model, type = "latex", header = FALSE, align = TRUE,
                                "Platform: Prolific (vs. Mturk)"),
           dep.var.labels = c("Total Points"),
           star.cutoffs = c(.05, .01, .001), 
-          star.char = c("*", "**", "***"))
+          star.char = c("*", "**", "***"),
+          column.sep.width = "10pt")
+
 
 ```
 
@@ -1238,7 +1246,7 @@ Experiment 1 addressed this limitation by adjusting the task queue logic. Specif
 
 ## Data
 
-Our experiment was conducted on the Prolific platform. In total, we acquired data from N = 115 participants, each of whom completed the modified experimental paradigm and revised questionnaires designed to explore the relationships between financial status, anxiety, and decision-making under uncertainty.
+Our experiment was conducted on the Prolific platform. In total, we acquired data from N = 92 participants, each of whom completed the modified experimental paradigm and revised questionnaires designed to explore the relationships between financial status, anxiety, and decision-making under uncertainty.
 
 ```{r load-data-and-analysis, message=FALSE, warning=FALSE}
 library(mice)
@@ -1634,140 +1642,128 @@ ggplot() +
   # Remove the axis labels
   labs(x = "", y = "")
 
+detach("package:maps", unload = TRUE)
+detach("package:ggmap", unload = TRUE)
+detach("package:ggmap", unload = TRUE)
 
 ```
 
 ## Results
-
-```{r}
-#| label: processing data
-
-# Function to convert a factor variable into an ordered factor
-ordered_factor <- function(fact_var) {
-  categories <- levels(fact_var)
-  n_cat <- length(categories)
-  cont <- matrix(data = 0, nrow = n_cat, ncol = (n_cat - 1))
-  cont[col(cont) < row(cont)] <- 1
-  rownames(cont) <- categories
-  colnames(cont) <- paste(categories[2:n_cat], categories[1:(n_cat - 1)], sep = " vs. ")
-  contrasts(fact_var) <- cont
-  return(fact_var)
-}
-
-# Process the final_data dataframe
-final_data %>%
-  group_by(PROLIFIC_PID) %>%
-  mutate(
-    high_income = 
-      case_when(as.numeric(Age) >= median(as.numeric(Age), na.rm = TRUE) ~ 1,
-                as.numeric(Age)  < median(as.numeric(Age), na.rm = TRUE) ~ 0),
-    high_anxiety = 
-      case_when(Max_Points >= median(Max_Points, na.rm = TRUE) ~ 1,
-                Max_Points  < median(Max_Points, na.rm = TRUE) ~ 0)
-  ) %>%
-  mutate(
-    high_income = factor(high_income,
-                         ordered = TRUE,
-                         labels = c("Low Income", "High Income")),
-    high_anxiety = factor(high_anxiety,
-                          ordered = TRUE,
-                          labels = c("Low Anxiety", "High Anxiety"))
-  ) %>%
-  mutate(
-    # Process each Processed_CSV_Data in each row
-    Processed_CSV_Data = map(Processed_CSV_Data, ~ {
-      df <- .
-
-      # Extract the indeces which differ for each variable
-      df$heart = (df$u1 != df$u2)
-      df$dollar = (df$i1 != df$i2)
-      df$effort = (df$e1 != df$e2)
-      df$left_choice = (df$choice == "L")
-      df$right_choice = (df$choice == "R")
-      df$split = (df$u1 != df$u2 & df$i1 != df$i2 & df$u1 != df$i1)
-      df$ui_leftsplit = df$left_choice*df$split
-      df$ui_rightsplit = df$right_choice*df$split
-
-      # Find the means of the values
-      df$huli = case_when(df$split == 0 ~ NA,
-                          df$ui_leftsplit == 1 & df$u1 == 2 ~ 1,
-                          df$ui_rightsplit == 1 & df$u2 == 2 ~ 1,
-                          df$ui_leftsplit == 1 & df$u1 == 1 ~ 0,
-                          df$ui_rightsplit == 1 & df$u2 == 1 ~ 0)
-      df$luhi = case_when(df$split == 0 ~ NA,
-                          df$ui_leftsplit == 1 & df$i1 == 2 ~ 1,
-                          df$ui_rightsplit == 1 & df$i2 == 2 ~ 1,
-                          df$ui_leftsplit == 1 & df$i1 == 1 ~ 0,
-                          df$ui_rightsplit == 1 & df$i2 == 1 ~ 0)
-      df
-    })
-
-```
 
 ### Choice
 
 
 ### Task Performance
 
-We compiled data on each participant's selection and non-selection of each type of task (Important, Hard, and Urgent), then computed the frequency with which each participant picked a particular task type when given an option. @tbl-totalpoints indicates that the decision to complete Important tasks significantly affected the total points a participant amassed (Estimate = 16.098, p \< .001). Specifically, a ten percentage point rise in the ratio of selected Important tasks (two points, as opposed to one point) resulted in an increase of 1.6 points in the overall score. However, the percentage of times a participant chose Hard or Urgent tasks did not significantly explain the total points accumulated (Estimate = -7.563, p = .371 for Hard tasks; Estimate = 6.539, p = .142 for Urgent tasks).
+We compiled data on each participant's selection and non-selection of each type of task (Important, Hard, and Urgent), then computed the frequency with which each participant picked a particular task type when given an option. @tbl-exp1-totalpoints indicates that the decision to complete Important tasks significantly affected the total points a participant amassed (Estimate = 16.098, p \< .001). Specifically, a ten percentage point rise in the ratio of selected Important tasks (two points, as opposed to one point) resulted in an increase of 1.6 points in the overall score. However, the percentage of times a participant chose Hard or Urgent tasks did not significantly explain the total points accumulated (Estimate = -7.563, p = .371 for Hard tasks; Estimate = 6.539, p = .142 for Urgent tasks).
 
 We also included demographic variables and participant characteristics (STAI score, income level, and platform) as control variables in the regression model, but none showed a significant relationship with total points.
 
 The model accounted for approximately 20.24% of the variance in total points (Adjusted R-squared = 0.132), with an overall significant model fit (F(6,68) = 2.877, p \< .05).
 
 ```{r, results='asis'}
-#| label: tbl-totalpoints
-#| tbl-cap: "Regression analysis of total points on participants' choice behavior and demographic variables. The predictors include the percentage of choices where Important, Hard, and Urgent tasks were chosen, participants' STAI score, income level (High vs. Low), and the platform on which the experiment was conducted (Prolific vs. Mturk)."
+#| label: tbl-exp1-totalpoints
+#| tbl-cap: "Regression analysis of total points on participants' task choice behavior and personal characteristics. The predictors include the percentage of choices where Important, Hard, and Urgent tasks were chosen, participants' pre- and post-experiment STAI scores, and three poverty-related factors."
 
-library(stargazer)
+# Define a function to create the chosen and not_chosen variables
+create_choice_vars <- function(game_data) {
+  game_data <- game_data %>%
+    mutate(chosen_i = ifelse(choice == 1, i1, i2),
+           chosen_e = ifelse(choice == 1, e1, e2),
+           chosen_u = ifelse(choice == 1, u1, u2),
+           not_chosen_i = ifelse(choice == 1, i2, i1),
+           not_chosen_e = ifelse(choice == 1, e2, e1),
+           not_chosen_u = ifelse(choice == 1, u2, u1))
+  
+  return(game_data)
+}
 
-joint_pilot <- joint_pilot %>%
-  mutate(chosen_i = ifelse(choice == "L", i1, i2) - 1,
-         chosen_e = ifelse(choice == "L", e1, e2) - 1,
-         chosen_u = ifelse(choice == "L", u1, u2) - 1,
-         not_chosen_i = ifelse(choice == "L", i2, i1) - 1,
-         not_chosen_e = ifelse(choice == "L", e2, e1) - 1,
-         not_chosen_u = ifelse(choice == "L", u2, u1) - 1)
+# Define a function to compute choice percentages
+compute_choice_percentages <- function(game_data) {
+  game_data %>%
+    mutate(
+      urgent_chosen = ifelse(chosen_u > not_chosen_u, 1, 0),
+      important_chosen = ifelse(chosen_i > not_chosen_i, 1, 0),
+      effort_chosen = ifelse(chosen_e > not_chosen_e, 1, 0)
+    ) %>%
+    group_by(participant) %>%
+    summarise(perc_urgent_chosen = mean(urgent_chosen, na.rm = TRUE),
+              perc_important_chosen = mean(important_chosen, na.rm = TRUE),
+              perc_effort_chosen = mean(effort_chosen, na.rm = TRUE))
+}
 
-# Calculate total points per participant
-points_per_participant <- joint_pilot %>%
+# Define a function to compute total points for a participant
+compute_total_points <- function(game_data) {
+  game_data %>%
+    group_by(participant) %>%
+    summarise(total_points = max(points))
+}
+
+# Filter out rows where CSV_Data is NULL
+df <- df %>% filter(!sapply(CSV_Data, is.null))
+
+# Apply the function to each game data nested in the CSV_Data column
+df$CSV_Data <- map(df$CSV_Data, create_choice_vars)
+
+# Apply this function to each participant's game data
+choice_percentages_list <- map(df$CSV_Data, compute_choice_percentages)
+# Combine all the results into a single data frame
+choice_percentages_df <- bind_rows(choice_percentages_list)
+
+# Apply this function to each participant's game data
+total_points_list <- map(df$CSV_Data, compute_total_points)
+# Combine all the results into a single data frame
+total_points_df <- bind_rows(total_points_list)
+# Join the total_points_df with choice_percentages_df
+performance <- inner_join(total_points_df %>% ungroup(),
+                          choice_percentages_df %>% ungroup(),
+                          by = "participant") %>%
   group_by(participant) %>%
-  summarise(total_points = max(points),
-            stai = first(stai),
-            high_income = first(high_income),
-            platform = first(platform))
+  summarize(
+    total_points = mean(total_points),
+    perc_urgent_chosen = mean(perc_urgent_chosen),
+    perc_important_chosen = mean(perc_important_chosen),
+    perc_effort_chosen = mean(perc_effort_chosen)
+  )
 
-# Calculate the percentage of times when the urgent, important and effortful options were chosen
-choice_percentages <- joint_pilot %>%
-  mutate(
-    urgent_chosen = ifelse(chosen_u > not_chosen_u, 1, 0),
-    important_chosen = ifelse(chosen_i > not_chosen_i, 1, 0),
-    effort_chosen = ifelse(chosen_e > not_chosen_e, 1, 0)
-  ) %>%
-  group_by(participant) %>%
-  summarise(perc_urgent_chosen = mean(urgent_chosen, na.rm = TRUE),
-            perc_important_chosen = mean(important_chosen, na.rm = TRUE),
-            perc_effort_chosen = mean(effort_chosen, na.rm = TRUE))
-
-performance <- inner_join(points_per_participant, choice_percentages, by = "participant")
+# Join the performance data frame with the main data frame
+df <- inner_join(df, performance, by = c("PROLIFIC_PID" = "participant"))
 
 # Run regression
-regression_model <- lm(total_points ~ perc_important_chosen + 
+reg_total1 <- lm(total_points ~ perc_important_chosen + 
+                         perc_effort_chosen + perc_urgent_chosen,
+                       data = df)
+reg_total2 <- lm(total_points ~ perc_important_chosen + 
                          perc_effort_chosen + perc_urgent_chosen +
-                         stai + high_income + platform, data = performance)
+                         SAI_pre + SAI_post + TAI_post,
+                       data = df)
+reg_total3 <- lm(total_points ~ perc_important_chosen + 
+                         perc_effort_chosen + perc_urgent_chosen +
+                         PA1 + PA2 + PA3,
+                       data = df)
+reg_total4 <- lm(total_points ~ perc_important_chosen + 
+                         perc_effort_chosen + perc_urgent_chosen +
+                         SAI_pre + SAI_post + TAI_post +
+                         PA1 + PA2 + PA3,
+                       data = df)
 
-# summary_stats <- summary(regression_model)
-
-stargazer(regression_model, type = "latex", header = FALSE, align = TRUE,
-          covariate.labels = c("Percentage of Important task chosen",
-                               "Percentage of Hard task chosen",
-                               "Percentage of Urgent task chosen",
-                               "STAI Score",
-                               "Low Income",
-                               "Platform: Prolific (vs. Mturk)"),
+stargazer(reg_total1, reg_total2, reg_total3, reg_total4,
+          type = "latex", 
+          header = FALSE, 
+          align = TRUE,
+          covariate.labels = c("Important task chosen",
+                               "Hard task chosen",
+                               "Urgent task chosen",
+                               "SAI (Pre)",
+                               "SAI (Post)",
+                               "TAI (Post)",
+                               "Factor 1",
+                               "Factor 2",
+                               "Factor 3"),
           dep.var.labels = c("Total Points"),
           star.cutoffs = c(.05, .01, .001), 
-          star.char = c("*", "**", "***"))
+          star.char = c("*", "**", "***"),
+          column.sep.width = "10pt")
 
 ```
 
@@ -1783,21 +1779,71 @@ When we compare an individual's choice of "challenging" tasks: decisions between
 #|   - "Anxiety"
 #| layout-ncol: 2
 
-joint_pilot %>%
-  group_by(platform, high_income) %>%
-  filter(!is.na(high_income)) %>%
-  summarise(choose_urg = sum(huli, na.rm = TRUE),
-            total = sum(!is.na(huli)),
-            mean_huli  = mean(huli, na.rm = TRUE)) %>%
+# Define a function to create the huli variable
+create_huli_var <- function(game_data) {
+  game_data <- game_data %>%
+    mutate(tradeoff = ifelse(u1 > u2
+                         & i1 < i2, 1,
+                         ifelse(u1 < u2
+                                & i1 > i2, 1, 0)),
+           urgent_choice = case_when(tradeoff == 0 ~ NA,
+                                     chosen_u == 1 ~ 1,
+                                     chosen_u == 0 ~ 0))
+  
+  return(game_data)
+}
+
+# Apply the function to each game data nested in the CSV_Data column
+df$CSV_Data <- map(df$CSV_Data, create_huli_var)
+
+# Apply this function to each participant's game data
+tradeoff_list <- map(df$CSV_Data, function(x) {
+  x %>%
+    group_by(participant) %>%
+    filter(!is.na(urgent_choice)) %>%
+    summarize(urgent_choice = mean(urgent_choice))
+})
+# Combine all the results into a single data frame
+tradeoff_df <- bind_rows(tradeoff_list) %>%
+  group_by(participant) %>%
+  summarize(urgent_choice = mean(urgent_choice))
+
+# Join the tradeoff_df with the main data frame
+df <- inner_join(df, tradeoff_df, by = c("PROLIFIC_PID" = "participant"))
+
+median_PA1 <- median(df$PA1, na.rm = TRUE)
+median_PA2 <- median(df$PA2, na.rm = TRUE)
+median_PA3 <- median(df$PA3, na.rm = TRUE)
+# Create two new columns to distinguish high-low income and high-low anxiety
+df$PAGroup1 <- ifelse(df$PA1 > median_PA1, 'High', 'Low')
+df$PAGroup2 <- ifelse(df$PA2 > median_PA2, 'High', 'Low')
+df$PAGroup3 <- ifelse(df$PA3 > median_PA3, 'High', 'Low')
+
+# Pivot the data to longer format
+df_long <- df %>%
+  pivot_longer(cols = starts_with("PAGroup"),
+               names_to = "PovertyFactor",
+               values_to = "PovertyGroup")
+
+# Group by PovertyFactor and PovertyGroup, and create the plot
+df_long %>%
+  group_by(PovertyFactor, PovertyGroup) %>%
+  filter(!is.na(PovertyGroup)) %>%
+  summarise(choose_urg = sum(urgent_choice, na.rm = TRUE),
+            total = sum(!is.na(urgent_choice)),
+            mean_huli  = mean(urgent_choice, na.rm = TRUE)) %>%
   mutate(se = sqrt((mean_huli * (1-mean_huli)) / total)) %>%
   
-  ggplot(aes(platform, mean_huli, fill = high_income),
+  ggplot(aes(PovertyFactor, mean_huli, fill = as.factor(PovertyGroup)),
          alpha=0.7) + 
   geom_col(position = "dodge") +
   labs(title="Choice Frequency of Urgent vs Non-urgent Tasks",
-       x ="Platform",
+       x ="",
        y = "Frequency of urgent/not important choices",
-       fill = "") +
+       fill = "Poverty Group") +
+  scale_x_discrete(labels = c("PAGroup1" = "Financial/Food Stability",
+                              "PAGroup2" = "Employment Stability",
+                              "PAGroup3" = "Housing Stability")) +
   scale_fill_brewer() +
   theme_minimal() +
   geom_errorbar(aes(ymin = mean_huli - se, ymax = mean_huli + se),
@@ -1807,21 +1853,29 @@ joint_pilot %>%
   geom_hline(yintercept=0.5, linetype=2)
 
 
-joint_pilot %>%
-  group_by(platform, high_anxiety) %>%
-  filter(!is.na(high_anxiety)) %>%
-  summarise(choose_urg = sum(huli, na.rm = TRUE),
-            total = sum(!is.na(huli)),
-            mean_huli  = mean(huli, na.rm = TRUE)) %>%
+# Pivot the data to longer format
+df_long <- df %>%
+  pivot_longer(cols = starts_with("AnxietyGroup"),
+               names_to = "AnxietyType",
+               values_to = "AnxietyGroup")
+# Group by AnxietyType and AnxietyGroup, and create the plot
+df_long %>%
+  group_by(AnxietyType, AnxietyGroup) %>%
+  filter(!is.na(AnxietyGroup)) %>%
+  summarise(choose_urg = sum(urgent_choice, na.rm = TRUE),
+            total = sum(!is.na(urgent_choice)),
+            mean_huli  = mean(urgent_choice, na.rm = TRUE)) %>%
   mutate(se = sqrt((mean_huli * (1-mean_huli)) / total)) %>%
   
-  ggplot(aes(platform, mean_huli, fill = high_anxiety),
+  ggplot(aes(AnxietyType, mean_huli, fill = AnxietyGroup),
          alpha=0.7) + 
   geom_col(position = "dodge") +
-  labs(title="Choice Frequency of Urgent vs Non-urgent Tasks",
-       x ="Platform",
+  labs(x ="",
        y = "Frequency of urgent/not important choices",
-       fill = "") +
+       fill = "Anxiety Group") +
+  scale_x_discrete(labels = c("AnxietyGroup_SAI_pre" = "State Anxiety Pre",
+                              "AnxietyGroup_SAI_post" = "State Anxiety Post",
+                              "AnxietyGroup_TAI_post" = "Trait Anxiety Post")) +
   scale_fill_brewer() +
   theme_minimal() +
   geom_errorbar(aes(ymin = mean_huli - se, ymax = mean_huli + se),
@@ -2111,6 +2165,8 @@ pglm(formula = Optimal ~ median_income_zip*stai  +
 ### Accuracy
 
 # Discussion
+
+Our findings underscore the critical importance of prioritization strategies in task performance. Despite the intuitive appeal of tending to urgent matters, our data suggest that focusing on important tasks yielded superior performance outcomes.
 
 ### Intergenerational Poverty
 

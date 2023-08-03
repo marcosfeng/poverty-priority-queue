@@ -18,7 +18,6 @@ format:
     include-in-header:
       - text: |
           \usepackage{dcolumn}
-jupyter: python3
 ---
 
 ```{r init, warning=FALSE, include=FALSE}
@@ -328,7 +327,7 @@ flowchart LR
   H --> I
 ```
 
-# Literature Review
+<!-- # Literature Review -->
 
 ## Research Questions
 
@@ -380,7 +379,7 @@ We build upon this by then generating an optimal protocol for identifying the be
 #| label: fig-dynaprog-simulation
 #| fig-cap: "Percentage of Urgent Choices"
 
-urgency_ratio_grid <- read_csv("urgency-ratio-grid.csv")
+urgency_ratio_grid <- read_csv("data/Pilot/urgency-ratio-grid.csv")
 urgency_ratio_grid <- urgency_ratio_grid %>%
   rename(gamma = `...1`) %>%
   pivot_longer(!gamma, names_to = "cost", values_to = "urgent") %>%
@@ -469,7 +468,7 @@ joint_pilot$education <- ordered_factor(joint_pilot$education)
 
 ```{r}
 #| label: wrangle-stai-demo
-qualtrics <- read_csv("PrioQ - Consolidated_January 13, 2022_18.42.csv")
+qualtrics <- read_csv("data/Pilot/PrioQ - Consolidated_January 13, 2022_18.42.csv")
 qualtrics <- qualtrics[-c(1:2),]
 vars <- c("Q36", "Q37", "Q39", "Q40", "Q42", "Q45", "Q46", "Q47", "Q50", "Q51",
           "Q34", "Q35", "Q38", "Q41", "Q43", "Q44", "Q48", "Q49", "Q52", "Q53...54",
@@ -495,13 +494,13 @@ demograph <- merge(y = qualtrics,
                   x = participants_df,
                   by.y = "PROLIFIC_PID",
                   by.x = "participant")
-ip2zip <- read_csv("./ZIPcode/ip2zip.csv")
+ip2zip <- read_csv("data/ZIPcode/ip2zip.csv")
 demograph <- merge(y = demograph,
                    x = ip2zip,
                    by.y = "IPAddress",
                    by.x = "IP")
 ### HERE:
-poverty <- read_csv("./ZIPcode/ACSST5Y2019.S1701_data_with_overlays_2021-12-21T174024.csv")
+poverty <- read_csv("data/ZIPcode/ACSST5Y2019.S1701_data_with_overlays_2021-12-21T174024.csv")
 poverty <- poverty %>%
   dplyr::select(NAME,S1701_C03_001E) %>%
   mutate(ZIP = as.numeric(str_sub(NAME, start= -5))) %>%
@@ -509,7 +508,7 @@ poverty <- poverty %>%
 demograph <- demograph %>%
   left_join(poverty, by = "ZIP")
 
-income <- read_csv("./ZIPcode/ACSST5Y2019.S1903_data_with_overlays_2021-11-16T180635.csv")
+income <- read_csv("data/ZIPcode/ACSST5Y2019.S1903_data_with_overlays_2021-11-16T180635.csv")
 income <- income %>%
   dplyr::select(NAME,S1903_C03_001E) %>%
   mutate(ZIP = as.numeric(str_sub(NAME, start= -5))) %>%
@@ -733,7 +732,7 @@ qualtrics <- qualtrics %>%
 ```
 
 ```{r data for pcacorrelations}
-write_csv(qualtrics, file = "data/qualtrics.csv")
+write_csv(qualtrics, file = "data/Pilot/qualtrics.csv")
 
 ```
 
@@ -812,7 +811,7 @@ We also included demographic variables and participant characteristics (STAI sco
 The model accounted for approximately 20.24% of the variance in total points (Adjusted R-squared = 0.132), with an overall significant model fit (F(6,68) = 2.877, p \< .05).
 
 ```{r data for totalpoints}
-write_csv(joint_pilot, file = "data/joint_pilot.csv")
+write_csv(joint_pilot, file = "data/Pilot/joint_pilot.csv")
 ```
 
 ```{r, results='asis'}
@@ -1004,7 +1003,7 @@ two_options <- joint_pilot %>%
          logRT = log(as.numeric(RT))) %>%
   filter(logRT != Inf & logRT != -Inf)
 
-write_csv(two_options, file = "data/two_options.csv")
+write_csv(two_options, file = "data/Pilot/two_options.csv")
 ```
 
 ```{r}
@@ -1114,7 +1113,7 @@ ggplot(dat, aes(x = dens, fill = lines)) +
 This score is calculated by first estimating the cost parameters for each participant and then using them with backwards induction to discover the optimal choice at each presented state.
 
 ```{r data for accuracy}
-write_csv(Accuracy, file = "data/Accuracy.csv")
+write_csv(Accuracy, file = "data/Pilot/Accuracy.csv")
 ```
 
 ```{r}
@@ -1406,7 +1405,7 @@ poverty4 <- fa(completed_data[,c(21:79)], nfactors = 4,
 poverty5 <- fa(completed_data[,c(21:79)], nfactors = 5,
               rotate = "oblimin", fm = "pa", scores = "tenBerge")
 
-factor_scores <- factor.scores(completed_data[,c(21:79)], poverty)
+factor_scores <- factor.scores(completed_data[,c(21:79)], poverty3)
 
 # Data for Analysis
 variables <- names(df[,c(1:5,28,115:119,122:125)])
@@ -1416,13 +1415,55 @@ df <- df %>%
 
 ```
 
-In order to identify underlying dimensions of poverty within our dataset, we used factor analysis. This statistical method explains variability among observed, correlated variables in terms of a potentially lower number of unobserved, latent variables known as factors. The goal is to uncover these factors and understand the structure of correlations among the variables.
+### Demographics
 
-For this specific analysis, we selected a subset of the survey data that primarily included responses to questions regarding household conditions, work conditions, and food deprivation. We performed the factor analysis using principal axis factoring, a method of extraction primarily used when the analysis aims to identify latent constructs underlying the variables CITE. It is a commonly used extraction method for psychological and social data. We employed an oblique rotation method to facilitate the interpretation of the factors. Such a method simplifies and clarifies the data structure. It allows for the factors to be correlated, which is often more realistic in social sciences research than assuming they are orthogonal. Further, we used a correlation-preserving scoring method (TenBerge), which provides unbiased estimates of the factor scores.
 
-Our three-factor model fits our data moderately well. The root mean square of residuals (RMSR), which measures the average residual correlation among variables, was 0.08, indicating a good fit. However, the Tucker-Lewis Index (TLI) was 0.475, below the desired threshold of 0.95, suggesting a moderate model fit. The root mean square error of approximation (RMSEA), which measures the discrepancy between the observed covariance matrix and the model covariance matrix per degree of freedom, was 0.073, with 90% confidence intervals between 0.069 and 0.08. This value suggests a reasonable error of approximation.
 
-The derived factors, based on their highest loadings, were interpreted as follows:
+### Comprehensive Measures of Poverty
+
+To develop a more nuanced measure of poverty, we revisited our questionnaire to address variance issues (@pca-measure). We contemplated expanding our sample to include more lower-income individuals or introducing new questions to elicit more variance. Our current iteration of comprehensive measurements is available in @questionnaires.
+
+We employed Factor Analysis, a statistical technique widely used to identify underlying relationships between measured variables. This method is particularly advantageous when dealing with scale compatibility issues, reducing many variables into fewer factors, and assisting in data interpretation, especially in large datasets.
+
+Before proceeding with the Factor Analysis, we addressed the issue of missing data in our dataset, as it can significantly skew the results. We opted to use Multiple Imputation by Chained Equations (MICE), an approach that fills in missing values multiple times to create several complete datasets. The number of imputations was set to the overall percentage of missing cases in the dataset, ensuring a robust and comprehensive imputation strategy. We chose the Random Forest (rf) method for our imputations. Random Forest is a flexible, non-parametric method that can handle complex interactions and non-linear relationships between variables, making it suitable for datasets with complex structures and patterns, like ours.
+
+Following this, we conducted a Factor Analysis on the complete datasets generated by the MICE procedure. This analysis aimed to uncover latent variables, or factors, that explain the variability among observed, correlated variables. This method is particularly useful in understanding the structure of correlations among the variables. For this specific analysis, we selected a subset of the survey data, including responses to questions regarding household conditions, work conditions, and food deprivation. We performed the factor analysis using principal axis factoring, a method of extraction primarily used when the analysis aims to identify latent constructs underlying the variables. It is a commonly used extraction method for psychological and social data. We also employed an oblique rotation method to facilitate the interpretation of the factors. Such a method simplifies and clarifies the data structure and allows for the factors to be correlated, which is a more relaxed and often more realistic assumption. Lastly, we used a correlation-preserving scoring method (TenBerge), which provides unbiased estimates of the factor scores.
+
+@fig-new-pov-scree displays the scree plot, a graphical representation of the eigenvalues of factors or components in an exploratory factor analysis. It helps in determining the number of factors to retain in the analysis. The x-axis represents the number of factors, and the y-axis represents the eigenvalues. The point at which the slope of the curve is leveling off (the "elbow") indicates the number of factors to retain. Although the elbow is a standard guideline, the decision to choose the number of factors should also consider the interpretability of the factors and the theoretical understanding of the measured constructs. In our case, the elbow in the scree plot suggested that two factors might be sufficient. However, upon further analysis, we found that a three-factor model provided a more meaningful and comprehensive understanding of poverty.
+
+
+``` {r}
+#| label: fig-new-pov-scree
+#| fig-cap: ""
+
+# Create a data frame with the cumulative proportion explained variance for each model
+explained_variance <- data.frame(
+  Factor = c(1, 2, 3, 4, 5),
+  Model1 = c(poverty1$Vaccounted["Proportion Var",], NA, NA, NA, NA),
+  Model2 = c(poverty2$Vaccounted["Proportion Var",], NA, NA, NA),
+  Model3 = c(poverty3$Vaccounted["Proportion Var",], NA, NA),
+  Model4 = c(poverty4$Vaccounted["Proportion Var",], NA),
+  Model5 = c(poverty5$Vaccounted["Proportion Var",])
+)
+
+# Reshape the data frame to a long format
+explained_variance_long <- gather(explained_variance, Model, Variance, -Factor)
+
+# Plot the data
+ggplot(explained_variance_long, aes(x = Factor, y = Variance, color = Model)) +
+  geom_line() +
+  geom_point() +
+  labs(x = "Factor", y = "Cumulative Proportion Explained Variance") +
+  theme_minimal()
+
+
+```
+
+More specifically, the two-factor model included "Financial Hardship" and "Employment and Economic Status" factors, which, while simpler, did not capture the full complexity of our data. The four-factor model added two additional factors. The third factor was a "Housing Status" factor, and the fourth was the "physical condition of the home ."It included variables related to a leaking roof, broken windows, exposed electrical wires, and a malfunctioning stove or refrigerator. However, the four-factor model did not significantly improve model fit. After careful consideration and analysis, we have opted for the three-factor model as the most appropriate means of capturing the complexity of poverty in our data. This model balances complexity and interpretability, allowing for a comprehensive understanding of poverty's main dimensions while remaining concise and comprehensible. The three distinct factors that comprise this model---financial hardship, employment and economic status, and housing status---align with the multidimensional nature of poverty, which extends beyond mere income deprivation to encompass various other aspects of life.
+
+Our three-factor model fits our data moderately well. The root mean square of residuals (RMSR), which measures the average residual correlation among variables, was 0.08, indicating a moderate fit. However, the Tucker-Lewis Index (TLI) was 0.475, below the desired threshold of 0.90, also suggesting only a moderate model fit. The root mean square error of approximation (RMSEA), which measures the discrepancy between the observed covariance matrix and the model covariance matrix per degree of freedom, was 0.073, with 90% confidence intervals between 0.069 and 0.08. This value suggests a reasonable error of approximation.
+
+The derived factors, based on their highest loadings, represent the following constructs:
 
 1. **Factor 1 (PA1)**: This factor had high loadings primarily on the 'Q48' series and 'Q50' questions, which indicate experiences of financial hardship and food insecurity within the past 12 months. We labeled Factor 1 as a "Financial Hardship" factor. This factor is moderately negatively correlated with Factor 3 (PA3).
 
@@ -1431,22 +1472,6 @@ The derived factors, based on their highest loadings, were interpreted as follow
 3. **Factor 3 (PA3)**: This factor had the highest loadings on questions related to home ownership. Thus, we interpret Factor 3 as a "Housing Status" factor. This factor had a negative correlation with Factor 1 (PA1) and a slight positive correlation with Factor 2 (PA2).
 
 The correlation of the factor scores with the factors for PA1, PA2, and PA3 were 0.99, 0.94, and 0.91, respectively, indicating high accuracy of the factor scores. Similarly, the multiple R square of scores with factors for PA1, PA2, and PA3 were 0.98, 0.88, and 0.83, respectively, suggesting a strong relationship between the observed variables and the extracted factors. The minimum correlation of possible factor scores were 0.97, 0.77, and 0.67 for PA1, PA2, and PA3, respectively, further supporting the adequacy of the factor scores.
-
-### Demographics
-
-### Comprehensive Measures of Poverty
-
-As seen in @pca-measure, Revisit questionnaire to address variance problems. One possibility is to expand our sample to lower-income people. Another option is to try other questions that would elicit more variance.
-
-Refer to @questionnaires for our current iteration of comprehensive measurements.
-
-In the current study, we employed Factor Analysis, a widely accepted statistical technique to identify the underlying relationships between measured variables. Factor Analysis helps deal with scale compatibility issues, reduces many variables into fewer factors, and assists in data interpretation, especially in large datasets.
-
-Before proceeding with the Factor Analysis, we first addressed the issue of missing data in our dataset, as it can significantly skew the results of a Factor Analysis. We opted to use Multiple Imputation by Chained Equations (MICE), an approach that fills in missing values multiple times to create several complete datasets. The number of imputations was set to the overall percentage of missing cases in the dataset, ensuring a robust and comprehensive imputation strategy.
-
-We chose the Random Forest (rf) method for our imputations. Random Forest is a flexible, non-parametric method that can handle complex interactions and non-linear relationships between variables, making it suitable for datasets with complex structures and patterns, like ours.
-
-Following this step, we conducted a Factor Analysis on the complete datasets generated by the MICE procedure.
 
 ## Results
 
@@ -1689,7 +1714,7 @@ Further, with interevent times, we can calculate the burstiness and memory as a 
 #| label: fig-simmer-burstiness
 #| fig-cap: "Burstiness by Urgency Weight"
 
-urgency_burstiness_grid <- read_csv("urgency-burstiness-grid.csv") 
+urgency_burstiness_grid <- read_csv("data/Pilot/urgency-burstiness-grid.csv")
 
 plt_bursty <-
   ggplot(urgency_burstiness_grid,
@@ -1910,7 +1935,7 @@ import pandas as pd
 import ast
 
 # Load the transition probabilities from the CSV file
-transition_df = pd.read_csv('./dyn_prog/transition_df.csv')
+transition_df = pd.read_csv('./Models/dyn_prog/transition_df.csv')
 # Define the discount factor
 gamma = 0.9
 # Maximum number of rounds

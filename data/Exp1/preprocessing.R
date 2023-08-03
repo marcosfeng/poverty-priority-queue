@@ -103,15 +103,18 @@ united_data <- united_data %>%
       
       str_detect(Q34, "^\\d{4}$") ~ 2023 - as.numeric(Q34),
       
-      TRUE ~ as.numeric(gsub("[^0-9\\.]", "", Q34))
-    )
+      TRUE ~ as.numeric(gsub("[^0-9\\.]", "", Q34))),
+    Q35 = case_when(
+      str_detect(Q35, "k") ~ as.numeric(str_extract(Q35, "\\d+(?=k)")) * 1000,
+      str_detect(Q35, "million") ~ as.numeric(str_extract(Q35, "\\d+(?=\\s?million)")) * 1e6,
+      TRUE ~ as.numeric(str_replace_all(Q35, "[^0-9\\.]", "")))
   )
 
 united_data <- united_data %>%
   mutate(across(c("Q3":"Q23", "Q37", "Q49_1":"Q49_3",
                   "Q51", "Q54", "Q56_1":"Q56_3", "Q60"), as.ordered)) %>%
   mutate(across(c("Ethnicity simplified", "Country of birth"), as.factor)) %>%
-  mutate(across(c("Q26":"Q32", "Q35", "Q44", "Q45", "Q55",  "Age"), as.numeric)) %>%
+  mutate(across(c("Q26":"Q32", "Q35", "Q44", "Q45", "Age"), as.numeric)) %>%
   mutate(across(c("Q52", "Q53", "Q55", "Q57":"Q59", "Q61", "Q33_1":"Q33_6",
                   "Q36", "Q46_1":"Q48_7", "Q50", "Student status"),
                 function(x) factor(x, levels = c("No", "Yes")))) %>%

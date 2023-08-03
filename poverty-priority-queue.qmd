@@ -22,23 +22,28 @@ jupyter: python3
 ---
 
 ```{r init, warning=FALSE, include=FALSE}
-
+library(tidyverse)
+library(tidymodels)
 library(stringi)
-library(stringr)
-library(dplyr)
-library(tidyr)
-library(readr)
-library(ggplot2)
 library(viridis)
 library(latticeExtra)
 library(rstan)
-library(tidymodels)
 library(pglm)
 library(factoextra)
+library(psych)
 
-load("./joint_pilot.Rdata")
-load("./prolific1StanData.Rdata")
-load("./MTurk_sample_nolimit2.Rdata")
+# © 1998-2023 RANDOM.ORG
+# 
+# 496181801	
+# Timestamp: 2023-08-02 17:58:21 UTC
+set.seed(496181801)
+
+```
+
+``` {r load-pilot}
+load("./Models/pilot/joint_pilot.Rdata")
+load("./Models/pilot/prolific1StanData.Rdata")
+load("./Models/pilot/MTurk_sample_nolimit2.Rdata")
 demograph <- qualtrics[qualtrics$PROLIFIC_PID %in% joint_pilot$participant,]
 
 ```
@@ -814,7 +819,6 @@ write_csv(joint_pilot, file = "data/joint_pilot.csv")
 #| label: tbl-totalpoints
 #| tbl-cap: "Regression analysis of total points on participants' choice behavior and demographic variables. The predictors include the percentage of choices where Important, Hard, and Urgent tasks were chosen, participants' STAI score, income level (High vs. Low), and the platform on which the experiment was conducted (Prolific vs. Mturk)."
 
-library(broom)
 library(stargazer)
 
 joint_pilot <- joint_pilot %>%
@@ -1235,47 +1239,198 @@ Experiment 1 addressed this limitation by adjusting the task queue logic. Specif
 ## Data
 
 ```{r load-data-and-analysis, message=FALSE, warning=FALSE}
+library(mice)
+library(caret)
+
 # Load the data
-df <- read_csv('df.csv')
+load(file = "data/Exp1/df.Rdata")
 
-# Identify missing data
+## Generate column names for STAI
+cols1 <- paste0("Q", 3:22)
+cols2 <- paste0("Q", 77:96)
+cols3 <- paste0("Q", 99:118)
+# Reorder the levels of ordered factors
+ordinal_to_numeric <- c("Not at all" = 1, "Somewhat" = 2,
+                        "Moderately" = 3, "Very much" = 4)
 df <- df %>%
-  mutate(across(c(Q3, Q4, Q7, Q10, Q12, Q13, Q17, Q18, Q21, Q22, Q77, Q78, Q81, Q84, Q86, Q87, Q91, Q92, Q95, Q96), function(x) 5 - x),
-         across(c(Q99, Q101, Q104, Q105, Q108, Q111, Q112, Q114, Q117), function(x) 5 - x),
-         SAI_pre = rowSums(select(df, Q3:Q22), na.rm = TRUE),
-         SAI_post = rowSums(select(df, Q76:Q96), na.rm = TRUE),
-         TAI_post = rowSums(select(df, Q98:Q118), na.rm = TRUE)) %>%
-  select(starts_with('Q'), SAI_pre, SAI_post, TAI_post)
+  mutate(across(c(cols1, cols2, cols3), ~recode(., !!!ordinal_to_numeric)))
 
+df$Q23 <- factor(df$Q23,
+                 levels = c("Less than $10,000",
+                            "$10,000 - $15,000",
+                            "$15,001 - $25,000",
+                            "$25,001 - $50,000",
+                            "$50,001 - $75,000",
+                            "$75,001 - $100,000",
+                            "$100,001 - $150,000",
+                            "More than $150,000"))
+df$Q24 <- factor(df$Q24, ordered = FALSE)
+df$Q49_1 <- factor(df$Q49_1,
+                   levels = c("Never True",
+                              "Sometimes",
+                              "Often"))
+df$Q49_2 <- factor(df$Q49_2,
+                   levels = c("Never True",
+                              "Sometimes",
+                              "Often"))
+df$Q49_3 <- factor(df$Q49_3,
+                   levels = c("Never True",
+                              "Sometimes",
+                              "Often"))
+df$Q51 <- factor(df$Q51,
+                 levels = c("Never",
+                            "Some months, but not every month",
+                            "Only 1 or 2 months",
+                            "Almost every month"))
+df$Q54 <- factor(df$Q54,
+                 levels = c("Never",
+                            "Some months, but not every month",
+                            "Only 1 or 2 months",
+                            "Almost every month"))
+df$Q56_1 <- factor(df$Q56_1,
+                   levels = c("Never true",
+                              "Sometimes true",
+                              "Often true"))
+df$Q56_2 <- factor(df$Q56_2,
+                   levels = c("Never true",
+                              "Sometimes true",
+                              "Often true"))
+df$Q56_3 <- factor(df$Q56_3,
+                   levels = c("Never true",
+                              "Sometimes true",
+                              "Often true"))
+
+
+# Clean column names
+names(df) <- gsub("\\s", "_", names(df))  # Replace spaces with underscores
+names(df) <- gsub("\\(|\\)", "", names(df))  # Remove parentheses
+
+# Define the mapping from ordinal to numeric values
+binary_vars <- c("Q33_1", "Q33_2", "Q33_3", "Q33_4", "Q33_5", "Q33_6", "Q36",
+                 "Q46_1", "Q46_2", "Q46_3", "Q46_4", "Q46_5", "Q46_6", "Q46_7", 
+                 "Q47_1", "Q47_2", "Q47_3", "Q47_4", "Q47_5", "Q47_6", "Q47_7", "Q47_8", "Q47_9",
+                 "Q48_1", "Q48_2", "Q48_3", "Q48_4", "Q48_5", "Q48_6", "Q48_7",
+                 "Q50", "Q52", "Q53", "Q55", "Q57", "Q58", "Q59", "Student_status")
+df[binary_vars] <- lapply(df[binary_vars],
+                          function(x) as.numeric(as.character(x) == "Yes"))
+
+# Infer Variables from Survey logic
+df$Q51[df$Q50 == 0] <- "Never"
+df$Q54[df$Q53 == 0] <- "Never"
+df$Q56_1[df$Q55 == 0] <- "Never true"
+df$Q56_2[df$Q55 == 0] <- "Never true"
+df$Q56_3[df$Q55 == 0] <- "Never true"
+df$Q57[df$Q55 == 0] <- 0
+df$Q36[df$Q33_1 == 0] <- 0
+
+# Remove columns that are all NA
+df <- df[, colSums(is.na(df)) != nrow(df)]
+# Detect and remove zero- or near-zero variance predictors
+nzv <- nearZeroVar(df[,-129], saveMetrics = TRUE)
+# Remove the variables with zero variance from the data
+df <- df[, c(!nzv$zeroVar, TRUE)]
+
+# Calculate STAI
+df <- df %>%
+  mutate(across(c("Q3", "Q4", "Q7", "Q10", "Q12", "Q13", "Q17", "Q18", "Q21",
+                  "Q22", "Q77", "Q78", "Q81", "Q84", "Q86", "Q87", "Q91", "Q92",
+                  "Q95", "Q96"), function(x) 5 - x),
+         across(c("Q99", "Q101", "Q104", "Q105", "Q108",
+                  "Q111", "Q112", "Q114", "Q117"), function(x) 5 - x),
+         SAI_pre = rowSums(select(df, Q3:Q22), na.rm = TRUE),
+         SAI_post = rowSums(select(df, Q77:Q96), na.rm = TRUE),
+         TAI_post = rowSums(select(df, Q99:Q118), na.rm = TRUE))
+
+# Create df without the trial info:
+df_mice <- df %>% select(!CSV_Data)
 # Set up the predictorMatrix
-predictorMatrix <- make.predictorMatrix(df)
+df_mice <- df_mice[,-c(1:5,94,74:114,115,122:124)]
+predictorMatrix <- make.predictorMatrix(df_mice)
+
+# Calculate the overall percentage of missing values in the data
+missing_values_percent <- round(mean(is.na(df_mice)) * 100)
 
 # Perform multiple imputation to fill missing values using MICE with FCS
-imputed_data <- mice(df, m=5, maxit = 50, method = 'pmm', seed = 500, predictorMatrix = predictorMatrix)
+# imputed_data <- mice(df_mice, m = max(missing_values_percent, 5), maxit = 20,
+#                      method = 'rf', predictorMatrix = predictorMatrix)
+# save(imputed_data, file = "data/Exp1/imputed_data.Rdata")
+load(file = "data/Exp1/imputed_data.Rdata")
 
-# Complete the data with the imputed values
-completed_data <- complete(imputed_data, 1)
+# Transform all to numeric
+completed_data <- complete(imputed_data, 1) %>%
+  mutate(Q23 = as.numeric(Q23),
+         ResidenceValue = as.numeric(ResidenceValue),
+         Q49_1 = as.numeric(Q49_1),
+         Q49_2 = as.numeric(Q49_2),
+         Q49_3 = as.numeric(Q49_3),
+         Q51 = as.numeric(Q51),
+         Q53 = as.numeric(Q53),
+         Q54 = as.numeric(Q54),
+         Q56_1 = as.numeric(Q56_1),
+         Q56_2 = as.numeric(Q56_2),
+         Female = ifelse(Sex == "Female", 1, 0)) %>%
+  select(!Sex)
+# For 'Sex'
+work_type <- model.matrix(~Q24-1, data = completed_data)
+# For 'Ethnicity_simplified'
+ethnicity_dummies <- model.matrix(~Ethnicity_simplified-1, data = completed_data)
+# For 'Country_of_birth'
+country_dummies <- model.matrix(~Country_of_birth-1, data = completed_data)
+completed_data <- completed_data %>%
+  bind_cols(ethnicity_dummies[,-c(ncol(ethnicity_dummies))], # Baseline: White
+            country_dummies[,-c(ncol(country_dummies))], # Baseline: US
+            work_type[,-c(ncol(work_type))]) %>% # Baseline: Salaried
+  mutate(AnnualSalary = log(AnnualSalary+1)) %>%
+  select(!c(Q24, Ethnicity_simplified, Country_of_birth))
+# Clean column names
+names(completed_data) <- gsub("\\s", "_", names(completed_data))  # Replace spaces with underscores
+names(completed_data) <- gsub("\\(|\\)", "", names(completed_data))  # Remove parentheses
 
-# Compute factor scores for three different sets of questions
-labor_market_earnings <- fa(completed_data[23:32], nfactors = 1, rotate = "varimax")
-wealth <- fa(completed_data[33:46], nfactors = 1, rotate = "varimax")
-food_insecurity <- fa(completed_data[49:61], nfactors = 1, rotate = "varimax")
+# Factor Analysis
+# STAIfa <- fa(select(df, c(Q3:Q22,Q77:Q96,Q99:Q118)), cor = "tet",
+#            nfactors = 2, rotate = "oblimin", fm = "pa", scores = "tenBerge")
 
-# Print factor loadings
-print(labor_market_earnings$loadings)
-print(wealth$loadings)
-print(food_insecurity$loadings)
+# Get indices of continuous, polytomous, and dichotomous variables
+polytomous_vars <- names(completed_data[,c(1:8,10:21,31,56:58,60,63,65)])
+continuous_vars <- names(completed_data[,c(22,23,29,32,33,68,69)])
+dichotomous_vars <- names(completed_data[,c(9,24:28,30,34:55,59,61:62,64,66:67,70:79)])
 
-# Scree plot
-scree(labor_market_earnings)
-scree(wealth)
-scree(food_insecurity)
+poverty1 <- fa(completed_data[,c(21:79)], nfactors = 1,
+              rotate = "oblimin", fm = "pa", scores = "tenBerge")
+poverty2 <- fa(completed_data[,c(21:79)], nfactors = 2,
+              rotate = "oblimin", fm = "pa", scores = "tenBerge")
+poverty3 <- fa(completed_data[,c(21:79)], nfactors = 3,
+              rotate = "oblimin", fm = "pa", scores = "tenBerge")
+poverty4 <- fa(completed_data[,c(21:79)], nfactors = 4,
+              rotate = "oblimin", fm = "pa", scores = "tenBerge")
+poverty5 <- fa(completed_data[,c(21:79)], nfactors = 5,
+              rotate = "oblimin", fm = "pa", scores = "tenBerge")
 
-# Eigenvalues
-print(labor_market_earnings$values)
-print(wealth$values)
-print(food_insecurity$values)
+factor_scores <- factor.scores(completed_data[,c(21:79)], poverty)
 
+# Data for Analysis
+variables <- names(df[,c(1:5,28,115:119,122:125)])
+df <- df %>%
+  select(variables) %>%
+  bind_cols(factor_scores$scores)
+
+```
+
+In order to identify underlying dimensions of poverty within our dataset, we used factor analysis. This statistical method explains variability among observed, correlated variables in terms of a potentially lower number of unobserved, latent variables known as factors. The goal is to uncover these factors and understand the structure of correlations among the variables.
+
+For this specific analysis, we selected a subset of the survey data that primarily included responses to questions regarding household conditions, work conditions, and food deprivation. We performed the factor analysis using principal axis factoring, a method of extraction primarily used when the analysis aims to identify latent constructs underlying the variables CITE. It is a commonly used extraction method for psychological and social data. We employed an oblique rotation method to facilitate the interpretation of the factors. Such a method simplifies and clarifies the data structure. It allows for the factors to be correlated, which is often more realistic in social sciences research than assuming they are orthogonal. Further, we used a correlation-preserving scoring method (TenBerge), which provides unbiased estimates of the factor scores.
+
+Our three-factor model fits our data moderately well. The root mean square of residuals (RMSR), which measures the average residual correlation among variables, was 0.08, indicating a good fit. However, the Tucker-Lewis Index (TLI) was 0.475, below the desired threshold of 0.95, suggesting a moderate model fit. The root mean square error of approximation (RMSEA), which measures the discrepancy between the observed covariance matrix and the model covariance matrix per degree of freedom, was 0.073, with 90% confidence intervals between 0.069 and 0.08. This value suggests a reasonable error of approximation.
+
+The derived factors, based on their highest loadings, were interpreted as follows:
+
+1. **Factor 1 (PA1)**: This factor had high loadings primarily on the 'Q48' series and 'Q50' questions, which indicate experiences of financial hardship and food insecurity within the past 12 months. We labeled Factor 1 as a "Financial Hardship" factor. This factor is moderately negatively correlated with Factor 3 (PA3).
+
+2. **Factor 2 (PA2)**: The highest loadings on this factor were hours worked weekly and the participant's annual salary, suggesting that this factor might be related to the work and economic conditions of the respondents. There was a slight positive correlation between this factor and Factor 3 (PA3). Given the nature of the variables that load heavily on this factor, we interpreted it as an "Employment and Economic Status" factor.
+
+3. **Factor 3 (PA3)**: This factor had the highest loadings on questions related to home ownership. Thus, we interpret Factor 3 as a "Housing Status" factor. This factor had a negative correlation with Factor 1 (PA1) and a slight positive correlation with Factor 2 (PA2).
+
+The correlation of the factor scores with the factors for PA1, PA2, and PA3 were 0.99, 0.94, and 0.91, respectively, indicating high accuracy of the factor scores. Similarly, the multiple R square of scores with factors for PA1, PA2, and PA3 were 0.98, 0.88, and 0.83, respectively, suggesting a strong relationship between the observed variables and the extracted factors. The minimum correlation of possible factor scores were 0.97, 0.77, and 0.67 for PA1, PA2, and PA3, respectively, further supporting the adequacy of the factor scores.
 
 ### Demographics
 
@@ -1284,6 +1439,14 @@ print(food_insecurity$values)
 As seen in @pca-measure, Revisit questionnaire to address variance problems. One possibility is to expand our sample to lower-income people. Another option is to try other questions that would elicit more variance.
 
 Refer to @questionnaires for our current iteration of comprehensive measurements.
+
+In the current study, we employed Factor Analysis, a widely accepted statistical technique to identify the underlying relationships between measured variables. Factor Analysis helps deal with scale compatibility issues, reduces many variables into fewer factors, and assists in data interpretation, especially in large datasets.
+
+Before proceeding with the Factor Analysis, we first addressed the issue of missing data in our dataset, as it can significantly skew the results of a Factor Analysis. We opted to use Multiple Imputation by Chained Equations (MICE), an approach that fills in missing values multiple times to create several complete datasets. The number of imputations was set to the overall percentage of missing cases in the dataset, ensuring a robust and comprehensive imputation strategy.
+
+We chose the Random Forest (rf) method for our imputations. Random Forest is a flexible, non-parametric method that can handle complex interactions and non-linear relationships between variables, making it suitable for datasets with complex structures and patterns, like ours.
+
+Following this step, we conducted a Factor Analysis on the complete datasets generated by the MICE procedure.
 
 ## Results
 
@@ -1574,11 +1737,8 @@ Example of Subjective Probabilities
 
 library(simmer)
 library(simmer.plot)
-library(tidyverse)
 library(latex2exp)
-#library(dplyr)
 #library(data.table)
-set.seed(1234)
 
 # Parameters
 lambda <- 5
@@ -2418,6 +2578,19 @@ Prolific1_Stan_results <- sampling(object = my_model, data = model_data,
                                    cores = 3)
 
 ```
+
+## Factor Analysis for Experiment 1
+
+The figure below offers a visual representation of the imputation process. The left plot represents the mean of the imputed values across iterations, while the right plot shows the corresponding standard deviations. The intermingling of different imputation streams indicates a successful multiple imputation process, suggesting that the chains have converged. Additionally, we expect no visible trends in the later iterations, indicating that the imputations have reached a stable solution.
+
+``` {r}
+#|label: fig-mice
+#|fig-cap: ""
+
+plot(imputed_data)
+
+```
+In the following steps, we will conduct Factor Analysis on the complete datasets generated by the MICE procedure. This approach allows us to minimize the impact of missing data and maximize the accuracy and reliability of our Factor Analysis results.
 
 # Appendix: Images
 

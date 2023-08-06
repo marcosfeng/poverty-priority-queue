@@ -32,6 +32,7 @@ library(factoextra)
 library(psych)
 library(gt)
 library(stargazer)
+library(texreg)
 
 # © 1998-2023 RANDOM.ORG
 # 
@@ -1902,37 +1903,30 @@ df_combined <- bind_rows(df_list) %>%
 
 ```
 
-Individuals in the low income groups and in the high anxiety groups chose urgent tasks more often than important tasks. This result is not consistent for high income or low anxiety groups. Future graphs in this document will show that the difference-in-difference is not as clear.
+In this section, we delve into the urgency bias, or the tendency for individuals to prioritize urgent tasks over others. @tbl-exp1-urgencypoverty displays our analysis of the interplay between this bias and various socio-economic parameters to elucidate their contributory roles.
 
-1.  
+Model 1 takes into account the role of stability in three fundamental life domains: food security (PA1), job security (PA2), and housing stability (PA3). Our findings reveal a marginally significant negative influence of job security on urgency bias, suggesting that a stable job situation may attenuate the propensity towards urgency bias. However, food supply and housing stability do not significantly sway urgency bias.
 
-2.  Multiple regression models to test the same hypotheses with different measures of income.
+Models 2 and 3 explore the potential relationship between urgency bias and pre- and post-experiment anxiety levels. Our results do not yield a significant correlation, suggesting that the state of anxiety, either before or after the experiment, does not hold significant sway over urgency bias.
 
-```{r, eval=FALSE}
+Model 4 probes the impact of area-level poverty (as measured by ZIP poverty level) on urgency bias. Interestingly, the results indicate a marginally significant negative relationship, hinting that individuals residing in areas with higher poverty levels may exhibit a slightly reduced tendency towards urgency bias.
+
+In all models, we account for a variety of control variables, including the total number of Prolific approvals (as a proxy for platform experience), gender, age, the perceived importance and effort of the chosen task, and the perceived urgency, importance, and effort of the unchosen task. A consistent pattern emerges across all models, accentuating the role of task attributes in shaping urgency bias. This observation underscores the dynamic nature of urgency bias, suggesting that it can change with the inherent characteristics of tasks in the queue, such as their perceived importance and urgency.
+
+```{r, results='asis'}
 #| label: tbl-exp1-urgencypoverty
+#| tbl-cap: "Controls include total approvals, sex, age, the effect of chosen and not chosen tasks, round left true, and sigma."
 
 # Random effects logistic regression with interaction term between FA dimensions
-pglm(formula = chosen_u ~ PA1 + PA2 + PA3 +
-                          SAI_pre + Total_approvals + Sex +
-                          Age +
-                          zip_income + zip_poverty_log +
-                          chosen_i + chosen_e + RoundLeft +
-                          not_chosen_i + not_chosen_e + not_chosen_u,
-     data = df_combined,
-     effect = "twoways",
-     index = c("participant", "round"),
-     model = "random",
-     family = binomial('logit')) -> urg_bias_factors
-
 pglm(formula = chosen_u ~ PA1 + PA2 + PA3 +
                           Total_approvals + Sex + Age +
                           chosen_i + chosen_e + RoundLeft +
                           not_chosen_i + not_chosen_e + not_chosen_u,
      data = df_combined,
      effect = "twoways",
-     index = c("participant", "round"),
+     family = binomial('logit'),
      model = "random",
-     family = binomial('logit')) -> urg_bias_PA
+     index = c("participant", "round")) -> urg_bias_PA
 
 pglm(formula = chosen_u ~ SAI_pre +
                           Total_approvals + Sex + Age +
@@ -1964,65 +1958,24 @@ pglm(formula = chosen_u ~ zip_poverty_log +
      model = "random",
      family = binomial('logit')) -> urg_bias_ZIP
 
-pglm(formula = chosen_u ~ PA2*SAI_post +
-                          Total_approvals + Sex + Age +
-                          chosen_i + chosen_e + RoundLeft +
-                          not_chosen_i + not_chosen_e + not_chosen_u,
-     data = df_combined,
-     effect = "twoways",
-     index = c("participant", "round"),
-     model = "random",
-     family = binomial('logit')) -> urg_bias_PA2SAI
+# Generate the table
+## Specify the names for the variables
+custom_coef <- list("PA1" = "PA1 (Food Stability)",
+                 "PA2" = "PA2 (Job Stability)",
+                 "PA3" = "PA3 (Housing Stability)",
+                 "SAI_pre" = "Anxiety Pre",
+                 "SAI_post" = "Anxiety Post",
+                 "zip_poverty_log" = "ZIP poverty level")
 
-```
+## Create the table
+knitreg(list(urg_bias_PA,
+            urg_bias_SAI_pre,
+            urg_bias_SAI_post,
+            urg_bias_ZIP),
+       caption = "Urgency Bias Regression Models",
+       stars = c(0.001, 0.01, 0.05, 0.1),
+       custom.coef.map = custom_coef)
 
-It seems that when controlling for Dim 1 and 2, some effects become significant. Multicollinearity might be a problem, although correlations between STAI and PCA components are not higher than 0.6 (see correlation plots above). These results might be a result of a separation between State and Trait Anxiety. Although we only included the State questions of STAI, state and trait scores are likely correlated. PCA dimensions 1 and 2 may control for this confounding effect.
-
-We review the Key Results from the first pages: urgent choices do seem to be above 50% for key groups, but the differences-in-differences across income and anxiety levels are not significant.
-
-Again, people might not mind leaving the High Importance task undone. This is what some friends have called the "insurance ice cream." That is, if I leave this High Importance task in my queue, I can use it when I get a task that is High Effort but Low Urgency.
-
-### Reaction Time
-
-```{r, eval=FALSE}
-#| label: tbl-exp1-reactiontime
-#| tbl-cap: "Regression analysis of reaction time (RT) on participants' PCs and anxiety measures."
-
-plm(formula = logRT ~ Dim.1*Dim.2 +
-                      age + education + points +
-                      chosen_i + chosen_e + chosen_u +
-                      not_chosen_i + not_chosen_e + not_chosen_u,
-     data = two_options,
-     effect = "twoways",
-     index = c("participant", "round"),
-     model = "random") -> rt_bias_pca
-
-plm(formula = logRT ~ income*stai +
-                      age + education + points +
-                      chosen_i + chosen_e + chosen_u +
-                      not_chosen_i + not_chosen_e + not_chosen_u,
-     data = two_options,
-     effect = "twoways",
-     index = c("participant", "round"),
-     model = "random") -> rt_bias_income
-
-plm(formula = logRT ~ poverty_zip*stai +
-                      age + education + points +
-                      chosen_i + chosen_e + chosen_u +
-                      not_chosen_i + not_chosen_e + not_chosen_u,
-     data = two_options,
-     effect = "twoways",
-     index = c("participant", "round"),
-     model = "random") -> rt_bias_zipdeprivation
-
-plm(formula = logRT ~ median_income_zip*stai +
-                      age + education + points +
-                      chosen_i + chosen_e + chosen_u +
-                      not_chosen_i + not_chosen_e + not_chosen_u,
-     data = two_options,
-     effect = "twoways",
-     index = c("participant", "round"),
-     model = "random") -> rt_bias_zipincome
 ```
 
 ### Accuracy
@@ -3201,6 +3154,7 @@ Prolific1_Stan_results <- sampling(object = my_model, data = model_data,
 ``` {r}
 #|label: fig-mice
 #|fig-cap: "Visual representation of the MICE imputation process. The left plot shows the mean of the imputed values across iterations, while the right plot displays the corresponding standard deviations. The intermingling of different imputation streams suggests successful convergence of the chains."
+#| layout-ncol: 3
 
 plot(imputed_data)
 

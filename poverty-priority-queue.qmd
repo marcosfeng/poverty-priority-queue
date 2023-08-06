@@ -1255,16 +1255,6 @@ library(caret)
 # Load the data
 load(file = "data/Exp1/df.Rdata")
 
-## Generate column names for STAI
-cols1 <- paste0("Q", 3:22)
-cols2 <- paste0("Q", 77:96)
-cols3 <- paste0("Q", 99:118)
-# Reorder the levels of ordered factors
-ordinal_to_numeric <- c("Not at all" = 1, "Somewhat" = 2,
-                        "Moderately" = 3, "Very much" = 4)
-df <- df %>%
-  mutate(across(c(cols1, cols2, cols3), ~recode(., !!!ordinal_to_numeric)))
-
 df$Q23 <- factor(df$Q23,
                  levels = c("Less than $10,000",
                             "$10,000 - $15,000",
@@ -1335,12 +1325,32 @@ df$Q36[df$Q33_1 == 0] <- 0
 
 # Remove columns that are all NA
 df <- df[, colSums(is.na(df)) != nrow(df)]
-# Detect and remove zero- or near-zero variance predictors
+# Detect and remove zero-variance predictors
 nzv <- nearZeroVar(df[,-129], saveMetrics = TRUE)
 # Remove the variables with zero variance from the data
 df <- df[, c(!nzv$zeroVar, TRUE)]
 
+# Perform multiple imputation
+# ## Create df without the trial info:
+# df_mice <- df %>% select(!CSV_Data)
+# ## Set up the predictorMatrix
+# df_mice <- df_mice[,-c(1:5,73:113,114)]
+# predictorMatrix <- make.predictorMatrix(df_mice)
+# 
+# ## Compute the maximum percentage of missing values
+# max_missing_percentage <- round(max(colMeans(is.na(df_mice))) * 100)
+# imputed_data <- mice(df_mice, m = max_missing_percentage,
+#                      method = 'rf', maxit = 5,
+#                      predictorMatrix = predictorMatrix)
+# 
+# save(imputed_data, file = "data/Exp1/imputed_data.Rdata")
+load(file = "data/Exp1/imputed_data.Rdata")
+
 # Calculate STAI
+df <- df %>%
+  mutate(across(c(paste0("Q", 3:22),
+                  paste0("Q", 77:96),
+                  paste0("Q", 99:118)), as.numeric))
 df <- df %>%
   mutate(across(c("Q3", "Q4", "Q7", "Q10", "Q12", "Q13", "Q17", "Q18", "Q21",
                   "Q22", "Q77", "Q78", "Q81", "Q84", "Q86", "Q87", "Q91", "Q92",
@@ -1350,21 +1360,6 @@ df <- df %>%
          SAI_pre = rowSums(select(df, Q3:Q22), na.rm = TRUE),
          SAI_post = rowSums(select(df, Q77:Q96), na.rm = TRUE),
          TAI_post = rowSums(select(df, Q99:Q118), na.rm = TRUE))
-
-# Create df without the trial info:
-df_mice <- df %>% select(!CSV_Data)
-# Set up the predictorMatrix
-df_mice <- df_mice[,-c(1:5,94,74:114,115,122:124)]
-predictorMatrix <- make.predictorMatrix(df_mice)
-
-# Calculate the overall percentage of missing values in the data
-missing_values_percent <- round(mean(is.na(df_mice)) * 100)
-
-# Perform multiple imputation to fill missing values using MICE with FCS
-# imputed_data <- mice(df_mice, m = max(missing_values_percent, 5), maxit = 20,
-#                      method = 'rf', predictorMatrix = predictorMatrix)
-# save(imputed_data, file = "data/Exp1/imputed_data.Rdata")
-load(file = "data/Exp1/imputed_data.Rdata")
 
 # Transform all to numeric
 completed_data <- complete(imputed_data, 1) %>%
@@ -1380,7 +1375,7 @@ completed_data <- complete(imputed_data, 1) %>%
          Q56_2 = as.numeric(Q56_2),
          Female = ifelse(Sex == "Female", 1, 0)) %>%
   select(!Sex)
-# For 'Sex'
+# For 'work_type'
 work_type <- model.matrix(~Q24-1, data = completed_data)
 # For 'Ethnicity_simplified'
 ethnicity_dummies <- model.matrix(~Ethnicity_simplified-1, data = completed_data)
@@ -1390,36 +1385,25 @@ completed_data <- completed_data %>%
   bind_cols(ethnicity_dummies[,-c(ncol(ethnicity_dummies))], # Baseline: White
             country_dummies[,-c(ncol(country_dummies))], # Baseline: US
             work_type[,-c(ncol(work_type))]) %>% # Baseline: Salaried
-  mutate(AnnualSalary = log(AnnualSalary+1)) %>%
+  mutate(AnnualSalary = log1p(AnnualSalary)) %>%
   select(!c(Q24, Ethnicity_simplified, Country_of_birth))
-# Clean column names
-names(completed_data) <- gsub("\\s", "_", names(completed_data))  # Replace spaces with underscores
-names(completed_data) <- gsub("\\(|\\)", "", names(completed_data))  # Remove parentheses
 
 # Factor Analysis
-# STAIfa <- fa(select(df, c(Q3:Q22,Q77:Q96,Q99:Q118)), cor = "tet",
-#            nfactors = 2, rotate = "oblimin", fm = "pa", scores = "tenBerge")
-
-# Get indices of continuous, polytomous, and dichotomous variables
-polytomous_vars <- names(completed_data[,c(1:8,10:21,31,56:58,60,63,65)])
-continuous_vars <- names(completed_data[,c(22,23,29,32,33,68,69)])
-dichotomous_vars <- names(completed_data[,c(9,24:28,30,34:55,59,61:62,64,66:67,70:79)])
-
-poverty1 <- fa(completed_data[,c(21:79)], nfactors = 1,
+poverty1 <- fa(completed_data[,c(21:78)], nfactors = 1, n.rotations = 50,
               rotate = "oblimin", fm = "pa", scores = "tenBerge")
-poverty2 <- fa(completed_data[,c(21:79)], nfactors = 2,
+poverty2 <- fa(completed_data[,c(21:78)], nfactors = 2, n.rotations = 50,
               rotate = "oblimin", fm = "pa", scores = "tenBerge")
-poverty3 <- fa(completed_data[,c(21:79)], nfactors = 3,
+poverty3 <- fa(completed_data[,c(21:78)], nfactors = 3, n.rotations = 50,
               rotate = "oblimin", fm = "pa", scores = "tenBerge")
-poverty4 <- fa(completed_data[,c(21:79)], nfactors = 4,
+poverty4 <- fa(completed_data[,c(21:78)], nfactors = 4, n.rotations = 50,
               rotate = "oblimin", fm = "pa", scores = "tenBerge")
-poverty5 <- fa(completed_data[,c(21:79)], nfactors = 5,
+poverty5 <- fa(completed_data[,c(21:78)], nfactors = 5, n.rotations = 50,
               rotate = "oblimin", fm = "pa", scores = "tenBerge")
 
-factor_scores <- factor.scores(completed_data[,c(21:79)], poverty3)
+factor_scores <- factor.scores(completed_data[,c(21:78)], poverty3)
 
 # Data for Analysis
-variables <- names(df[,c(1:5,28,115:119,122:125)])
+variables <- names(df[,c(1:5,28,114:118,121:124)])
 df <- df %>%
   select(variables) %>%
   bind_cols(factor_scores$scores)
@@ -1503,14 +1487,13 @@ Before proceeding with the Factor Analysis, we addressed the issue of missing da
 
 Following this, we conducted a Factor Analysis on the complete datasets generated by the MICE procedure. This analysis aimed to uncover latent variables, or factors, that explain the variability among observed, correlated variables. This method is particularly useful in understanding the structure of correlations among the variables. For this specific analysis, we selected a subset of the survey data, including responses to questions regarding household conditions, work conditions, and food deprivation. We performed the factor analysis using principal axis factoring, a method of extraction primarily used when the analysis aims to identify latent constructs underlying the variables. It is a commonly used extraction method for psychological and social data. We also employed an oblique rotation method to facilitate the interpretation of the factors. Such a method simplifies and clarifies the data structure and allows for the factors to be correlated, which is a more relaxed and often more realistic assumption. Lastly, we used a correlation-preserving scoring method (TenBerge), which provides unbiased estimates of the factor scores.
 
-@fig-new-pov-scree displays the scree plot, a graphical representation of the eigenvalues of factors or components in an exploratory factor analysis. It helps in determining the number of factors to retain in the analysis. The x-axis represents the number of factors, and the y-axis represents the eigenvalues. The point at which the slope of the curve is leveling off (the "elbow") indicates the number of factors to retain. Although the elbow is a standard guideline, the decision to choose the number of factors should also consider the interpretability of the factors and the theoretical understanding of the measured constructs. In our case, the elbow in the scree plot suggested that two factors might be sufficient. However, upon further analysis, we found that a three-factor model provided a more meaningful and comprehensive understanding of poverty.
-
+@fig-new-pov-scree displays the scree plot, a graphical representation of the proportion explained variance for each factor in an exploratory factor analysis. It helps in determining the number of factors to retain in the analysis. The x-axis represents the number of factors, and the y-axis represents the proportion explained variance. The point at which the slope of the curve is leveling off (the "elbow") indicates the number of factors to retain. Although the elbow is a standard guideline, the decision to choose the number of factors should also consider the interpretability of the factors and the theoretical understanding of the measured constructs. In our case, the elbow in the scree plot suggested that two factors might be sufficient. However, upon further analysis, we found that a three-factor model provided a more meaningful and comprehensive understanding of poverty.
 
 ``` {r}
 #| label: fig-new-pov-scree
 #| fig-cap: ""
 
-# Create a data frame with the cumulative proportion explained variance for each model
+# Create a data frame with the proportion explained variance for each model
 explained_variance <- data.frame(
   Factor = c(1, 2, 3, 4, 5),
   Model1 = c(poverty1$Vaccounted["Proportion Var",], NA, NA, NA, NA),
@@ -1527,7 +1510,7 @@ explained_variance_long <- gather(explained_variance, Model, Variance, -Factor)
 ggplot(explained_variance_long, aes(x = Factor, y = Variance, color = Model)) +
   geom_line() +
   geom_point() +
-  labs(x = "Factor", y = "Cumulative Proportion Explained Variance") +
+  labs(x = "Factor", y = "Proportion Explained Variance") +
   theme_minimal()
 
 
@@ -1611,7 +1594,7 @@ library(maptools)
 df$zip_poverty_log <- log1p(df$zip_poverty)
 # Define the colors and breakpoints
 colors <- c("blue","blue","white", "red","red")
-breaks <- quantile(df$zip_poverty_log, probs = c(0, 0.25, 0.5, 0.75, 1), na.rm = TRUE)
+breaks <- quantile(df$zip_poverty_log, probs = c(0, 0.5, 1), na.rm = TRUE)
 # Create a color gradient function
 color_gradient <- colorRampPalette(colors)
 # Get the US map data
@@ -1626,7 +1609,7 @@ ggplot() +
   # Define the color scale
   scale_color_gradientn(colors = color_gradient(100), 
                         breaks = breaks, 
-                        labels = round(breaks, 2),
+                        labels = round(expm1(breaks), 2),
                         guide = "colorbar") +
   # Define the size scale
   scale_size_continuous(range = c(1, 5)) +
@@ -1638,13 +1621,15 @@ ggplot() +
   theme(panel.grid.major = element_blank(), 
         panel.grid.minor = element_blank(),
         axis.text = element_blank(), 
-        axis.ticks = element_blank()) +
+        axis.ticks = element_blank(),
+        # Move the legends to the bottom
+        legend.position = "bottom") +
   # Remove the axis labels
   labs(x = "", y = "")
 
 detach("package:maps", unload = TRUE)
 detach("package:ggmap", unload = TRUE)
-detach("package:ggmap", unload = TRUE)
+detach("package:maptools", unload = TRUE)
 
 ```
 
@@ -1772,7 +1757,7 @@ stargazer(reg_total1, reg_total2, reg_total3, reg_total4,
 When we compare an individual's choice of "challenging" tasks: decisions between high urgency - low importance or low importance - high urgency tasks, we observe that high anxiety and low income individuals more often choose high urgency tasks over high value tasks, which corroborates the current non-quantitative literature as can be observed in the plots below.
 
 ```{r}
-#| label: fig-tradeoff-results
+#| label: fig-exp1-tradeoff
 #| fig-cap: "Choice proportions by income and anxiety"
 #| fig-subcap:
 #|   - "Income"
@@ -1840,8 +1825,8 @@ df_long %>%
   labs(title="Choice Frequency of Urgent vs Non-urgent Tasks",
        x ="",
        y = "Frequency of urgent/not important choices",
-       fill = "Poverty Group") +
-  scale_x_discrete(labels = c("PAGroup1" = "Financial/Food Stability",
+       fill = "Stability") +
+  scale_x_discrete(labels = c("PAGroup1" = "Food Stability",
                               "PAGroup2" = "Employment Stability",
                               "PAGroup3" = "Housing Stability")) +
   scale_fill_brewer() +
@@ -1872,7 +1857,7 @@ df_long %>%
   geom_col(position = "dodge") +
   labs(x ="",
        y = "Frequency of urgent/not important choices",
-       fill = "Anxiety Group") +
+       fill = "Anxiety Level") +
   scale_x_discrete(labels = c("AnxietyGroup_SAI_pre" = "State Anxiety Pre",
                               "AnxietyGroup_SAI_post" = "State Anxiety Post",
                               "AnxietyGroup_TAI_post" = "Trait Anxiety Post")) +
@@ -1885,63 +1870,37 @@ df_long %>%
   geom_hline(yintercept=0.5, linetype=2)
 
 ```
-
-Accuracy in trade-off decisions as a function of income and anxiety
-
-Multiple regression models to test the same hypotheses with different measures of income.
-
-```{r}
-#| label: proportion-tests
-
-joint_pilot %>%
-  mutate(huli = factor(huli,
-                       ordered = FALSE,
-                       levels = c(1,0),
-                       labels = c("High Urgency, Low Importance",
-                                  "Low Urgency, High Importance"))) %>%
-  prop_test(formula = huli ~ high_income,
-            alternative = "greater",
-            order = c("Low Income", "High Income")) -> pooled_income_test
-
-joint_pilot %>% 
-  mutate(huli = factor(huli,
-                       ordered = FALSE,
-                       levels = c(1,0),
-                       labels = c("High Urgency, Low Importance",
-                                  "Low Urgency, High Importance"))) %>%
-  prop_test(formula = huli ~ high_anxiety,
-            alternative = "less",
-            order = c("Low Anxiety", "High Anxiety")) -> pooled_anxiety_test
-
-joint_pilot %>%
-  filter(high_income == "Low Income") %>%
-  mutate(huli = factor(huli,
-                       ordered = FALSE,
-                       levels = c(1,0),
-                       labels = c("High Urgency, Low Importance",
-                                  "Low Urgency, High Importance"))) %>%
-  prop_test(formula = huli ~ NULL,
-            success = "High Urgency, Low Importance",
-            p = 0.5,
-            alternative = "greater") -> low_income_test
-
-joint_pilot %>%
-  filter(high_anxiety == "High Anxiety") %>%
-  mutate(huli = factor(huli,
-                       ordered = FALSE,
-                       levels = c(1,0),
-                       labels = c("High Urgency, Low Importance",
-                                  "Low Urgency, High Importance"))) %>%
-  prop_test(formula = huli ~ NULL,
-            success = "High Urgency, Low Importance",
-            p = 0.5,
-            alternative = "greater") -> high_anxiety_test
-
+``` {r clean environment}
+#| echo: false
+rm(list = setdiff(ls(), c("df","poverty3","imputed_data")))
+gc(verbose = FALSE)
 ```
 
-Percent of urgent choices (vs. important) as a function of income and anxiety.
-
 ### General Urgency Bias
+
+``` {r merge datasets Exp1}
+
+# Function to add participant-level data to each trial dataframe
+add_participant_data <- function(trial_data) {
+  trial_data %>%
+    left_join(participant_data, by = c('participant' = 'PROLIFIC_PID'))
+}
+
+# Convert df (excluding column 14) to a data frame and ensure participant ID is unique
+participant_data <- df[,-c(14)] %>%
+  group_by(PROLIFIC_PID) %>%
+  summarise(across(where(~ !is.numeric(.)), ~ first(na.omit(.))), 
+            across(where(is.numeric), mean, na.rm = TRUE))
+
+# Use lapply to add participant data to each data frame in df$CSV_Data
+df_list <- lapply(df$CSV_Data, add_participant_data)
+
+# Combine the data frames in df_list
+df_combined <- bind_rows(df_list) %>%
+  group_by(participant) %>%
+  mutate(round = row_number())
+
+```
 
 Individuals in the low income groups and in the high anxiety groups chose urgent tasks more often than important tasks. This result is not consistent for high income or low anxiety groups. Future graphs in this document will show that the difference-in-difference is not as clear.
 
@@ -1949,56 +1908,71 @@ Individuals in the low income groups and in the high anxiety groups chose urgent
 
 2.  Multiple regression models to test the same hypotheses with different measures of income.
 
-```{r data for urgencypoverty}
-two_options <- joint_pilot %>%
-  filter(!is.na(participant), !is.na(round)) %>%
-  filter(!is.na(chosen_i), !is.na(chosen_e),
-         !is.na(not_chosen_i), !is.na(not_chosen_e), !is.na(not_chosen_u)) %>%
-  mutate(income = as.numeric(income),
-         logRT = log(as.numeric(RT))) %>%
-  filter(logRT != Inf & logRT != -Inf)
+```{r, eval=FALSE}
+#| label: tbl-exp1-urgencypoverty
 
-write_csv(two_options, file = "data/Pilot/two_options.csv")
-```
-
-```{r}
-#| label: tbl-urgencypoverty
-
-pglm(formula = chosen_u ~ Dim.1*Dim.2 +
-                          age + education + points +
-                          chosen_i + chosen_e + not_chosen_i + not_chosen_e + not_chosen_u,
-     data = two_options,
+# Random effects logistic regression with interaction term between FA dimensions
+pglm(formula = chosen_u ~ PA1 + PA2 + PA3 +
+                          SAI_pre + Total_approvals + Sex +
+                          Age +
+                          zip_income + zip_poverty_log +
+                          chosen_i + chosen_e + RoundLeft +
+                          not_chosen_i + not_chosen_e + not_chosen_u,
+     data = df_combined,
      effect = "twoways",
      index = c("participant", "round"),
      model = "random",
-     family = binomial('logit')) -> urg_bias_pca
+     family = binomial('logit')) -> urg_bias_factors
 
-pglm(formula = chosen_u ~ income*stai +
-                          age + education + points +
-                          chosen_i + chosen_e + not_chosen_i + not_chosen_e + not_chosen_u,
-     data = two_options,
+pglm(formula = chosen_u ~ PA1 + PA2 + PA3 +
+                          Total_approvals + Sex + Age +
+                          chosen_i + chosen_e + RoundLeft +
+                          not_chosen_i + not_chosen_e + not_chosen_u,
+     data = df_combined,
      effect = "twoways",
      index = c("participant", "round"),
      model = "random",
-     family = binomial('logit')) -> urg_bias_income
+     family = binomial('logit')) -> urg_bias_PA
 
-pglm(formula = chosen_u ~ poverty_zip*stai +
-                          age + education + points +
-                          chosen_i + chosen_e + not_chosen_i + not_chosen_e + not_chosen_u,
-     data = two_options,
+pglm(formula = chosen_u ~ SAI_pre +
+                          Total_approvals + Sex + Age +
+                          chosen_i + chosen_e + RoundLeft +
+                          not_chosen_i + not_chosen_e + not_chosen_u,
+     data = df_combined,
      effect = "twoways",
      index = c("participant", "round"),
      model = "random",
-     family = binomial('logit')) -> urg_bias_zipdeprivation
+     family = binomial('logit')) -> urg_bias_SAI_pre
 
-pglm(formula = chosen_u ~ median_income_zip*stai +
-                          age + education + points +
-                          chosen_i + chosen_e + not_chosen_i + not_chosen_e + not_chosen_u,
-     data = two_options,
+pglm(formula = chosen_u ~ SAI_post +
+                          Total_approvals + Sex + Age +
+                          chosen_i + chosen_e + RoundLeft +
+                          not_chosen_i + not_chosen_e + not_chosen_u,
+     data = df_combined,
      effect = "twoways",
      index = c("participant", "round"),
      model = "random",
-     family = binomial('logit')) -> urg_bias_zipincome
+     family = binomial('logit')) -> urg_bias_SAI_post
+
+pglm(formula = chosen_u ~ zip_poverty_log +
+                          Total_approvals + Sex + Age +
+                          chosen_i + chosen_e + RoundLeft +
+                          not_chosen_i + not_chosen_e + not_chosen_u,
+     data = df_combined,
+     effect = "twoways",
+     index = c("participant", "round"),
+     model = "random",
+     family = binomial('logit')) -> urg_bias_ZIP
+
+pglm(formula = chosen_u ~ PA2*SAI_post +
+                          Total_approvals + Sex + Age +
+                          chosen_i + chosen_e + RoundLeft +
+                          not_chosen_i + not_chosen_e + not_chosen_u,
+     data = df_combined,
+     effect = "twoways",
+     index = c("participant", "round"),
+     model = "random",
+     family = binomial('logit')) -> urg_bias_PA2SAI
 
 ```
 
@@ -2010,8 +1984,8 @@ Again, people might not mind leaving the High Importance task undone. This is wh
 
 ### Reaction Time
 
-```{r}
-#| label: tbl-reactiontime
+```{r, eval=FALSE}
+#| label: tbl-exp1-reactiontime
 #| tbl-cap: "Regression analysis of reaction time (RT) on participants' PCs and anxiety measures."
 
 plm(formula = logRT ~ Dim.1*Dim.2 +
@@ -2055,8 +2029,8 @@ plm(formula = logRT ~ median_income_zip*stai +
 
 We also obtain a comparison of the choices participants make and the optimal, or rational, protocol we generated. This is done by estimating a hierarchical Bayesian model...
 
-```{r}
-#| label: fig-costs
+```{r, eval=FALSE}
+#| label: fig-exp1costs
 #| fig-cap: "Histogram of Estimated Costs per Participant"
 dat <- data.frame(dens = c(costs$cH, costs$cL), 
                   lines = rep(c("cH", "cL"), each = nrow(costs)))
@@ -2067,12 +2041,12 @@ ggplot(dat, aes(x = dens, fill = lines)) +
 
 This score is calculated by first estimating the cost parameters for each participant and then using them with backwards induction to discover the optimal choice at each presented state.
 
-```{r data for accuracy}
+```{r exp1-accuracy, eval=FALSE}
 write_csv(Accuracy, file = "data/Pilot/Accuracy.csv")
 ```
 
-```{r}
-#| label: fig-accuracy
+```{r, eval=FALSE}
+#| label: fig-exp1-accuracy
 #| fig-cap: "Histogram of Accuracy Proportions"
 
 hist(Accuracy$Accuracy, breaks=10)
@@ -2087,8 +2061,8 @@ hist(Accuracy$Accuracy, breaks=10)
 
 Finally, we compare for each participant, how many of their choices are identical to a model that observed the full horizon for the Markov decision process. Each participant is a dot, y axis is the percentage of correct choices in the experiment while x axis is the STAI (anxiety measure). Generally the results are very similar to figure 1.5.
 
-```{r}
-#| label: fig-accuracy-results
+```{r, eval=FALSE}
+#| label: fig-exp1-accuracy-results
 #| fig-cap: "Participant Accuracy by Income and Anxiety"
 #| fig-subcap:
 #|   - "Prolific, Income"
@@ -2115,8 +2089,8 @@ It appears that Accuracy does not vary across income and anxiety levels with the
 
 #### General Linear Models of Accuracy
 
-```{r}
-#| label: tbl-accuracy
+```{r, eval=FALSE}
+#| label: tbl-exp1-accuracy
 pglm(formula = Optimal ~ income*stai +
                          age + education + points +
                          chosen_i + chosen_e + chosen_u +
@@ -2550,7 +2524,7 @@ Notably, this does not imply that the policy for each state will be identical. H
 
 Above all, these findings underline the complexity of decision-making processes and the intricate dynamics in this and other task-based games. In practice, the large number of possible states in this game (due to the different combinations of tasks and their characteristics) might make exact dynamic programming infeasible for humans. As such, approximation methods such as function approximation or reinforcement learning techniques are necessary.
 
-```{python}
+```{python, eval = FALSE}
 import pandas as pd
 import ast
 
@@ -2619,10 +2593,6 @@ for round in reversed(range(1, num_rounds)):  # From (num_rounds - 1) to 1
 
 value_df.to_csv('./dyn_prog/value_df.csv')
 policy_df.to_csv('./dyn_prog/policy_df.csv')
-
-```
-
-```{python}
 
 ```
 
@@ -3246,6 +3216,17 @@ Next, we conducted Factor Analysis on the complete datasets generated by the MIC
 loadings <- as.matrix(poverty3$loadings)
 # Create the heatmap
 heatmap(loadings)
+
+```
+
+## Correlations in Experiment 1 Variables
+
+```{r}
+
+cor(df[c("PA1", "PA2", "PA3", "zip_income", "zip_poverty_log",
+         "SAI_pre", "SAI_post", "TAI_post",
+         "Total_approvals", "Age")],
+    method = "spearman", use = "pairwise.complete.obs")
 
 ```
 

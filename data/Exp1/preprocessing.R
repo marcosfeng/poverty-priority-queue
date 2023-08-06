@@ -111,7 +111,12 @@ united_data <- united_data %>%
   )
 
 united_data <- united_data %>%
-  mutate(across(c("Q3":"Q23", "Q37", "Q49_1":"Q49_3",
+  mutate(across(c("Q3":"Q22","Q77":"Q96","Q99":"Q118"),
+                ~factor(.x, levels = c("Not at all",
+                                       "Somewhat",
+                                       "Moderately",
+                                       "Very much"), ordered = TRUE))) %>%
+  mutate(across(c("Q23", "Q37", "Q49_1":"Q49_3",
                   "Q51", "Q54", "Q56_1":"Q56_3", "Q60"), as.ordered)) %>%
   mutate(across(c("Ethnicity simplified", "Country of birth"), as.factor)) %>%
   mutate(across(c("Q26":"Q32", "Q35", "Q44", "Q45", "Age"), as.numeric)) %>%
@@ -189,7 +194,7 @@ united_data <- united_data %>%
   select(all_of(columns_to_keep))
 
 # Get a list of all unzipped files
-files <- list.files("data/Exp1/processed/", pattern = "*.csv", full.names = TRUE)
+files <- list.files("data/Exp1/processed", pattern = "*.csv", full.names = TRUE)
 
 # Initialize an empty list to store the CSV dataframes
 csv_dataframes <- list()
@@ -214,7 +219,8 @@ for (file in files) {
 united_data$CSV_Data <- united_data$PROLIFIC_PID %>% map(~csv_dataframes[[.]])
 
 united_data <- united_data %>%
-  filter(!is.na(PROLIFIC_PID))
+  filter(!is.na(PROLIFIC_PID)) %>%
+  filter(!map_lgl(CSV_Data, is.null))
 
 df <- united_data
 save(df, file = "./data/Exp1/df.Rdata")

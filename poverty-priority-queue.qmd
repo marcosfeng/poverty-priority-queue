@@ -40,6 +40,8 @@ library(texreg)
 # Timestamp: 2023-08-02 17:58:21 UTC
 set.seed(496181801)
 
+reticulate::use_condaenv(condaenv = "py-poverty")
+
 ```
 
 ``` {r load-pilot}

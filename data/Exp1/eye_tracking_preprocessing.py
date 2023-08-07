@@ -27,6 +27,8 @@ common_resolutions = [(1024, 576), (1280, 720), (1366, 768),
 def extract_features(task):
     if pd.isna(task):
         return np.nan, np.nan, np.nan
+    if 'none' in task:
+      return np.nan, np.nan, np.nan
     u = int('-U' in task)
     i = int('2.png' in task)
     e = int('-sp' in task)

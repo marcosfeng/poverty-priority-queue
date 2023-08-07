@@ -30,8 +30,8 @@ vignettes/*.pdf
 .DS_Store
 Icon
 
-python-environment
-python-environment/*
+py-poverty
+py-poverty/*
 
 /.quarto/
 

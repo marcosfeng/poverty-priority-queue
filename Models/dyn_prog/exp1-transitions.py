@@ -1,6 +1,5 @@
 import pandas as pd
 import numpy as np
-import ast
 
 # Define the possible tasks and their durations
 tasks = ["HHU", "HLU", "LHU", "LLU", "HH0", "HL0", "LH0", "LL0"]
@@ -176,11 +175,11 @@ for i, state in enumerate(states):
                              if transition_tensor[i, j, k] > 0}
         transition_df.at[state, f"Choice {j}"] = next_states_probs
 
-transition_df.to_csv('./dyn_prog/transition_df.csv')
+transition_df.to_csv('./Models/dyn_prog/transition_df.csv')
 
 # Identify all unique states
-unique_states = np.unique(np.concatenate([list(ast.literal_eval(row['Choice 0']).keys()) + 
-                                          list(ast.literal_eval(row['Choice 1']).keys()) 
+unique_states = np.unique(np.concatenate([list(row['Choice 0'].keys()) + 
+                                          list(row['Choice 1'].keys()) 
                                           for _, row in transition_df.iterrows()]))
 
 # Create a dictionary to map state names to indices
@@ -191,12 +190,14 @@ transition_matrix_0 = np.zeros((transition_df.shape[0], len(unique_states)))
 transition_matrix_1 = np.zeros((transition_df.shape[0], len(unique_states)))
 
 # Fill the transition matrices
-for i, row in transition_df.iterrows():
-    for state, prob in ast.literal_eval(row['Choice 0']).items():
+for i, (_, row) in enumerate(transition_df.iterrows()):
+    for state, prob in row['Choice 0'].items():
         transition_matrix_0[i, state_to_index[state]] = prob
-    for state, prob in ast.literal_eval(row['Choice 1']).items():
+    for state, prob in row['Choice 1'].items():
         transition_matrix_1[i, state_to_index[state]] = prob
 
-# Check the first few rows of the transition matrices
-transition_matrix_0[:5, :], transition_matrix_1[:5, :]
+# Save the transition matrices to CSV files
+np.savetxt("Models/dyn_prog/transition_matrix_0.csv", transition_matrix_0, delimiter=",")
+np.savetxt("Models/dyn_prog/transition_matrix_1.csv", transition_matrix_1, delimiter=",")
+
 

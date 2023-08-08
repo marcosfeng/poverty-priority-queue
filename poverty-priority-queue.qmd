@@ -1542,13 +1542,12 @@ Similar to our pilot study, we validated participants' income reports by analyzi
 #| fig-cap: "Income and Poverty Levels by ZIP Code"
 
 # Load the ip to zip code data
-ip2zip <- read_csv("data/ZIPcode/ip2zip_exp1.csv")
+ip2zip <- read_csv("data/ZIPcode/ip2zip_exp1.csv") %>%
+  distinct()
 
 # Merge the demographics data with the ip to zip code data
-df <- merge(y = df,
-           x = ip2zip,
-           by.y = "IPAddress",
-           by.x = "IP")
+df <- df %>%
+  left_join(ip2zip, by = c("IPAddress" = "IP"))
 
 # Load the poverty data
 poverty <- read_csv("data/ZIPcode/ACSST5Y2019.S1701_data_with_overlays_2021-12-21T174024.csv")
@@ -1574,24 +1573,13 @@ income <- income %>%
 
 # Merge the demographics data with the income data and remove the IP column for privacy
 df <- df %>%
-  dplyr::select(-"IP") %>%
+  dplyr::select(-c("IPAddress")) %>%
   left_join(income, by = "ZIP") %>%
   mutate(
     zip_poverty = as.numeric(S1701_C03_001E),
     zip_income = as.numeric(S1903_C03_001E)
   ) %>%
   select(!c(S1701_C03_001E, S1903_C03_001E))
-
-# Generate summary statistics
-summary_stats <- df %>%
-  summarise(
-    mean_income = mean(zip_income, na.rm = TRUE),
-    mean_poverty_rate = mean(zip_poverty, na.rm = TRUE),
-  )
-
-library(ggmap)
-library(maps)
-library(maptools)
 
 # Add a new column for the transformed poverty level
 df$zip_poverty_log <- log1p(df$zip_poverty)
@@ -1629,10 +1617,6 @@ ggplot() +
         legend.position = "bottom") +
   # Remove the axis labels
   labs(x = "", y = "")
-
-detach("package:maps", unload = TRUE)
-detach("package:ggmap", unload = TRUE)
-detach("package:maptools", unload = TRUE)
 
 ```
 
@@ -1773,7 +1757,9 @@ create_huli_var <- function(game_data) {
     mutate(tradeoff = ifelse(u1 > u2
                          & i1 < i2, 1,
                          ifelse(u1 < u2
-                                & i1 > i2, 1, 0)),
+                                & i1 > i2, 1,
+                                ifelse(is.na(i1) | is.na(i2), 0,
+                                       0))),
            urgent_choice = case_when(tradeoff == 0 ~ NA,
                                      chosen_u == 1 ~ 1,
                                      chosen_u == 0 ~ 0))
@@ -1789,12 +1775,12 @@ tradeoff_list <- map(df$CSV_Data, function(x) {
   x %>%
     group_by(participant) %>%
     filter(!is.na(urgent_choice)) %>%
-    summarize(urgent_choice = mean(urgent_choice))
+    summarize(urgent_proportion = mean(urgent_choice))
 })
 # Combine all the results into a single data frame
 tradeoff_df <- bind_rows(tradeoff_list) %>%
   group_by(participant) %>%
-  summarize(urgent_choice = mean(urgent_choice))
+  summarize(urgent_proportion = mean(urgent_proportion))
 
 # Join the tradeoff_df with the main data frame
 df <- inner_join(df, tradeoff_df, by = c("PROLIFIC_PID" = "participant"))
@@ -1817,16 +1803,15 @@ df_long <- df %>%
 df_long %>%
   group_by(PovertyFactor, PovertyGroup) %>%
   filter(!is.na(PovertyGroup)) %>%
-  summarise(choose_urg = sum(urgent_choice, na.rm = TRUE),
-            total = sum(!is.na(urgent_choice)),
-            mean_huli  = mean(urgent_choice, na.rm = TRUE)) %>%
-  mutate(se = sqrt((mean_huli * (1-mean_huli)) / total)) %>%
+  summarise(total = sum(!is.na(urgent_proportion)),
+            mean_huli  = mean(urgent_proportion, na.rm = TRUE)) %>%
+  mutate(se = sqrt((mean_huli * (1 - mean_huli)) / total)) %>%
   
   ggplot(aes(PovertyFactor, mean_huli, fill = as.factor(PovertyGroup)),
-         alpha=0.7) + 
+         alpha = 0.7) + 
   geom_col(position = "dodge") +
-  labs(title="Choice Frequency of Urgent vs Non-urgent Tasks",
-       x ="",
+  labs(title = "Choice Frequency of Urgent vs Non-urgent Tasks",
+       x = "",
        y = "Frequency of urgent/not important choices",
        fill = "Stability") +
   scale_x_discrete(labels = c("PAGroup1" = "Food Stability",
@@ -1835,10 +1820,10 @@ df_long %>%
   scale_fill_brewer() +
   theme_minimal() +
   geom_errorbar(aes(ymin = mean_huli - se, ymax = mean_huli + se),
-                width=0.4,
-                alpha=0.9,
+                width = 0.4,
+                alpha = 0.9,
                 position = position_dodge(0.9)) + 
-  geom_hline(yintercept=0.5, linetype=2)
+  geom_hline(yintercept = 0.5, linetype = 2)
 
 
 # Pivot the data to longer format
@@ -1850,15 +1835,14 @@ df_long <- df %>%
 df_long %>%
   group_by(AnxietyType, AnxietyGroup) %>%
   filter(!is.na(AnxietyGroup)) %>%
-  summarise(choose_urg = sum(urgent_choice, na.rm = TRUE),
-            total = sum(!is.na(urgent_choice)),
-            mean_huli  = mean(urgent_choice, na.rm = TRUE)) %>%
-  mutate(se = sqrt((mean_huli * (1-mean_huli)) / total)) %>%
+  summarise(total = sum(!is.na(urgent_proportion)),
+            mean_huli  = mean(urgent_proportion, na.rm = TRUE)) %>%
+  mutate(se = sqrt((mean_huli * (1 - mean_huli)) / total)) %>%
   
   ggplot(aes(AnxietyType, mean_huli, fill = AnxietyGroup),
-         alpha=0.7) + 
+         alpha = 0.7) + 
   geom_col(position = "dodge") +
-  labs(x ="",
+  labs(x = "",
        y = "Frequency of urgent/not important choices",
        fill = "Anxiety Level") +
   scale_x_discrete(labels = c("AnxietyGroup_SAI_pre" = "State Anxiety Pre",
@@ -1867,10 +1851,10 @@ df_long %>%
   scale_fill_brewer() +
   theme_minimal() +
   geom_errorbar(aes(ymin = mean_huli - se, ymax = mean_huli + se),
-                width=0.4,
-                alpha=0.9,
+                width = 0.4,
+                alpha = 0.9,
                 position = position_dodge(0.9)) + 
-  geom_hline(yintercept=0.5, linetype=2)
+  geom_hline(yintercept = 0.5, linetype = 2)
 
 ```
 ``` {r clean environment}
@@ -1890,10 +1874,10 @@ add_participant_data <- function(trial_data) {
 }
 
 # Convert df (excluding column 14) to a data frame and ensure participant ID is unique
-participant_data <- df[,-c(14)] %>%
+participant_data <- df[,-c(11)] %>%
   group_by(PROLIFIC_PID) %>%
   summarise(across(where(~ !is.numeric(.)), ~ first(na.omit(.))), 
-            across(where(is.numeric), mean, na.rm = TRUE))
+            across(where(is.numeric), ~ mean(., na.rm = TRUE)))
 
 # Use lapply to add participant data to each data frame in df$CSV_Data
 df_list <- lapply(df$CSV_Data, add_participant_data)
@@ -1901,7 +1885,10 @@ df_list <- lapply(df$CSV_Data, add_participant_data)
 # Combine the data frames in df_list
 df_combined <- bind_rows(df_list) %>%
   group_by(participant) %>%
-  mutate(round = row_number())
+  mutate(block = ceiling(row_number() / 40),  # Identifies the block number for each trial
+         round = row_number() - 40 * (block - 1))  # Reset the round number for each block
+
+# write_csv(df_combined, file = "data/Exp1/df.csv")
 
 ```
 
@@ -1928,35 +1915,35 @@ pglm(formula = chosen_u ~ PA1 + PA2 + PA3 +
      effect = "twoways",
      family = binomial('logit'),
      model = "random",
-     index = c("participant", "round")) -> urg_bias_PA
+     index = c("participant", "round", "block")) -> urg_bias_PA
 
 pglm(formula = chosen_u ~ SAI_pre +
                           Total_approvals + Sex + Age +
-                          chosen_i + chosen_e + RoundLeft +
+                          chosen_i + chosen_e + RoundLeft + block +
                           not_chosen_i + not_chosen_e + not_chosen_u,
      data = df_combined,
      effect = "twoways",
-     index = c("participant", "round"),
+     index = c("participant", "round", "block"),
      model = "random",
      family = binomial('logit')) -> urg_bias_SAI_pre
 
 pglm(formula = chosen_u ~ SAI_post +
                           Total_approvals + Sex + Age +
-                          chosen_i + chosen_e + RoundLeft +
+                          chosen_i + chosen_e + RoundLeft + block +
                           not_chosen_i + not_chosen_e + not_chosen_u,
      data = df_combined,
      effect = "twoways",
-     index = c("participant", "round"),
+     index = c("participant", "round", "block"),
      model = "random",
      family = binomial('logit')) -> urg_bias_SAI_post
 
 pglm(formula = chosen_u ~ zip_poverty_log +
                           Total_approvals + Sex + Age +
-                          chosen_i + chosen_e + RoundLeft +
+                          chosen_i + chosen_e + RoundLeft + block +
                           not_chosen_i + not_chosen_e + not_chosen_u,
      data = df_combined,
      effect = "twoways",
-     index = c("participant", "round"),
+     index = c("participant", "round", "block"),
      model = "random",
      family = binomial('logit')) -> urg_bias_ZIP
 

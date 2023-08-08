@@ -4,10 +4,12 @@ import numpy as np
 # Define the possible tasks and their durations
 tasks = ["HHU", "HLU", "LHU", "LLU", "HH0", "HL0", "LH0", "LL0"]
 
+nonurgent_threshold = 3
+
 # Non-zero duration task with zero duration task
 states = [f"{task1}0,{task2}{duration1}" 
           for task1 in tasks 
-          for duration1 in range(1, 4) 
+          for duration1 in range(1, nonurgent_threshold) 
           for task2 in tasks[4:]]
 
 # Zero duration tasks with non-identical zero duration task
@@ -130,7 +132,7 @@ for i, state in enumerate(states):
 
         elif remaining_task in ["HH0", "HL0"]:
             # The task can be replaced by a new task after four rounds
-            if remaining_duration < 3:
+            if remaining_duration < (nonurgent_threshold - 1):
                 next_states = [next_state
                                for next_state in states
                                if (f"{remaining_task}{remaining_duration+1}" in next_state.split(",") and
@@ -148,7 +150,7 @@ for i, state in enumerate(states):
 
         elif remaining_task in ["LH0", "LL0"]:
             # The task can be replaced by a new task after four rounds
-            if remaining_duration < 3:
+            if remaining_duration < (nonurgent_threshold - 1):
                 next_states = [next_state
                                for next_state in states
                                if (f"{remaining_task}{remaining_duration+1}" in next_state.split(",") and

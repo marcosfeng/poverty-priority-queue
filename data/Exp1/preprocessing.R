@@ -199,8 +199,23 @@ files <- list.files("data/Exp1/processed", pattern = "*.csv", full.names = TRUE)
 # Initialize an empty list to store the CSV dataframes
 csv_dataframes <- list()
 
-# For each CSV file
-for (file in files) {
+# Create a dataframe with file names and corresponding prolific_pid and date/time
+selected_files <- data.frame(
+  file = files,
+  prolific_pid = sapply(files, function(file) strsplit(basename(file), "_prioq-eyetrack_")[[1]][1]),
+  date_time = sapply(files, function(file) strsplit(basename(file), "_prioq-eyetrack_")[[1]][2]) %>%
+    str_replace_all(c(".csv" = "", "h" = ":", "\\." = ":")) %>%
+    sub(":[0-9]{3}$", "", .) %>%
+    ymd_hms()
+) %>%
+  arrange(prolific_pid, date_time) %>%
+#   # Select the file with the earliest date/time for each prolific_pid
+#   group_by(prolific_pid) %>%
+#   slice(which.min(date_time)) %>%
+  pull(file)
+
+# For each sorted CSV file
+for (file in selected_files) {
   # Extract the 'PROLIFIC_PID' from the file name
   prolific_pid <- strsplit(basename(file), "_prioq-eyetrack_")[[1]][1]
   
@@ -210,8 +225,13 @@ for (file in files) {
   # Skip to next file if this file is empty
   if (is.null(df)) next
   
-  # Store the dataframe in the list using the 'PROLIFIC_PID' as the key
-  csv_dataframes[[prolific_pid]] <- df
+  # If the 'PROLIFIC_PID' already exists in the list, bind the new dataframe to the existing one
+  if (prolific_pid %in% names(csv_dataframes)) {
+    csv_dataframes[[prolific_pid]] <- bind_rows(csv_dataframes[[prolific_pid]], df)
+  } else {
+    # Otherwise, store the dataframe in the list using the 'PROLIFIC_PID' as the key
+    csv_dataframes[[prolific_pid]] <- df
+  }
 }
 
 # Create a new column in the 'united_data' dataframe

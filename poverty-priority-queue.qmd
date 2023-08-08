@@ -1334,16 +1334,16 @@ nzv <- nearZeroVar(df[,-129], saveMetrics = TRUE)
 df <- df[, c(!nzv$zeroVar, TRUE)]
 
 # Perform multiple imputation
-# ## Create df without the trial info:
-# df_mice <- df %>% select(!CSV_Data)
-# ## Set up the predictorMatrix
-# df_mice <- df_mice[,-c(1:5,73:113,114)]
-# predictorMatrix <- make.predictorMatrix(df_mice)
-# 
+## Create df without the trial info:
+df_mice <- df %>% select(!CSV_Data)
+## Set up the predictorMatrix
+df_mice <- df_mice[,-c(1:5,73:113,114)]
+predictorMatrix <- make.predictorMatrix(df_mice)
+
 # ## Compute the maximum percentage of missing values
 # max_missing_percentage <- round(max(colMeans(is.na(df_mice))) * 100)
 # imputed_data <- mice(df_mice, m = max_missing_percentage,
-#                      method = 'rf', maxit = 5,
+#                      method = 'rf', maxit = 30,
 #                      predictorMatrix = predictorMatrix)
 # 
 # save(imputed_data, file = "data/Exp1/imputed_data.Rdata")

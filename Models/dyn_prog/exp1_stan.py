@@ -103,9 +103,10 @@ participant_mapping = {participant_id: index for index,
                                                    start=1)}
 # Create a new array of participant IDs, where each string ID is replaced with its corresponding integer
 participant_ids = np.array([participant_mapping[id]
-                            for id in df['participant']])
+                            for id, round in zip(df['participant'], df['round'])
+                            if round == 1])
 data['participants'] = participant_ids
-data['P'] = len(np.unique(df['participant']))
+data['P'] = len(np.unique(participant_ids))
 
 # Each block has a fixed number of rounds
 data['T'] = block_size
@@ -158,5 +159,17 @@ data['transition_probs'] = transition_probs
 
 model = CmdStanModel(stan_file="./Models/dyn_prog/exp1.stan")
 # Fit the model to the data
+## Delete unnecessary variables
+all_vars = list(globals().keys())
+keep_vars = ['data', 'model', 'r', 'CmdStanModel', 'np', 'pd']
+## Delete all variables except for the ones to keep
+for var in all_vars:
+    if var not in keep_vars:
+        del globals()[var]
+del all_vars
+## Perform garbage collection
+import gc
+gc.collect()
+
 fit = model.sample(data=data)
 

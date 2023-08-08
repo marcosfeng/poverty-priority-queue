@@ -82,7 +82,6 @@ state_matrix = df.apply(create_state_name, axis=1).values
 
 # Create the choice matrix
 choice_matrix = df['choice'].values
-choice_matrix = [choice_matrix[i:i+block_size] for i in range(0, len(choice_matrix), block_size)]
 
 # Reshape the state and choice matrices into blocks
 state_matrix = [state_matrix[i:i+block_size] for i in range(0, len(state_matrix), block_size)]
@@ -94,16 +93,17 @@ data['N'] = len(state_matrix)
 data['K'] = len(np.unique(state_matrix))
 
 # Update the state and choice matrices in the data dictionary
-data['state'] = state_matrix
+data['state'] = np.array(state_matrix, dtype=int)
 data['choice'] = choice_matrix
+data['choice'] = np.stack([np.array(lst, dtype=int) for lst in data['choice']])
 
 # Create a dictionary that maps each unique participant ID to a unique integer
 participant_mapping = {participant_id: index for index,
-                       participant_id in enumerate(np.unique(data['participant']),
+                       participant_id in enumerate(np.unique(df['participant']),
                                                    start=1)}
 # Create a new array of participant IDs, where each string ID is replaced with its corresponding integer
 participant_ids = np.array([participant_mapping[id]
-                            for id in data['participant']])
+                            for id in df['participant']])
 data['participants'] = participant_ids
 data['P'] = len(np.unique(df['participant']))
 
@@ -117,14 +117,15 @@ reward = np.zeros((data['K'], 2))
 reward_mapping = {'L': 1, 'H': 2}
 effort_mapping = {'L': 0, 'H': 1}
 # Iterate over the state dictionary
-for state, index in state_dict.items():
+state_to_index = {state: index - 1 for state, index in state_to_index.items()}
+for state, index in state_to_index.items():
     # Split the state into two parts
     state_1, state_2 = state.split(',')
     
     # Check if '<NA>' is in state_1
     if '<NA>' in state_1:
-        reward[index, 0] = -1
-        effort[index, 0] = -1
+        reward[index, 0] = 2
+        effort[index, 0] = 2
     else:
         # Extract the reward and effort levels for state_1
         reward_1, effort_1 = state_1[:2]
@@ -134,8 +135,8 @@ for state, index in state_dict.items():
     
     # Check if '<NA>' is in state_2
     if '<NA>' in state_2:
-        reward[index, 1] = -1
-        effort[index, 1] = -1
+        reward[index, 1] = 2
+        effort[index, 1] = 2
     else:
         # Extract the reward and effort levels for state_2
         reward_2, effort_2 = state_2[:2]
@@ -144,19 +145,18 @@ for state, index in state_dict.items():
         effort[index, 1] = effort_mapping[effort_2]
 
 # Add the matrices to the data dictionary
-data['effort'] = effort
-data['reward'] = reward
+data['effort'] = effort.astype(int)
+data['reward'] = reward.astype(int)
 
 # Now, transition_probs is a 3D array where transition_probs[:,:,0] is the matrix for choice 1
 # and transition_probs[:,:,1] is the matrix for choice 2
-transition_probs_1 = pd.read_csv('./Models/dyn_prog/transition_matrix_0.csv')
-transition_probs_2 = pd.read_csv('./Models/dyn_prog/transition_matrix_1.csv')
-transition_probs = np.stack([transition_probs_1, transition_probs_2], axis=2)
+transition_probs_1 = pd.read_csv('./Models/dyn_prog/transition_matrix_0.csv', header=None)
+transition_probs_2 = pd.read_csv('./Models/dyn_prog/transition_matrix_1.csv', header=None)
+transition_probs = np.stack([transition_probs_1, transition_probs_2], axis=0)
 # Add the transition probability matrix to the data dictionary
 data['transition_probs'] = transition_probs
 
-
-model = CmdStanModel(stan_file="./Models/dyn_prog")
+model = CmdStanModel(stan_file="./Models/dyn_prog/exp1.stan")
 # Fit the model to the data
 fit = model.sample(data=data)
 

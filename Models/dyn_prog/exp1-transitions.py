@@ -188,15 +188,25 @@ unique_states = np.unique(np.concatenate([list(row['Choice 0'].keys()) +
 state_to_index = {state: index for index, state in enumerate(unique_states)}
 
 # Initialize the transition matrices
-transition_matrix_0 = np.zeros((transition_df.shape[0], len(unique_states)))
-transition_matrix_1 = np.zeros((transition_df.shape[0], len(unique_states)))
+transition_matrix_0 = np.zeros((len(unique_states), len(unique_states)))
+transition_matrix_1 = np.zeros((len(unique_states), len(unique_states)))
 
 # Fill the transition matrices
 for i, (_, row) in enumerate(transition_df.iterrows()):
-    for state, prob in row['Choice 0'].items():
-        transition_matrix_0[i, state_to_index[state]] = prob
-    for state, prob in row['Choice 1'].items():
-        transition_matrix_1[i, state_to_index[state]] = prob
+    choice_0_dict = row['Choice 0']
+    choice_1_dict = row['Choice 1']
+    for state, prob in choice_0_dict.items():
+        index = state_to_index[state]
+        if index >= 116:
+            print(f"Problematic state (Choice 0): {state}")
+        else:
+            transition_matrix_0[i, index] = prob
+    for state, prob in choice_1_dict.items():
+        index = state_to_index[state]
+        if index >= 116:
+            print(f"Problematic state (Choice 1): {state}")
+        else:
+            transition_matrix_1[i, index] = prob
 
 # Save the transition matrices to CSV files
 np.savetxt("Models/dyn_prog/transition_matrix_0.csv", transition_matrix_0, delimiter=",")

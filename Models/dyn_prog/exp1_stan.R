@@ -15,7 +15,7 @@ data_list$state <- t(h5read(file = "./Models/dyn_prog/data.h5", name = "state"))
 data_list$transition_probs <- h5read(file = "./Models/dyn_prog/data.h5", name = "transition_probs")
 data_list$transition_probs <- aperm(data_list$transition_probs, c(3, 1, 2))
 
-model <- cmdstan_model("Models/dyn_prog/exp1.stan")
+model <- cmdstan_model("Models/dyn_prog/exp1-hierarchical.stan")
 
 fit <- model$sample(
   data = data_list,

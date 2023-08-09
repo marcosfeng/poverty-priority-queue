@@ -171,5 +171,10 @@ del all_vars
 import gc
 gc.collect()
 
-fit = model.sample(data=data)
+import h5py
+with h5py.File('./Models/dyn_prog/data.h5', 'w') as f:
+    for key in data.keys():
+        f.create_dataset(key, data=data[key])
+
+# fit = model.sample(data=data)
 

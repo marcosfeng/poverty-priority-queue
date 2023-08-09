@@ -11,53 +11,53 @@ data {
   array[N] int<lower=1, upper=P> participants; // participant identifiers
 }
 parameters {
-  real<lower=0.5, upper=1> gamma_mu; // mean discount factor
+  // real<lower=0.5, upper=1> gamma_mu; // mean discount factor
   real<lower=0> costH_mu; // mean cost MULTIPLIER for high effort
-  real<lower=0> costL_mu; // mean cost for low effort
+  // real<lower=0> costL_mu; // mean cost for low effort
   real<lower=0> beta_mu; // mean beta
   
-  real<lower=0> gamma_sigma; // standard deviation of discount factor
+  // real<lower=0> gamma_sigma; // standard deviation of discount factor
   real<lower=0> costH_sigma; // standard deviation of costH
-  real<lower=0> costL_sigma; // standard deviation of costL
+  // real<lower=0> costL_sigma; // standard deviation of costL
   real<lower=0> beta_sigma; // standard deviation of beta
 
-  array[P] real<lower=0, upper=1> gamma; // discount factor for each participant
+  // array[P] real<lower=0, upper=1> gamma; // discount factor for each participant
   array[P] real<lower=0> costH; // cost MULTIPLIER for high effort for each participant
-  array[P] real<lower=0> costL; // cost for low effort for each participant
+  // array[P] real<lower=0> costL; // cost for low effort for each participant
   array[P] real<lower=0> beta; // beta for each participant
 }
 model {
-  gamma_mu ~ beta(10, 2); // prior for mean of gamma
+  // gamma_mu ~ beta(10, 2); // prior for mean of gamma
   costH_mu ~ exponential(1); // prior for mean of costH
-  costL_mu ~ exponential(1); // prior for mean of costL
+  // costL_mu ~ exponential(1); // prior for mean of costL
   beta_mu ~ exponential(0.25); // prior for mean of beta
   
-  gamma_sigma ~ exponential(1);
+  // gamma_sigma ~ exponential(1);
   costH_sigma ~ exponential(1); // prior for standard deviation of costH
-  costL_sigma ~ exponential(1); // prior for standard deviation of costL
+  // costL_sigma ~ exponential(1); // prior for standard deviation of costL
   beta_sigma ~ exponential(1); // prior for standard deviation of beta
 
-  gamma ~ normal(gamma_mu, gamma_sigma);
+  // gamma ~ normal(gamma_mu, gamma_sigma);
   costH ~ normal(costH_mu, costH_sigma);
-  costL ~ normal(costL_mu, costL_sigma);
+  // costL ~ normal(costL_mu, costL_sigma);
   beta ~ normal(beta_mu, beta_sigma);
 
   // EV for making a choice (1 or 2) in state K at time T
   array[2] matrix[T, K] EVs;
-
+  print(beta_mu);
   profile("backward_induction") {
     for (n in 1:N) {
       // Calculate the EV for the last round
       for (k in 1:K) {
-        EVs[1, T, k] = reward[k, 1] - ((effort[k,1] != 2) ? ((effort[k,1] == 1) ? costH[participants[n]]*costL[participants[n]] : costL[participants[n]]) : 0);
-        EVs[2, T, k] = reward[k, 2] - ((effort[k,2] != 2) ? ((effort[k,2] == 1) ? costH[participants[n]]*costL[participants[n]] : costL[participants[n]]) : 0);
+        EVs[1, T, k] = reward[k, 1] - ((effort[k,1] == 1) ? costH[participants[n]] : 0);
+        EVs[2, T, k] = reward[k, 2] - ((effort[k,2] == 1) ? costH[participants[n]] : 0);
       }
   
       // Loop through the time and states, calculating the EVs for each choice
       for (t in 1:(T-1)) {
         for (k in 1:K) {
-          EVs[1, T-t, k] = dot_product(transition_probs[1, k, :], to_vector(EVs[1, T-t+1, :]) * gamma[participants[n]]) + reward[k, 1] - ((effort[k,1] != 2) ? ((effort[k,1] == 1) ? costH[participants[n]]*costL[participants[n]] : costL[participants[n]]) : 0);
-          EVs[2, T-t, k] = dot_product(transition_probs[2, k, :], to_vector(EVs[2, T-t+1, :]) * gamma[participants[n]]) + reward[k, 2] - ((effort[k,2] != 2) ? ((effort[k,2] == 1) ? costH[participants[n]]*costL[participants[n]] : costL[participants[n]]) : 0);
+          EVs[1, T-t, k] = dot_product(transition_probs[1, k, :], to_vector(EVs[1, T-t+1, :])) + reward[k, 1] - ((effort[k,1] == 1) ? costH[participants[n]] : 0);
+          EVs[2, T-t, k] = dot_product(transition_probs[2, k, :], to_vector(EVs[2, T-t+1, :])) + reward[k, 2] - ((effort[k,2] == 1) ? costH[participants[n]] : 0);
         }
       }
     }

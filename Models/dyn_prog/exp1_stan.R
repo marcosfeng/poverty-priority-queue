@@ -22,8 +22,8 @@ fit <- model$sample(
   seed = 123,
   chains = 1,
   parallel_chains = 1,
-  iter_warmup = 100,
-  iter_sampling = 100
+  iter_warmup = 500,
+  iter_sampling = 500
 )
 samples <- fit$draws()
 fit$summary()

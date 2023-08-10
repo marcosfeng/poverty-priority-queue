@@ -244,7 +244,7 @@ united_data <- united_data %>%
 
 df <- united_data
 save(df, file = "./data/Exp1/df.Rdata")
-# write_csv(df, file = "./data/Exp1/df.csv")
+write_csv(df, file = "./data/Exp1/df.csv")
 
 # # Function to extract maximum points from the embedded DataFrame
 # extract_max_points <- function(df) {
@@ -261,8 +261,6 @@ save(df, file = "./data/Exp1/df.Rdata")
 # 
 # # Extract the required columns
 # extracted_data <- select(united_data, PROLIFIC_PID, Progress, Max_Points)
-
-
 
 
 

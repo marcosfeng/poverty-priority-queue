@@ -125,8 +125,8 @@ for state, index in state_to_index.items():
     
     # Check if '<NA>' is in state_1
     if '<NA>' in state_1:
-        reward[index, 0] = 2
-        effort[index, 0] = 2
+        reward[index, 0] = 0
+        effort[index, 0] = 0
     else:
         # Extract the reward and effort levels for state_1
         reward_1, effort_1 = state_1[:2]
@@ -136,8 +136,8 @@ for state, index in state_to_index.items():
     
     # Check if '<NA>' is in state_2
     if '<NA>' in state_2:
-        reward[index, 1] = 2
-        effort[index, 1] = 2
+        reward[index, 1] = 0
+        effort[index, 1] = 0
     else:
         # Extract the reward and effort levels for state_2
         reward_2, effort_2 = state_2[:2]

@@ -14,16 +14,24 @@ data_list$reward <- t(h5read(file = "./Models/dyn_prog/data.h5", name = "reward"
 data_list$state <- t(h5read(file = "./Models/dyn_prog/data.h5", name = "state"))
 data_list$transition_probs <- h5read(file = "./Models/dyn_prog/data.h5", name = "transition_probs")
 data_list$transition_probs <- aperm(data_list$transition_probs, c(3, 1, 2))
+data_list$grainsize <- round(data_list$N/4)
+data_list$slices_n <- seq_len(data_list$N)
 
-model <- cmdstan_model("Models/dyn_prog/exp1-hierarchical.stan")
+
+model <- cmdstan_model(compile = FALSE,
+                       stan_file = "Models/dyn_prog/exp1-hierarchical.stan")
+model$compile(cpp_options = list(stan_opencl = TRUE,
+                                 OPENCL_DEVICE_ID = 0,
+                                 OPENCL_PLATFORM_ID = 1),
+              quiet = FALSE, force_recompile = TRUE)
 
 fit <- model$sample(
   data = data_list,
   seed = 123,
   chains = 1,
   parallel_chains = 1,
-  iter_warmup = 500,
-  iter_sampling = 500
+  iter_warmup = 4,
+  iter_sampling = 4
 )
 samples <- fit$draws()
 fit$summary()

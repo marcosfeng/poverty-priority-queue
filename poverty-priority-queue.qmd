@@ -21,18 +21,19 @@ format:
 ---
 
 ```{r init, warning=FALSE, include=FALSE}
-library(tidyverse)
-library(tidymodels)
-library(stringi)
 library(viridis)
 library(latticeExtra)
-library(rstan)
-library(pglm)
 library(factoextra)
-library(psych)
-library(gt)
+library(weights)
 library(stargazer)
 library(texreg)
+library(gt)
+library(rstan)
+library(stringi)
+library(psych)
+library(pglm)
+library(tidymodels)
+library(tidyverse)
 library(reticulate)
 
 # © 1998-2023 RANDOM.ORG
@@ -177,10 +178,10 @@ By simulating this queue, we can graph a heatmap with the relationship of the we
 
 ```{r}
 #| cache: true
-#| label: img-simmer-simulation
-#| img-cap: "Probability of Survival by Urgency Weight"
+#| label: fig-simmer-simulation
+#| fig-cap: "Probability of Survival by Urgency Weight"
 
-urgency_survival_grid <- read_csv("urgency-survival-grid.csv") %>%
+urgency_survival_grid <- read_csv("data/Pilot/urgency-survival-grid.csv") %>%
   rename(time = mean_time) %>%
   filter(!is.na(mean_survival)) %>%
   filter(time < 20) # Anything greater is close to 0
@@ -192,7 +193,7 @@ levelplot(mean_survival ~ time * weight, urgency_survival_grid,
 
 ```
 
-@img-simmer-simulation shows that those with higher urgency weights are more likely to survive longer in the queue. This finding suggests that the weight of urgency in the priority function plays a significant role in determining the survival probability of tasks in the queue. This finding underscores the importance of considering both urgency and importance when prioritizing tasks, particularly in contexts where survival rates are critical, such as in decision-making scenarios faced by individuals living in poverty.
+@fig-simmer-simulation shows that those with higher urgency weights are more likely to survive longer in the queue. This finding suggests that the weight of urgency in the priority function plays a significant role in determining the survival probability of tasks in the queue. This finding underscores the importance of considering both urgency and importance when prioritizing tasks, particularly in contexts where survival rates are critical, such as in decision-making scenarios faced by individuals living in poverty.
 
 ## Integrating Our Model with Poverty {#sec-poverty}
 
@@ -342,9 +343,9 @@ Our experimental design simulates the environment of an ice cream parlor using a
 
 ### Structure
 
-In the game interface, participants saw a queue of tasks representing ice cream orders on the sides of the screen. Each task varied according to three characteristics: effort, importance, and urgency. These characteristics corresponded to icons on each task image to aid the participants' decision-making process, as depicted in @img-choice.
+In the game interface, participants saw a queue of tasks representing ice cream orders on the sides of the screen. Each task varied according to three characteristics: effort, importance, and urgency. These characteristics corresponded to icons on each task image to aid the participants' decision-making process, as depicted in @fig-choice.
 
-![Example of two tasks with differing levels of Importance (Value), Effort, and Urgency.](images/tasks_example.png){#img-choice}
+![Example of two tasks with differing levels of Importance (Value), Effort, and Urgency.](images/tasks_example.png){#fig-choice}
 
 1\. Effort: We operationalized effort through the number of clicks required to complete an order. More complex orders required more elements on the ice cream, some of which were relatively difficult to discern (e.g., the different types of sprinkles). We deem tasks with more elements, or hard-to-discern elements, more effortful.
 
@@ -352,7 +353,7 @@ In the game interface, participants saw a queue of tasks representing ice cream 
 
 3\. Urgency: We used clock icons on each image to convey the degree of urgency of a task. Two clock icons denoted a high-urgency order, while one clock icon represented a low-urgency order. High-urgency tasks lost value (dollar signs) if participants did not complete them in a given round (e.g., an urgent task worth 2 points would become an urgent task worth 1 point in the next round, and an urgent task worth 1 point would lose all of its value). If a high-urgency task lost all its value, it would disappear from the queue, and the participant was "punished" by having only one order in the queue for the following two rounds. Conversely, low-urgency tasks stayed in the queue until selected and completed.
 
-In each round, participants saw the screen shown in @img-pilot-exp. They were instructed to select a task from the queue (left or right) and click on the matching ice cream icons in the center of the screen to complete it. If they made a mistake, they could use the trash can icon to discard the current order and start over. The game continued for a total of 20 orders. Participants were not restricted to a specific order of task completion; they could choose any task from the queue at any time. This open-choice design allowed us to observe and analyze the decision-making and prioritization strategies employed by the participants. Note that we incentivized players in the game by offering a prize of up to $\$1.00$ , contingent on the total number of points players accumulated throughout the game.
+In each round, participants saw the screen shown in @fig-pilot-exp. They were instructed to select a task from the queue (left or right) and click on the matching ice cream icons in the center of the screen to complete it. If they made a mistake, they could use the trash can icon to discard the current order and start over. The game continued for a total of 20 orders. Participants were not restricted to a specific order of task completion; they could choose any task from the queue at any time. This open-choice design allowed us to observe and analyze the decision-making and prioritization strategies employed by the participants. Note that we incentivized players in the game by offering a prize of up to $\$1.00$ , contingent on the total number of points players accumulated throughout the game.
 
 ### Simulation
 
@@ -697,10 +698,11 @@ For a more detailed understanding of these measures, please refer to the ACS Sub
 
 #### Composite Measure (PCA)
 
-Given that poverty is a multidimensional variable, we attempt to capture it through a series of questions (see @questionnaires for details). We created several questions about physical, mental, and monetary deprivation. We then summarized these results in a PCA. We use only the top two components, as per the Scree plot:
+Given that poverty is a multidimensional variable, we attempt to capture it through a series of questions (see @sec-questionnaires for details). We created several questions about physical, mental, and monetary deprivation. We then summarized these results in a PCA. We use only the top two components, as per the Scree plot:
 
 ```{r}
-#| label: img-pcascree
+#| label: fig-pcascree
+#| fig-cap: "" 
 
 # PCA
 qualtrics[,c(55:141)] <- sapply(qualtrics[,c(55:141)],as.numeric)
@@ -729,44 +731,63 @@ qualtrics <- qualtrics %>%
 ```
 
 ```{r data for pcacorrelations}
+#| eval: false
 write_csv(qualtrics, file = "data/Pilot/qualtrics.csv")
-
 ```
 
 ```{r}
 #| label: fig-pcacorrelations
-#| fig-cap: "Plot"
 #| layout-ncol: 2
+#| fig-cap: "Spearman Correlations of Principal Components. *** (p < .001), ** (p < .01), * (p < .05), † (p < .1)."
+#|   - "Correlation between income and Component 1"
+#|   - "Correlation between income and Component 2" 
+#|   - "Correlation between state anxiety and Component 1"
+#|   - "Correlation between state anxiety and Component 2"
 
-## PCA internal relationships
-# Creating the plot
-plot(qualtrics$income, qualtrics$Dim.1, pch = 19, col = "lightblue",
-     xlab="Income", ylab="Component 1")
-# Regression line
-abline(lm(qualtrics$Dim.1 ~ as.numeric(qualtrics$income)), col = "red", lwd = 3)
-# Pearson correlation
-text(paste("Correlation:", round(cor(qualtrics$Dim.1, as.numeric(qualtrics$income), use = "complete.obs"), 2)), x = 6, y = .7)
+# Function to create the plot
+create_plot <- function(x_var, y_var,
+                        x_label, y_label, x_breaks, x_labels,
+                        x_coord, y_coord, x_angle) {
+  spearman_cor <- cor.test(x_var, y_var, method = "spearman")
+  significance <- ifelse(spearman_cor$p.value < 0.001, "***",
+                  ifelse(spearman_cor$p.value < 0.01, "**",
+                  ifelse(spearman_cor$p.value < 0.05, "*",
+                  ifelse(spearman_cor$p.value < 0.1, "†", ""))))
+  correlation_text <- paste("r(", length(na.omit(y_var)), ") =",
+                            rd(spearman_cor$estimate, digits = 2), significance)
+  ggplot(qualtrics, aes(x = x_var, y = y_var)) +
+    geom_point(color = "steelblue", shape = 16, size = 3, fill = "white") +
+    geom_smooth(method = "loess", se = TRUE, color = "red") +
+    labs(x = x_label, y = y_label) +
+    scale_x_continuous(breaks = x_breaks, labels = x_labels) +
+    theme_minimal() +
+    theme(plot.title = element_text(size = 18, hjust = 0.5, face = "bold", color = "steelblue"),
+          axis.text.x = element_text(angle = x_angle, hjust = 1, vjust = 1,
+                                     size = 12, face = "plain", color = "black"),
+          axis.text.y = element_text(size = 12, face = "plain", color = "black"),
+          axis.title = element_text(size = 14, face = "bold", color = "black"),
+          panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+          panel.background = element_rect(fill = "white"),
+          plot.margin = unit(c(0.5, 0.5, 0.5, 0.5), "cm"),
+          plot.background = element_rect(fill = "white"), legend.position = "none") +
+    annotate(geom = "label", x = x_coord, y = y_coord, label = correlation_text, size = 4)
+}
 
-plot(as.numeric(qualtrics$income), qualtrics$Dim.2, pch = 19, col = "lightblue",
-     xlab="Income", ylab="Component 2")
-# Regression line
-abline(lm(qualtrics$Dim.2 ~ as.numeric(qualtrics$income)), col = "red", lwd = 3)
-# Pearson correlation
-text(paste("Correlation:", round(cor(qualtrics$Dim.2, as.numeric(qualtrics$income), use = "complete.obs"), 2)), x = 6, y = .7)
-########
-plot(qualtrics$stai, qualtrics$Dim.1, pch = 19, col = "lightblue",
-     xlab="Anxiety", ylab="Component 1")
-# Regression line
-abline(lm(qualtrics$Dim.1 ~ qualtrics$stai), col = "red", lwd = 3)
-# Pearson correlation
-text(paste("Correlation:", round(cor(qualtrics$Dim.1, qualtrics$stai, use = "complete.obs"), 2)), x = 40, y = -2)
+# Define breaks and labels for income
+income_breaks <- c(1, 2, seq(3.5, 10.5, by = 2), 11, 12)
+income_labels <- c("Less than $10,000", "$10,000 to $19,999", "$20,000 to $39,999",
+                   "$40,000 to $59,999", "$60,000 to $79,999", "$80,000 to $99,999",
+                   "$100,000 to $149,999", "$150,000 or more")
 
-plot(qualtrics$stai, qualtrics$Dim.2, pch = 19, col = "lightblue",
-     xlab="Anxiety", ylab="Component 2")
-# Regression line
-abline(lm(qualtrics$Dim.2 ~ qualtrics$stai), col = "red", lwd = 3)
-# Pearson correlation
-text(paste("Correlation:", round(cor(qualtrics$Dim.2, qualtrics$stai, use = "complete.obs"), 2)), x = 40, y = .7)
+# Create plots
+create_plot(qualtrics$income, qualtrics$Dim.1, "Income", "Component 1",
+            income_breaks, income_labels, 4, -6, 45)
+create_plot(qualtrics$income, qualtrics$Dim.2, "Income", "Component 2",
+            income_breaks, income_labels, 4, -4, 45)
+create_plot(qualtrics$stai, qualtrics$Dim.1, "State Anxiety", "Component 1",
+            waiver(), waiver(), 30, -4.5, 0)
+create_plot(qualtrics$stai, qualtrics$Dim.2, "State Anxiety", "Component 2",
+            waiver(), waiver(), 30, -4.5, 0)
 
 ```
 
@@ -1215,7 +1236,7 @@ Experiment 1 was developed in PsychoPy version 2023.1.3 and hosted on the Pavlov
 
 ### Structure
 
-In line with the pilot study, the game interface for Experiment 1 presented participants with a queue of tasks, each varying in effort, importance, and urgency. As previously depicted in @img-choice, we visually represented these characteristics with corresponding icons on each task image.
+In line with the pilot study, the game interface for Experiment 1 presented participants with a queue of tasks, each varying in effort, importance, and urgency. As previously depicted in @fig-choice, we visually represented these characteristics with corresponding icons on each task image.
 
 1.  Effort: As in the pilot study, we operationalized effort through the number of clicks required to complete an order, with more complex orders demanding more effort.
 
@@ -1223,13 +1244,13 @@ In line with the pilot study, the game interface for Experiment 1 presented part
 
 3.  Urgency: The urgency of tasks was conveyed similarly to the pilot study, with clock icons indicating the degree of urgency. However, low-urgency tasks now remained in the queue for four rounds before being replaced, and, unlike high-urgency tasks, there was no penalty if low-urgency tasks disappeared after four rounds.
 
-In each round, participants saw the screen shown in @img-exp. They were instructed to select a task from the queue (left or right) and click on the matching ice cream icons in the center of the screen to complete it. The game continued for 40 orders, doubling the length of the pilot study to provide a more robust measure of participant behavior. As in the pilot study, participants were not restricted to a specific order of task completion, allowing for an open-choice design that facilitated the observation and analysis of decision-making and prioritization strategies. The potential earnings increased to a maximum of $\$4.00$, contingent on the total number of points accumulated throughout the game, to further incentivize participation.
+In each round, participants saw the screen shown in @fig-exp. They were instructed to select a task from the queue (left or right) and click on the matching ice cream icons in the center of the screen to complete it. The game continued for 40 orders, doubling the length of the pilot study to provide a more robust measure of participant behavior. As in the pilot study, participants were not restricted to a specific order of task completion, allowing for an open-choice design that facilitated the observation and analysis of decision-making and prioritization strategies. The potential earnings increased to a maximum of $\$4.00$, contingent on the total number of points accumulated throughout the game, to further incentivize participation.
 
 Experiment 1 introduced a critical modification to the task queue logic, distinguishing it from the pilot study. As previously noted, specific task scenarios in the game posed more complex decision-making challenges, where the optimal course of action was not immediately apparent (e.g., choosing between a high-importance, low-urgency task, and a high-urgency, low-importance task). Due to the uniform task sampling employed in our pilot study, these "hard choices" were infrequently encountered.
 
 Experiment 1 addressed this limitation by adjusting the task queue logic. Specifically, if the remaining task in the queue was of high importance and low urgency, there was a 50% chance that the subsequent task would be of high urgency and low importance, and vice versa. This element of randomness introduced an additional layer of unpredictability into the task queue, thereby enhancing the realism and complexity of the decision-making process for participants. This significant redesign from the pilot study increased the frequency of "hard choices," enabling us to delve deeper into analyzing participants' decision-making and prioritization strategies under these more challenging circumstances.
 
-![Game interface for Experiment 1. Participants have a queue, with a task on each side, and a series of icons they must press in order to complete a task. The clocks and dollar signs on a task represent the urgency and importance of the task, respectively. The top of the screen displays a points counter and a rounds counter.](images/exp_example.png){#img-exp}
+![Game interface for Experiment 1. Participants have a queue, with a task on each side, and a series of icons they must press in order to complete a task. The clocks and dollar signs on a task represent the urgency and importance of the task, respectively. The top of the screen displays a points counter and a rounds counter.](images/exp_example.png){#fig-exp}
 
 <!-- ## Power Analysis -->
 
@@ -1474,7 +1495,7 @@ gt(results_reshaped) %>%
 
 ### Comprehensive Poverty Measures
 
-To develop a more nuanced measure of poverty, we revisited our questionnaire to address variance issues (@pca-measure). We contemplated expanding our sample to include more lower-income individuals or introducing new questions to elicit more variance. Our current iteration of comprehensive measurements is available in @questionnaires.
+To develop a more nuanced measure of poverty, we revisited our questionnaire to address variance issues (@pca-measure). We contemplated expanding our sample to include more lower-income individuals or introducing new questions to elicit more variance. Our current iteration of comprehensive measurements is available in @sec-questionnaires.
 
 We employed Factor Analysis, a statistical technique widely used to identify underlying relationships between measured variables. This method is particularly advantageous when dealing with scale compatibility issues, reducing many variables into fewer factors, and assisting in data interpretation, especially in large datasets.
 
@@ -3171,7 +3192,7 @@ cor(df[c("PA1", "PA2", "PA3", "zip_income", "zip_poverty_log",
 
 ## Pilot Experiment Image
 
-![Game interface for Pilot Experiment. Participants had a queue with two tasks on top of the screen and a series of icons they must press in order to complete a task. The clocks (hearts, in this version) and dollar signs on a task represent the urgency and importance of the task, respectively. The right side of the screen displays a rounds counter (top) and a points counter (bottom).](images/totalice.jpeg){#img-pilot-exp}
+![Game interface for Pilot Experiment. Participants had a queue with two tasks on top of the screen and a series of icons they must press in order to complete a task. The clocks (hearts, in this version) and dollar signs on a task represent the urgency and importance of the task, respectively. The right side of the screen displays a rounds counter (top) and a points counter (bottom).](images/totalice.jpeg){#fig-pilot-exp}
 
 ## Priority Queuing
 
@@ -3181,6 +3202,6 @@ A list can contain an arbitrary number of tasks and the priority of each task is
 
 # Appendix: Documentation
 
-## Questionnaires
+## Questionnaires {#sec-questionnaires}
 
 <!-- ## IRB -->

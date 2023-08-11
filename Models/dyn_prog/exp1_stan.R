@@ -1,6 +1,12 @@
 library(rhdf5)
 library(cmdstanr)
 
+# © 1998-2023 RANDOM.ORG
+# 
+# 887468224	
+# Timestamp: 2023-08-11 02:07:26 UTC
+set.seed(887468224)
+
 data_list <- list()
 # Read each dataset and store it in the list
 data_list$K <- h5read(file = "./Models/dyn_prog/data.h5", name = "K")
@@ -27,11 +33,10 @@ model$compile(cpp_options = list(stan_opencl = TRUE,
 
 fit <- model$sample(
   data = data_list,
-  seed = 123,
   chains = 1,
-  parallel_chains = 1,
-  iter_warmup = 10,
-  iter_sampling = 10
+  parallel_chains = 4,
+  iter_warmup = 500,
+  iter_sampling = 500
 )
 samples <- fit$draws()
 fit$summary()

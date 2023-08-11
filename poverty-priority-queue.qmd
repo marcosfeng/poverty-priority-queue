@@ -104,12 +104,21 @@ The two-step task is a well-established paradigm in cognitive neuroscience used 
 For example, consider the first stage with an initial state that includes two choices: "buying a phone" or "taking a course." The transition probabilities are defined by the likelihood of moving to the second stage, given the first-stage choice. For instance, choosing "taking a course" could lead more often to a state where one gets a promotion (State 2a), while "buying a phone" could lead more often to a state where one does not get promoted and keeps the same job (State 2b). In the second stage, the state spaces include another choice, such as "buying a car." In State 2a (getting a promotion), the decision maker could choose "buying a phone" or "buying a car," where the car would be brand new and fancy, reflecting the increased financial resources in this state. In State 2b (keeping the same job), the decision maker could choose "taking a course" or "buying a car," where the car would be cheap and used, reflecting the lower financial resources in this state. In this context, both stages have rewards associated with the actions that are not a result of the transition to future states. Specifically, buying a phone would lead to immediate subjective value (e.g., the thrill of having a new gadget), and so would education (e.g., the fulfillment of getting a diploma or gaining knowledge). The value of each action, however, is the sum of its associated reward and the value of all future states weighted by their respective transition probabilities. The policy in this context would be the strategy that defines which action to take in each state. For instance, the decision maker might adopt a policy of always choosing the action with the highest immediate reward or adopt a more complex strategy that considers each action's urgency, importance, and value. Key in this decision is also the discount factor, which reflects the decision maker's time preference or discount rate. For instance, the decision maker might value the immediate pleasure of buying a phone more highly than the potential future benefit of a promotion (Daw et al., 2005).
 
 ```{mermaid}
-graph TD
-    A[First Stage: Buy Phone or Take Course] -->|70%| B[Second Stage: Keep Job]
-    A -->|30%| C[Second Stage: Get Promotion]
-    B --> D[Choices: Take Course or Buy Used Car]
-    C --> E[Choices: Buy Phone or Buy New Car]
-
+flowchart TD
+   subgraph "State s"
+   A1[Buy Phone]
+   A2[Take Course]
+   end
+   subgraph C[State s'2: Get Promotion]
+   E[Buy Phone and Used Car \n or\n Take Course]
+   end
+   subgraph B[State s'1: Keep Job]
+   D[Buy Phone \n or\n Buy Used Car]
+   end
+   A1 -->|70%| B
+   A1 -.->|30%| C
+   A2 -.->|30%| B
+   A2 -->|70%| C
 ```
 
 ### Priority Queuing
@@ -220,24 +229,6 @@ Previous research has found that factors such as stress and education levels can
 ### Urgency
 
 Our model is beneficial for analyzing the decisions of individuals in low-SES (Socioeconomic Status) environments. Here, we build on the two-stage decision-making model by incorporating urgency. In the first stage of our model, the decision-maker, an individual encounters two choices: "Work an extra shift" or "Attend a free community college class." The choice of "Work an extra shift" predominantly leads to a state where the individual has extra money (State 2a), while "Attend a free community college class" more frequently leads to a state where the individual gains new skills (State 2b). The urgency component is crucial in this stage. The opportunity to work an extra shift is fleeting, available only on the current day. If not seized, this opportunity will expire, and the potential for additional income will be lost. Conversely, the community college class, part of a recurring weekly course, presents a less urgent choice. The individual could attend the class the following week, but missing classes could lead to a cumulative knowledge gap, jeopardizing the overall benefit of the course. In the second stage, the state space expands to include another choice. In State 2a (having extra money), the individual could choose between "Buy groceries" or "Pay utility bills." In State 2b (gaining new skills), the individual could opt to "Apply for a better job" or "Start a small business." Urgency is also a pivotal factor in the second stage. The utility bill payment is due imminently, and failure to pay will discontinue essential services. On the other hand, buying groceries, while a recurring necessity, may not have the same urgency. However, a prolonged delay in this action could lead to health and well-being implications, underscoring its medium-term urgency.
-
-```{mermaid}
-flowchart TD
-   subgraph "State s"
-   A1[Buy Phone]
-   A2[Take Course]
-   end
-   subgraph C[State s'2: Get Promotion]
-   E[Buy Phone and Used Car \n or\n Take Course]
-   end
-   subgraph B[State s'1: Keep Job]
-   D[Buy Phone \n or\n Buy Used Car]
-   end
-   A1 -->|70%| B
-   A1 -.->|30%| C
-   A2 -.->|30%| B
-   A2 -->|70%| C
-```
 
 To illustrate the role of urgency in decision-making, we will use a mathematical representation of our model. We will consider a simplified version of the two-stage decision-making scenario described above, focusing on the first stage, where the decision-maker must choose between "Work an extra shift" or "Attend a free community college class."
 
@@ -704,7 +695,7 @@ The median income data we used is also sourced from the ACS. This data reflects 
 
 For a more detailed understanding of these measures, please refer to the ACS Subject Definitions document available at [this link](https://www2.census.gov/programs-surveys/acs/tech_docs/subject_definitions/2021_ACSSubjectDefinitions.pdf).
 
-#### ¶Composite Measure (PCA)
+#### Composite Measure (PCA)
 
 Given that poverty is a multidimensional variable, we attempt to capture it through a series of questions (see @questionnaires for details). We created several questions about physical, mental, and monetary deprivation. We then summarized these results in a PCA. We use only the top two components, as per the Scree plot:
 
@@ -2075,12 +2066,6 @@ pglm(formula = Optimal ~ median_income_zip*stai  +
              family = binomial('logit')) -> accuracy_zipincome
 ```
 
-
-
-### Reaction Time
-
-### Accuracy
-
 # Discussion
 
 Our findings underscore the critical importance of prioritization strategies in task performance. Despite the intuitive appeal of tending to urgent matters, our data suggest that focusing on important tasks yielded superior performance outcomes.
@@ -3198,4 +3183,4 @@ A list can contain an arbitrary number of tasks and the priority of each task is
 
 ## Questionnaires
 
-## IRB
+<!-- ## IRB -->

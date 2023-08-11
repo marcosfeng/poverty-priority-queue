@@ -41,3 +41,4 @@ fit <- model$sample(
 samples <- fit$draws()
 fit$summary()
 
+# fit$save_object(file = "./Models/dyn_prog/hierarchical-results.RDS")

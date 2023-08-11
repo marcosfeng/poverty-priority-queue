@@ -1,32 +1,32 @@
 functions {
   real backward_induction(array[] int slices_n, int start, int end, int N,
                           int T, int K, int P, array[,] int state,
-                          array[,] int choice, array[,] int effort,
-                          array[,] int reward,
+                          array[,] int choice, matrix effort, matrix reward,
                           array[] matrix transition_probs, array[] real beta,
                           array[] real costH, array[] int participants) {
     real result = 0;
     array[2] matrix[T, K] EVs;
     vector[T] alpha = rep_vector(0, T);
-
+    
     for (n in start : end) {
       real common_cost = costH[participants[n]];
       matrix[2, T] b = beta[participants[n]] * rep_matrix(1, 2, T);
       matrix[T, 2] logit_probs;
       
       // Calculate the EV for the last round
-      EVs[1, T, :] = reward[:, 1] - effort[:, 1] * common_cost;
-      EVs[2, T, :] = reward[:, 2] - effort[:, 2] * common_cost;
+      EVs[1, T,  : ] = (reward[ : , 1] - effort[ : , 1] * common_cost)';
+      EVs[2, T,  : ] = (reward[ : , 2] - effort[ : , 2] * common_cost)';
       // Loop through the time and states, calculating the EVs for each choice
       for (t in 1 : (T - 1)) {
-        EVs[1, T - t, :] = transition_probs[1] * EVs[1, T - t + 1, :] 
-                         + reward[:, 1] - effort[:, 1] * common_cost;
-        EVs[2, T - t, :] = transition_probs[2] * EVs[2, T - t + 1, :] 
-                         + reward[:, 2] - effort[:, 2] * common_cost;
+        EVs[1, T - t,  : ] = (transition_probs[1] * (EVs[1, T - t + 1,  : ]')
+                              + reward[ : , 1] - effort[ : , 1] * common_cost)';
+        EVs[2, T - t,  : ] = (transition_probs[2] * (EVs[2, T - t + 1,  : ]')
+                              + reward[ : , 2] - effort[ : , 2] * common_cost)';
       }
       for (t in 1 : T) {
         int s = state[n, t]; // Current state
-        logit_probs[t] = EVs[1:2, t, s];
+        logit_probs[t, 1] = EVs[1, t, s]; // EV for choice 1
+        logit_probs[t, 2] = EVs[2, t, s]; // EV for choice 2
       }
       result += categorical_logit_glm_lpmf(choice[n] | logit_probs, alpha, b);
     }
@@ -40,8 +40,8 @@ data {
   int<lower=1> P; // number of participants
   array[N, T] int<lower=1, upper=K> state; // state matrix
   array[N, T] int<lower=1, upper=2> choice; // choice matrix
-  array[K, 2] int<lower=0, upper=1> effort; // effort matrix
-  array[K, 2] int<lower=1, upper=2> reward; // reward matrix
+  matrix<lower=0, upper=1>[K, 2] effort; // effort matrix
+  matrix<lower=0, upper=2>[K, 2] reward; // reward matrix
   array[2] matrix[K, K] transition_probs; // transition probability matrix
   array[N] int<lower=1, upper=P> participants; // participant identifiers
   int<lower=1> grainsize; // Grainsize for parallelization

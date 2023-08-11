@@ -2,8 +2,8 @@ import numpy as np
 import pandas as pd
 from cmdstanpy import CmdStanModel
 
-df = pd.read_csv('./data/Exp1/df.csv')
-transition_df = pd.read_csv('./Models/dyn_prog/transition_df.csv')
+df = pd.read_csv('/home/master/poverty-priority-queue/data/Exp1/df.csv')
+transition_df = pd.read_csv('/home/master/poverty-priority-queue/Models/dyn_prog/transition_df.csv')
 
 # Remove block with defective trials:
 participant_to_remove = df.iloc[2375]['participant']
@@ -151,14 +151,12 @@ data['reward'] = reward.astype(int)
 
 # Now, transition_probs is a 3D array where transition_probs[:,:,0] is the matrix for choice 1
 # and transition_probs[:,:,1] is the matrix for choice 2
-transition_probs_1 = pd.read_csv('./Models/dyn_prog/transition_matrix_0.csv', header=None)
-transition_probs_2 = pd.read_csv('./Models/dyn_prog/transition_matrix_1.csv', header=None)
+transition_probs_1 = pd.read_csv('/home/master/poverty-priority-queue/Models/dyn_prog/transition_matrix_0.csv', header=None)
+transition_probs_2 = pd.read_csv('/home/master/poverty-priority-queue/Models/dyn_prog/transition_matrix_1.csv', header=None)
 transition_probs = np.stack([transition_probs_1, transition_probs_2], axis=0)
 # Add the transition probability matrix to the data dictionary
 data['transition_probs'] = transition_probs
 
-model = CmdStanModel(stan_file="./Models/dyn_prog/exp1.stan")
-# Fit the model to the data
 ## Delete unnecessary variables
 all_vars = list(globals().keys())
 keep_vars = ['data', 'model', 'r', 'CmdStanModel', 'np', 'pd']
@@ -172,9 +170,7 @@ import gc
 gc.collect()
 
 import h5py
-with h5py.File('./Models/dyn_prog/data.h5', 'w') as f:
+with h5py.File('/home/master/poverty-priority-queue/Models/dyn_prog/data.h5', 'w') as f:
     for key in data.keys():
         f.create_dataset(key, data=data[key])
-
-# fit = model.sample(data=data)
 

@@ -1147,22 +1147,6 @@ fit_model <- function(formula, data) {
        model = "random")
 }
 
-# Function to calculate observations
-get_gof_rows <- function(model) {
-  obs_trials <- model$model %>%
-    group_by(pick(2:5)) %>%
-    summarise(trials = n()) %>% ungroup() %>%
-    summarise(max = max(trials), min = min(trials), mean = mean(trials))
-   obs_participants <- model$model %>%
-    group_by(pick(2:5)) %>%
-    mutate(id = row_number()) %>% ungroup() %>%
-    summarise(N = max(id))
-  Participants <- obs_participants$N
-  Trials <- paste0(obs_trials$min, "-", obs_trials$max, " (M = ", round(obs_trials$mean,1),")")
-  BIC <- AIC(model, k = log(nrow(model$model)))
-  return(list(Participants = Participants, Trials = Trials, BIC = BIC))
-}
-
 # Define formulas
 formulas <- list(
   logRT ~ Dim.1*Dim.2 + age + male + points +
@@ -1179,7 +1163,7 @@ formulas <- list(
 )
 
 # Fit models
-models <- lapply(formulas, fit_model, data = two_options)
+models <- lapply(formulas, fit_model, data = two_options) #Defined in previous block
 
 # Generate the table
 gof_list <- lapply(models, get_gof_rows)
@@ -1214,11 +1198,30 @@ We also obtain a comparison of the choices participants make and the optimal, or
 ```{r}
 #| label: fig-costs
 #| fig-cap: "Histogram of Estimated Costs per Participant"
+
 dat <- data.frame(dens = c(costs$cH, costs$cL), 
                   lines = rep(c("cH", "cL"), each = nrow(costs)))
+
 ggplot(dat, aes(x = dens, fill = lines)) + 
-  #geom_histogram() +
-  geom_density(alpha = 0.5)
+  geom_density(alpha = 0.5) +
+  scale_fill_manual(
+    name = "Cost",
+    values = c("cH" = "blue", "cL" = "red"),
+    labels = c("High", "Low")
+  ) +
+  theme_minimal() +
+  theme(
+    legend.position = "bottom",
+    legend.title = element_text(size = 12, face = "bold"),
+    legend.text = element_text(size = 10),
+    axis.title.x = element_blank(),
+    axis.title.y = element_text(size = 12, face = "bold"),
+    axis.text = element_text(size = 10)
+  ) +
+  labs(
+    y = "Density"
+  )
+
 ```
 
 This score is calculated by first estimating the cost parameters for each participant and then using them with backwards induction to discover the optimal choice at each presented state.
@@ -1284,45 +1287,90 @@ It appears that Accuracy does not vary across income and anxiety levels with the
 
 ```{r}
 #| label: tbl-accuracy
-pglm(formula = Optimal ~ income*stai +
-                         age + education + points +
+#| label: tbl-accuracy
+#| tbl-cap: "Regression analysis of accuracy on participants' choice behavior and demographic variables"
+#| tbl-subcap: "The predictors include income, PCA components, ZIP deprivation, ZIP income, age, education, points, and task attributes."
+
+# Fit the models
+accuracy_models <- list(
+    accuracy_pca = pglm(formula = Optimal ~ Dim.1*Dim.2  +
+                      age + male + points +
+                      chosen_i + chosen_e + chosen_u +
+                      not_chosen_i + not_chosen_e + not_chosen_u,
+             data = two_options,
+             effect = "twoways",
+             model = "random",
+             family = binomial('logit')),
+  accuracy_income = pglm(formula = Optimal ~ income*stai +
+                         age + male + points +
                          chosen_i + chosen_e + chosen_u +
                          not_chosen_i + not_chosen_e + not_chosen_u,
              data = two_options,
              effect = "twoways",
-             index = c("participant", "round"),
              model = "random",
-             family = binomial('logit')) -> accuracy_income
-
-pglm(formula = Optimal ~ Dim.1*Dim.2  +
-                      age + education + points +
+             family = binomial('logit')),
+  accuracy_zipdeprivation = pglm(formula = Optimal ~ poverty_zip*stai +
+                      age + male + points +
                       chosen_i + chosen_e + chosen_u +
                       not_chosen_i + not_chosen_e + not_chosen_u,
              data = two_options,
              effect = "twoways",
-             index = c("participant", "round"),
              model = "random",
-             family = binomial('logit')) -> accuracy_pca
-
-pglm(formula = Optimal ~ poverty_zip*stai +
-                      age + education + points +
+             family = binomial('logit')),
+  accuracy_zipincome = pglm(formula = Optimal ~ median_income_zip*stai  +
+                      age + male + points +
                       chosen_i + chosen_e + chosen_u +
                       not_chosen_i + not_chosen_e + not_chosen_u,
              data = two_options,
              effect = "twoways",
-             index = c("participant", "round"),
              model = "random",
-             family = binomial('logit')) -> accuracy_zipdeprivation
+             family = binomial('logit'))
+)
 
-pglm(formula = Optimal ~ median_income_zip*stai  +
-                      age + education + points +
-                      chosen_i + chosen_e + chosen_u +
-                      not_chosen_i + not_chosen_e + not_chosen_u,
-             data = two_options,
-             effect = "twoways",
-             index = c("participant", "round"),
-             model = "random",
-             family = binomial('logit')) -> accuracy_zipincome
+# Function to calculate observations
+get_gof_rows <- function(model) {
+  obs_trials <- model$model %>%
+    group_by(pick(2:5)) %>%
+    summarise(trials = n()) %>% ungroup() %>%
+    summarise(max = max(trials), min = min(trials), mean = mean(trials))
+  obs_participants <- model$model %>%
+    group_by(pick(2:5)) %>%
+    mutate(id = row_number()) %>% ungroup() %>%
+    summarise(N = max(id))
+  Participants <- obs_participants$N
+  Trials <- paste0(obs_trials$min, "-", obs_trials$max, " (M = ", round(obs_trials$mean,1),")")
+  BIC <- AIC(model, k = log(nrow(model$model)))
+  return(list(Participants = Participants, Trials = Trials, BIC = BIC))
+}
+
+# Generate the table
+gof_list <- lapply(accuracy_models, get_gof_rows)
+final_gof_list <- list(
+  Participants = sapply(gof_list, `[[`, "Participants"),
+  Trials = sapply(gof_list, `[[`, "Trials"),
+  BIC = sapply(gof_list, `[[`, "BIC")
+)
+
+# Define custom coefficient names
+custom_coef <- list("Dim.1" = "PC 1",
+                    "Dim.2" = "PC 2",
+                    "income" = "Income",
+                    "stai" = "Anxiety",
+                    "poverty_zip" = "ZIP Poverty Level",
+                    "median_income_zip" = "ZIP Median Income",
+                    "income:stai" = "Anxiety Interaction",
+                    "poverty_zip:stai" = "Anxiety Interaction",
+                    "median_income_zip:stai" = "Anxiety Interaction")
+
+knitreg(lapply(accuracy_models, function(x) {
+  texreg::extract(x, include.aic = FALSE, include.loglik = FALSE)
+  }),
+  custom.model.names = c("(1)","(2)","(3)","(4)"),
+  custom.header = list("Accuracy" = 1:4),
+  stars = c(0.001, 0.01, 0.05, 0.1),
+  custom.coef.map = custom_coef,
+  custom.gof.rows = final_gof_list)
+
 ```
 
 # Experiment 1
@@ -3316,6 +3364,9 @@ cor(df[c("PA1", "PA2", "PA3", "zip_income", "zip_poverty_log",
 ### Pilot Urgency Regression
 
 ```{r}
+#| label: tbl-sensitivity
+#| tbl-cap: "Model Comparison"
+#| tbl-subcap: "Comparison of different models based on BIC, number of variables, and included attributes"
 
 two_options <- joint_pilot %>%
   filter(!is.na(participant), !is.na(round)) %>%
@@ -3331,42 +3382,81 @@ two_options <- joint_pilot %>%
   select(-max_round_in_block, -first_block_rounds)
 two_options <- pdata.frame(two_options, index = c("participant", "round"))
 
+# Function to fit the model
+fit_model <- function(formula, data) {
+  pglm(formula = formula,
+       data = data,
+       effect = "twoways",
+       family = binomial('logit'),
+       model = "random")
+}
+
+# Function to calculate observations
+get_gof_rows <- function(model) {
+  seq_ivs <- c(2:5)
+  if (ncol(model$model) < 6) {
+    seq_ivs <- c(2:3)
+  } 
+  obs_trials <- model$model %>%
+    group_by(pick(seq_ivs)) %>%
+    summarise(trials = n()) %>% ungroup() %>%
+    summarise(max = max(trials), min = min(trials), mean = mean(trials))
+   obs_participants <- model$model %>%
+    group_by(pick(seq_ivs)) %>%
+    mutate(id = row_number()) %>% ungroup() %>%
+    summarise(N = max(id))
+  Participants <- obs_participants$N
+  Trials <- paste0(obs_trials$min, "-", obs_trials$max, " (M = ", round(obs_trials$mean,1),")")
+  BIC <- AIC(model, k = log(nrow(model$model)))
+  return(list(Participants = Participants, Trials = Trials, BIC = BIC))
+}
+
 formulas <- list(
   chosen_u ~ Dim.1*Dim.2,
   chosen_u ~ Dim.1*Dim.2 + age + male + points,
   chosen_u ~ Dim.1*Dim.2 + age + male + points +
     chosen_i + chosen_e + not_chosen_i + not_chosen_e + not_chosen_u,
-  chosen_u ~ age + male + points +
-    (Dim.1 + Dim.2)*(chosen_i + chosen_e + not_chosen_i + not_chosen_e + not_chosen_u),
+  chosen_u ~ age + male +
+    (Dim.1 + Dim.2)*(chosen_i + chosen_e + not_chosen_i + not_chosen_e + not_chosen_u) + 
+    points,
   
   chosen_u ~ income*stai,
   chosen_u ~ income*stai + age + male + points + platform,
   chosen_u ~ income*stai + age + male + points + platform +
     chosen_i + chosen_e + not_chosen_i + not_chosen_e + not_chosen_u,
-  chosen_u ~ age + male + points + platform +
-    (income + stai)*(chosen_i + chosen_e + not_chosen_i + not_chosen_e + not_chosen_u),
+  chosen_u ~ age + male +
+    (income + stai)*(chosen_i + chosen_e + not_chosen_i + not_chosen_e + not_chosen_u) +
+    platform + points,
   
   chosen_u ~ poverty_zip*stai,
   chosen_u ~ poverty_zip*stai + age + male + points,
   chosen_u ~ poverty_zip*stai + age + male + points +
     chosen_i + chosen_e + not_chosen_i + not_chosen_e + not_chosen_u,
-  chosen_u ~ age + male + points +
-    (poverty_zip + stai)*(chosen_i + chosen_e + not_chosen_i + not_chosen_e + not_chosen_u),
+  chosen_u ~ age + male +
+    (poverty_zip + stai)*(chosen_i + chosen_e + not_chosen_i + not_chosen_e + not_chosen_u) +
+    points,
   
   chosen_u ~ median_income_zip*stai,
   chosen_u ~ median_income_zip*stai + age + male + points,
   chosen_u ~ median_income_zip*stai + age + male + points +
     chosen_i + chosen_e + not_chosen_i + not_chosen_e + not_chosen_u,
-  chosen_u ~ age + male + points +
-    (median_income_zip + stai)*(chosen_i + chosen_e + not_chosen_i + not_chosen_e + not_chosen_u)
+  chosen_u ~ age + male +
+    (median_income_zip + stai)*(chosen_i + chosen_e + not_chosen_i + not_chosen_e + not_chosen_u) +
+    points
 )
-
 # Fit the models using your fit_model function
 models <- lapply(formulas, fit_model, data = two_options)
 
+gof_list <- lapply(models, get_gof_rows)
+# Transpose the list to match the desired structure
+final_gof_list <- list(
+  Participants = sapply(gof_list, `[[`, "Participants"),
+  Trials = sapply(gof_list, `[[`, "Trials"),
+  BIC = sapply(gof_list, `[[`, "BIC")
+)
+
 # Initialize an empty data frame for results
 results_table <- data.frame(
-  Main_IV1 = character(),
   BIC = numeric(),
   Num_Variables = integer(),
   Participants = integer(),
@@ -3381,24 +3471,18 @@ for (i in 1:length(models)) {
   model <- models[[i]]
   formula <- formulas[[i]]
   bic <- AIC(model, k = log(nrow(model$model)))
-  num_variables <- length(all.vars(formula)) - 1 # Subtracting response variable
-  
-  # Check for types of variables
-  main_iv1 <- ifelse(any(grepl("Dim.1|Dim.2", deparse(formula))), "PCs 1 and 2", "")
-  main_iv1 <- ifelse(any(grepl("income", deparse(formula))), "Income and STAI", main_iv1)
-  main_iv1 <- ifelse(any(grepl("poverty_zip", deparse(formula))), "ZIP Poverty Level and STAI", main_iv1)
-  main_iv1 <- ifelse(any(grepl("median_income_zip", deparse(formula))), "ZIP Median Income and STAI", main_iv1)
+  num_variables <- length(models[[i]]$estimate) - 1 # Subtracting sigma
   
   # Add to the results table
   results_table <- rbind(results_table, data.frame(
-    Main_IV1 = main_iv1,
     BIC = bic,
     Num_Variables = num_variables,
     Participants = final_gof_list$Participants[i],
     Trials = final_gof_list$Trials[i],
     Demographic_Variables = ifelse(any(grepl("age|male", deparse(formula))), "Yes", "No"),
-    Choice_Attributes = ifelse(any(grepl("chosen_i|chosen_e|not_chosen_i|not_chosen_e|not_chosen_u", deparse(formula))), "Yes", "No"),
-    Interacted_With_Choice_Attributes = ifelse(any(grepl("\\*\\(chosen_i", deparse(formula))), "Yes", "No"),
+    Choice_Attributes = ifelse(any(grepl("chosen_i|chosen_e|not_chosen_i|not_chosen_e|not_chosen_u",
+                                         deparse(formula))), "Yes", "No"),
+    Interacted_With_Choice_Attributes = ifelse(any(grepl("\\* \\(chosen_i", deparse(formula))), "Yes", "No"),
     stringsAsFactors = FALSE
   ))
 }
@@ -3408,17 +3492,12 @@ results_table$Row_Group <- rep(c("PCs 1 and 2",
                                  "Income and STAI",
                                  "ZIP Poverty Level and STAI",
                                  "ZIP Median Income and STAI"), each = 4)
-# Convert logical columns to "Yes" and "No"
-results_table$Demographic_Variables <- ifelse(results_table$Demographic_Variables, "Yes", "No")
-results_table$Choice_Attributes <- ifelse(results_table$Choice_Attributes, "Yes", "No")
-results_table$Interacted_With_Choice_Attributes <- ifelse(results_table$Interacted_With_Choice_Attributes, "Yes", "No")
+# Add a column for the row labels with the desired labels
+results_table$Row_Label <- rep(c("(a)", "(b)", "(c)", "(d)"), 4)
 
+# Create the table using the gt package
 gt_table <- results_table %>%
-  gt(rowname_col = NULL, groupname_col = "Row_Group") %>%
-  tab_header(
-    title = "Model Comparison",
-    subtitle = "Comparison of different models based on BIC, number of variables, and included attributes"
-  ) %>%
+  gt(rowname_col = "Row_Label", groupname_col = "Row_Group") %>%
   cols_label(
     BIC = "BIC",
     Num_Variables = "Regressors",

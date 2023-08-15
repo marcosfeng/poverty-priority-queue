@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 from cmdstanpy import CmdStanModel
+import h5py
 
 df = pd.read_csv('/home/master/poverty-priority-queue/data/Exp1/df.csv')
 transition_df = pd.read_csv('/home/master/poverty-priority-queue/Models/dyn_prog/transition_df.csv')
@@ -101,6 +102,13 @@ data['choice'] = np.stack([np.array(lst, dtype=int) for lst in data['choice']])
 participant_mapping = {participant_id: index for index,
                        participant_id in enumerate(np.unique(df['participant']),
                                                    start=1)}
+# Export dictionary for R
+with h5py.File('Models/dyn_prog/participant_mapping.h5', 'w') as h5file:
+    participant_ids = list(participant_mapping.keys())
+    indices = list(participant_mapping.values())
+    h5file.create_dataset('participant_ids', data=np.array(participant_ids, dtype='S'))
+    h5file.create_dataset('indices', data=np.array(indices))
+    
 # Create a new array of participant IDs, where each string ID is replaced with its corresponding integer
 participant_ids = np.array([participant_mapping[id]
                             for id, round in zip(df['participant'], df['round'])
@@ -169,7 +177,6 @@ del all_vars
 import gc
 gc.collect()
 
-import h5py
 with h5py.File('/home/master/poverty-priority-queue/Models/dyn_prog/data.h5', 'w') as f:
     for key in data.keys():
         f.create_dataset(key, data=data[key])

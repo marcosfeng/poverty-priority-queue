@@ -1287,7 +1287,6 @@ It appears that Accuracy does not vary across income and anxiety levels with the
 
 ```{r}
 #| label: tbl-accuracy
-#| label: tbl-accuracy
 #| tbl-cap: "Regression analysis of accuracy on participants' choice behavior and demographic variables"
 #| tbl-subcap: "The predictors include income, PCA components, ZIP deprivation, ZIP income, age, education, points, and task attributes."
 
@@ -2016,12 +2015,6 @@ df_long %>%
 
 ```
 
-```{r clean environment}
-#| echo: false
-rm(list = setdiff(ls(), c("df","poverty3","imputed_data")))
-gc(verbose = FALSE)
-```
-
 ### General Urgency Bias
 
 ```{r merge datasets Exp1}
@@ -2061,7 +2054,7 @@ Model 4 probes the impact of area-level poverty (as measured by ZIP poverty leve
 
 In all models, we account for a variety of control variables, including the total number of Prolific approvals (as a proxy for platform experience), gender, age, the perceived importance and effort of the chosen task, and the perceived urgency, importance, and effort of the unchosen task. A consistent pattern emerges across all models, accentuating the role of task attributes in shaping urgency bias. This observation underscores the dynamic nature of urgency bias, suggesting that it can change with the inherent characteristics of tasks in the queue, such as their perceived importance and urgency.
 
-```{r, results='asis'}
+```{r}
 #| label: tbl-exp1-urgencypoverty
 #| tbl-cap: "Urgency Bias Regression Models"
 #| tbl-subcap: "Controls include total approvals, sex, age, the effect of chosen and not chosen tasks, round left true, and sigma."
@@ -2125,10 +2118,12 @@ custom_coef <- list("PA1" = "Food Stability",
                     "zip_income_log" = "ZIP Median Income",
                     "zip_poverty_log" = "ZIP poverty level",
                     "SAI_pre" = "Anxiety")
-knitreg(lapply(models, function(x) {extract(x, include.aic = FALSE, include.loglik = FALSE)}),
-        stars = c(0.001, 0.01, 0.05, 0.1),
-        custom.coef.map = custom_coef,
-        custom.gof.rows = final_gof_list)
+knitreg(lapply(models, function(x) {
+  texreg::extract(x, include.aic = FALSE, include.loglik = FALSE)
+  }),
+  stars = c(0.001, 0.01, 0.05, 0.1),
+  custom.coef.map = custom_coef,
+  custom.gof.rows = final_gof_list)
 
 ```
 
@@ -2136,29 +2131,106 @@ knitreg(lapply(models, function(x) {extract(x, include.aic = FALSE, include.logl
 
 We also obtain a comparison of the choices participants make and the optimal, or rational, protocol we generated. This is done by estimating a hierarchical Bayesian model...
 
+```{r}
+#| label: exp1-accuracy-code
+
+exp1_stan <- readRDS("~/poverty-priority-queue/Models/dyn_prog/hierarchical-results.RDS")
+# Extracting parameter values
+samples <- exp1_stan$draws()
+params <- summary(samples)
+
+# Extracting costH values by matching variable names
+costH_names <- grep("^costH\\[[0-9]+\\]$", params$variable, value = TRUE)
+costH_values <- params[params$variable %in% costH_names, 2]
+
+data_list <- list()
+# Read each dataset and store it in the list
+data_list$K <- h5read(file = "./Models/dyn_prog/data.h5", name = "K")
+data_list$N <- h5read(file = "./Models/dyn_prog/data.h5", name = "N")
+data_list$P <- h5read(file = "./Models/dyn_prog/data.h5", name = "P")
+data_list$T <- h5read(file = "./Models/dyn_prog/data.h5", name = "T")
+data_list$choice <- t(h5read(file = "./Models/dyn_prog/data.h5", name = "choice"))
+data_list$effort <- t(h5read(file = "./Models/dyn_prog/data.h5", name = "effort"))
+data_list$participants <- h5read(file = "./Models/dyn_prog/data.h5", name = "participants")
+data_list$reward <- t(h5read(file = "./Models/dyn_prog/data.h5", name = "reward"))
+data_list$state <- t(h5read(file = "./Models/dyn_prog/data.h5", name = "state"))
+data_list$transition_probs <- h5read(file = "./Models/dyn_prog/data.h5", name = "transition_probs")
+data_list$transition_probs <- aperm(data_list$transition_probs, c(3, 1, 2))
+data_list$grainsize <- round(data_list$N/4)
+data_list$slices_n <- seq_len(data_list$N)
+
+# Mapping the STAN variables to the new ones
+choice_best <- matrix(0, data_list$N, data_list$T)
+
+for (i in c(1:data_list$N)) {
+  EVs <- array(0, dim = c(2, data_list$T, data_list$K))
+  common_cost <- as.numeric(costH_values[data_list$participants[i],])
+  
+  # Calculate the EV for the last round
+  EVs[1, T, ] <- data_list$reward[, 1] - data_list$effort[, 1] * common_cost
+  EVs[2, T, ] <- data_list$reward[, 2] - data_list$effort[, 2] * common_cost
+  
+  # Loop through the time and states, calculating the EVs for each choice
+  for (t in 1:(data_list$T - 1)) {
+    EVs[1, data_list$T - t,] <-
+      data_list$transition_probs[1] %*% EVs[1, data_list$T - t + 1, ] + data_list$reward[, 1] - data_list$effort[, 1] * common_cost
+    EVs[2, data_list$T - t,] <-
+      data_list$transition_probs[2] %*% EVs[2, data_list$T - t + 1, ] + data_list$reward[, 2] - data_list$effort[, 2] * common_cost
+  }
+  
+  for (t in 1:data_list$T) {
+    s <- data_list$state[i, t] # Current state
+    ev1 <- EVs[1, t, s] # EV for choice 1
+    ev2 <- EVs[2, t, s] # EV for choice 2
+    
+    # Determine the best choice
+    choice_best[i, t] <- ifelse(ev1 >= ev2, 1, 2)
+  }
+}
+
+#####  Accuracy of all trials
+comparison <- (data_list$choice == choice_best)
+Accuracy <- as.data.frame(rowMeans(comparison, na.rm=T))
+Accuracy <- cbind(Accuracy, data_list$participants)
+## Get participant ID
+# Read the HDF5 file
+participant_ids <- h5read('Models/dyn_prog/participant_mapping.h5', 'participant_ids')
+indices <- h5read('Models/dyn_prog/participant_mapping.h5', 'indices')
+# Convert the participant_ids to characters if they are stored as bytes
+# participant_ids <- sapply(participant_ids, function(x) rawToChar(as.raw(x)))
+# Create a data frame from the HDF5 data
+participant_mapping <- data.frame(participant = participant_ids,
+                                  cost = costH_values$mean,
+                                  index = indices)
+
+```
+
 ```{r, eval=FALSE}
 #| label: fig-exp1costs
-#| fig-cap: "Histogram of Estimated Costs per Participant"
-dat <- data.frame(dens = c(costs$cH, costs$cL), 
-                  lines = rep(c("cH", "cL"), each = nrow(costs)))
-ggplot(dat, aes(x = dens, fill = lines)) + 
-  #geom_histogram() +
-  geom_density(alpha = 0.5)
+#| fig-cap: "Histogram of Means of Estimated Costs Parameters per Participant"
+#| fig-subcap: "Note that the lower cost was assumed to be 0."
+
+# Compute the mean of the hyperparameter (mu_cost)
+mean_hyper_cost <- params$mean[2]
+
+# Create a density plot for the individual participant parameters (cost)
+ggplot(final_df, aes(x = cost)) +
+  geom_density(alpha = 0.5, fill = "steelblue") +
+  geom_segment(aes(x = mean_hyper_cost, y = 0, xend = mean_hyper_cost, yend = max(density(final_df$cost)$y)),
+               color = "black", linetype = "dashed", size = 0.5) +
+  theme_minimal() +
+  custom_theme +
+  labs(
+    y = "Density",
+    title = "Density of Individual Parameters with Means"
+  ) +
+  annotate("text", x = mean_hyper_cost, y = 0,
+           label = expression(hat(mu)["cost"]),
+           vjust = 0.6, color = "black", parse = TRUE)
+
 ```
 
 This score is calculated by first estimating the cost parameters for each participant and then using them with backwards induction to discover the optimal choice at each presented state.
-
-```{r exp1-accuracy, eval=FALSE}
-write_csv(Accuracy, file = "data/Pilot/Accuracy.csv")
-```
-
-```{r, eval=FALSE}
-#| label: fig-exp1-accuracy
-#| fig-cap: "Histogram of Accuracy Proportions"
-
-hist(Accuracy$Accuracy, breaks=10)
-
-```
 
 #### Accuracy, Anxiety, and Income
 
@@ -2170,29 +2242,58 @@ Finally, we compare for each participant, how many of their choices are identica
 #| label: fig-exp1-accuracy-results
 #| fig-cap: "Participant Accuracy by Income and Anxiety"
 #| fig-subcap:
-#|   - "Prolific, Income"
-#|   - "Prolific, Anxiety"
+#|   - "Income"
+#|   - "Anxiety"
 #| layout-ncol: 2
 #| column: page-right
-ggplot(Accuracy, aes(x=income, y=Accuracy)) +
-  geom_point() +
-  stat_smooth(method=loess) +
-  geom_label(x=6, y=.8,
-             label=paste("Correlation:",
-                         round(cor(Accuracy$Accuracy, Accuracy$income), 2)))
 
-ggplot(Accuracy, aes(x=stai, y=Accuracy)) +
-  geom_point() +
-  stat_smooth(method=loess) +
-  geom_label(x=30, y=.8,
-             label=paste("Correlation:",
-                         round(cor(Accuracy$stai, Accuracy$Accuracy), 2)))
+# Join with the existing data frame
+Accuracy_exp1 <- Accuracy %>%
+  left_join(participant_mapping,
+            by = c('data_list$participants' = 'index')) %>%
+  # Create the Accuracy column
+  select(!`data_list$participants`) %>%
+  rename(Accuracy = `rowMeans(comparison, na.rm = T)`) %>%
+  left_join(df_combined %>%
+              group_by(participant) %>%
+              summarise(job = first(PA2),
+                        stai = first(SAI_pre)), by = "participant")
+
+# Plot no 1 : Participant Accuracy by Income
+ggplot(Accuracy_exp1, aes(x = job, y = Accuracy)) +
+  geom_point(color = "steelblue", size = 3) +
+  stat_smooth(method = loess, color = "red", size = 1) +
+  geom_label(x = 1, y = 0.75,
+             label = paste("Correlation:",
+                           rd(cor.test(Accuracy_exp1$job,
+                                       Accuracy_exp1$Accuracy,
+                                       method = "spearman")$estimate, 2)),
+             fill = "white", color = "black", label.padding = unit(0.35, "lines")) +
+  labs(x = "Job Stability", y = "Accuracy",
+       title = "Participant Accuracy by Job Stability",
+       subtitle = "Prolific, Income") +
+  custom_theme
+
+# Plot no 2: Participant Accuracy by STAI (State-Trait Anxiety Inventory)
+ggplot(Accuracy_exp1, aes(x = stai, y = Accuracy)) +
+  geom_point(color = "steelblue", size = 3) +
+  stat_smooth(method = loess, color = "red", size = 1) +
+  geom_label(x = 35, y = 0.8,
+             label = paste("Correlation:",
+                           rd(cor.test(Accuracy_exp1$stai,
+                                       Accuracy_exp1$Accuracy,
+                                       method = "spearman")$estimate, 2)),
+             fill = "white", color = "black", label.padding = unit(0.35, "lines")) +
+  labs(x = "SAI (State Anxiety Inventory)", y = "Accuracy",
+       title = "Participant Accuracy by State Anxiety",
+       subtitle = "Prolific, Anxiety") +
+  custom_theme
 
 ```
 
 It appears that Accuracy does not vary across income and anxiety levels with these measures. Some possibilities of this fact might include that, since time discounting here is virtually 0, leaving the important task behind will not affect participants as much (depending, of course, of the estimated cost parameters).
 
-#### General Linear Models of Accuracy
+<!-- #### General Linear Models of Accuracy -->
 
 ```{r, eval=FALSE}
 #| label: tbl-exp1-accuracy

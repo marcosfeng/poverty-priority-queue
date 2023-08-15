@@ -38,7 +38,8 @@ fit <- model$sample(
   iter_warmup = 500,
   iter_sampling = 500
 )
-samples <- fit$draws()
-fit$summary()
 
 # fit$save_object(file = "./Models/dyn_prog/hierarchical-results.RDS")
+
+samples <- fit$draws()
+fit$summary()

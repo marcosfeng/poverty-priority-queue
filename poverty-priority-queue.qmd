@@ -62,14 +62,6 @@ get_regression_result <- function(model, coefficient_name) {
 
 ```
 
-```{r load-pilot}
-load("./Models/pilot/joint_pilot.Rdata")
-load("./Models/pilot/prolific1StanData.Rdata")
-load("./Models/pilot/MTurk_sample_nolimit2.Rdata")
-demograph <- qualtrics[qualtrics$PROLIFIC_PID %in% joint_pilot$participant,]
-
-```
-
 # Introduction
 
 Poverty is a multi-dimensional problem, and behavioral scientists have focused on the effects of the environment on the decision-making process across socio-economic levels (Bertrand et al., 2004). Their underlying assumption is that humans share the same underlying biology and psychology, and that "poverty" causes significant changes in people's environments and, in turn, their decisions. For example, living in poverty often means having a limited set of options in life (from choosing what to have for dinner to which occupation to pursue), and it increases the number of demands in terms of time and mental resources (Banerjee & Duflo, 2012). This lack of control over choices leads to a chronic state of vigilance and stress (Chemin et al., 2013).
@@ -197,7 +189,7 @@ By simulating this queue, we can graph a heatmap with the relationship of the we
 #| label: fig-simmer-simulation
 #| fig-cap: "Probability of Survival by Urgency Weight"
 
-urgency_survival_grid <- read_csv("data/Pilot/urgency-survival-grid.csv") %>%
+urgency_survival_grid <- read_csv("Models/DES/urgency-survival-grid.csv") %>%
   rename(time = mean_time) %>%
   filter(!is.na(mean_survival)) %>%
   filter(time < 20) # Anything greater is close to 0
@@ -205,7 +197,7 @@ urgency_survival_grid <- read_csv("data/Pilot/urgency-survival-grid.csv") %>%
 levelplot(mean_survival ~ time * weight, urgency_survival_grid, 
           panel = panel.levelplot.points, cex = 0
     ) + 
-    latticeExtra::layer_(panel.2dsmoother(..., n = 200))
+    latticeExtra::layer(panel.2dsmoother(..., n = 200))
 
 ```
 
@@ -393,7 +385,7 @@ We build upon this by then generating an optimal protocol for identifying the be
 #| label: fig-dynaprog-simulation
 #| fig-cap: "Percentage of Urgent Choices"
 
-urgency_ratio_grid <- read_csv("data/Pilot/urgency-ratio-grid.csv")
+urgency_ratio_grid <- read_csv("Models/pilot/pilot-simulation-grid.csv")
 urgency_ratio_grid <- urgency_ratio_grid %>%
   rename(gamma = `...1`) %>%
   pivot_longer(!gamma, names_to = "cost", values_to = "urgent") %>%
@@ -402,7 +394,7 @@ urgency_ratio_grid <- urgency_ratio_grid %>%
 levelplot(urgent ~ cost * gamma, urgency_ratio_grid, 
           panel = panel.levelplot.points, cex = 0
     ) + 
-    latticeExtra::layer_(panel.2dsmoother(..., n = 200))
+    latticeExtra::layer(panel.2dsmoother(..., n = 200))
 
 ```
 
@@ -418,20 +410,43 @@ While certain task scenarios in the game require minimal cognition (e.g., a high
 
 We administered our experiment over both Mturk and Prolific. In our MTurk administration, we acquired N = 22 participants, and via Prolific, N = 53. Here, we treat these samples as independent replications.
 
+```{r load-pilot}
+joint_pilot <- read_csv(file = "data/Pilot/joint_pilot.csv")
+qualtrics <- read_csv("data/Pilot/Qualtrics.csv")
+load("./Models/pilot/prolific1StanData.Rdata")
+load("./Models/pilot/MTurk_sample_nolimit2.Rdata")
+```
+
+```{r}
+#| label: wrangle-stai-demo
+
+qualtrics <- qualtrics[-c(1:2),]
+vars <- c("Q36", "Q37", "Q39", "Q40", "Q42", "Q45", "Q46", "Q47", "Q50", "Q51",
+          "Q34", "Q35", "Q38", "Q41", "Q43", "Q44", "Q48", "Q49", "Q52", "Q53...54",
+          "Q26", "Q27", "Q32")
+qualtrics <- qualtrics %>%
+  mutate(across(all_of(vars), as.numeric))
+qualtrics <- qualtrics %>%
+  mutate(
+    stai = (Q36 + Q37 + Q39 + Q40 + Q42 + Q45 + Q46 + Q47 + Q50 + Q51 +
+      5*10 - Q34 - Q35 - Q38 - Q41 - Q43 - Q44 - Q48 - Q49 - Q52 - Q53...54),
+    age = 2021 - Q26
+  ) %>%
+  rename(
+    income = Q32,
+    education = Q27
+  )
+
+# Cleaning joint_pilot:
+joint_pilot <- joint_pilot %>%
+  group_by(participant, block) %>%
+  filter(n() >= 10) %>% ungroup() %>%
+  left_join(qualtrics, by = c("participant" = "PROLIFIC_PID"))
+
+```
+
 ```{r}
 #| label: data-wrangling-pilot
-ordered_factor <- function(fact_var) {
-  categories <- levels(fact_var)
-  n_cat <- length(categories)
-  cont <- matrix(data = 0, nrow = n_cat, ncol = (n_cat - 1))
-  cont[col(cont) < row(cont)] <- 1
-  rownames(cont) <- categories
-  colnames(cont) <- paste(categories[2:n_cat],
-                          categories[1:(n_cat - 1)],
-                          sep = " vs. ")
-  contrasts(fact_var) <- cont
-  return(fact_var)
-}
 
 joint_pilot %>%
   group_by(platform) %>%
@@ -449,9 +464,10 @@ joint_pilot %>%
                          labels = c("Low Income", "High Income")),
     high_anxiety = factor(high_anxiety,
                           ordered = TRUE,
-                          labels = c("Low Anxiety", "High Anxiety"))
+                          labels = c("Low Anxiety", "High Anxiety")),
+    male = if_else(Q30 == "1", 1, 0)
   ) %>%
-  # Extract the indeces which differ for each variable: 
+  # Extract the indexes which differ for each variable: 
   mutate(
     heart = (u1 != u2), # <-- index @ which diff urgency
     dollar = (i1 != i2), # <-- index @ which diff importance
@@ -476,34 +492,14 @@ joint_pilot %>%
                      ui_rightsplit == 1 & i2 == 1 ~ 0)
   ) -> joint_pilot
 
-joint_pilot$income <- ordered_factor(joint_pilot$income)
-joint_pilot$education <- ordered_factor(joint_pilot$education)
-```
+joint_pilot$income <- ordered(joint_pilot$income)
+joint_pilot$education <- ordered(joint_pilot$education)
 
-```{r}
-#| label: wrangle-stai-demo
-qualtrics <- read_csv("data/Pilot/PrioQ - Consolidated_January 13, 2022_18.42.csv")
-qualtrics <- qualtrics[-c(1:2),]
-vars <- c("Q36", "Q37", "Q39", "Q40", "Q42", "Q45", "Q46", "Q47", "Q50", "Q51",
-          "Q34", "Q35", "Q38", "Q41", "Q43", "Q44", "Q48", "Q49", "Q52", "Q53...54",
-          "Q26", "Q27", "Q32")
-qualtrics <- qualtrics %>%
-  mutate(across(all_of(vars), as.numeric))
-qualtrics <- qualtrics %>%
-  mutate(
-    stai = (Q36 + Q37 + Q39 + Q40 + Q42 + Q45 + Q46 + Q47 + Q50 + Q51 +
-      5*10 - Q34 - Q35 - Q38 - Q41 - Q43 - Q44 - Q48 - Q49 - Q52 - Q53...54),
-    age = 2021 - Q26
-  ) %>%
-  rename(
-    income = Q32,
-    education = Q27
-  )
 ```
 
 ```{r}
 #| label: processing-data
-participants_df <- aggregate(points ~ participant, data=joint_pilot, FUN = mean)
+participants_df <- aggregate(points ~ participant, data = joint_pilot, FUN = mean)
 demograph <- merge(y = qualtrics,
                   x = participants_df,
                   by.y = "PROLIFIC_PID",
@@ -517,7 +513,7 @@ demograph <- merge(y = demograph,
 poverty <- read_csv("data/ZIPcode/ACSST5Y2019.S1701_data_with_overlays_2021-12-21T174024.csv")
 poverty <- poverty %>%
   dplyr::select(NAME,S1701_C03_001E) %>%
-  mutate(ZIP = as.numeric(str_sub(NAME, start= -5))) %>%
+  mutate(ZIP = as.numeric(str_sub(NAME, start = -5))) %>%
   dplyr::select(-NAME)
 demograph <- demograph %>%
   left_join(poverty, by = "ZIP")
@@ -534,7 +530,6 @@ demograph <- demograph %>%
     S1701_C03_001E = as.numeric(S1701_C03_001E),
     S1903_C03_001E = as.numeric(S1903_C03_001E)
   )
-
 
 rm(ip2zip, income, poverty)
 
@@ -640,11 +635,7 @@ comparisonLONG <- as.data.frame(comparison) %>%
 
 ## Adding poverty measure
 joint_pilot <- joint_pilot %>% 
-  left_join(demograph[,c(2,10:11)], by = "participant") %>%
-  group_by(participant) %>%
-  arrange(points) %>%
-  mutate(round = row_number()) %>%
-  ungroup()
+  left_join(demograph[,c(2,10:11)], by = "participant")
 
 joint_pilot <- demograph %>%
   dplyr::select("participant","S1701_C03_001E","S1903_C03_001E") %>%
@@ -720,33 +711,40 @@ Poverty, a complex and multifaceted phenomenon, extends beyond mere monetary dep
 #| label: fig-pcascree
 #| fig-cap: "Scree plot illustrating the explained variance of the principal components." 
 
-# PCA
+library(sinkr)
+# Interpolating missing gaps using DINEOF
 qualtrics[,c(55:141)] <- sapply(qualtrics[,c(55:141)],as.numeric)
 qualtrics.prepca <- 
   qualtrics[,c(55:141)][,(apply(qualtrics[,c(55:141)], 2, var, na.rm=TRUE) != 0) &
-                          !is.na(apply(qualtrics[,c(55:141)], 2, var, na.rm=TRUE))]
-qualtrics.prepca <- qualtrics.prepca %>%
-  add_column(PROLIFIC_PID = qualtrics$PROLIFIC_PID)
-qualtrics.prepca <- na.omit(qualtrics.prepca[!is.na(qualtrics.prepca$PROLIFIC_PID),])
-qualtrics.pca <- prcomp(qualtrics.prepca[,-c(48)], center = TRUE, scale = TRUE)
+                          !is.na(apply(qualtrics[,c(55:141)], 2, var, na.rm=TRUE))] %>%
+  # Adding PROLIFIC_PID column and filtering
+  add_column(PROLIFIC_PID = qualtrics$PROLIFIC_PID) %>%
+  # filter(!is.na(PROLIFIC_PID)) %>%
+  filter(rowSums(is.na(.)) < (ncol(.) - 1)) # Exclude PROLIFIC_PID column
+interpolated_data <- dineof(qualtrics.prepca %>% select(!"PROLIFIC_PID") %>% as.matrix)
+  
+# Performing PCA
+qualtrics.pca <- prcomp(interpolated_data$Xa, center = TRUE, scale = TRUE)
+
 ### Scree plot
-fviz_eig(qualtrics.pca)
+fviz_eig(qualtrics.pca, geom = "line", main = "")
 # Results for Variables
 qualtrics.var <- get_pca_var(qualtrics.pca)
 # Results for individuals
 qualtrics.ind <- get_pca_ind(qualtrics.pca)
-deprivation <- as.data.frame(qualtrics.ind$coord[,c(1:2)])   # Coordinates
+deprivation <- as.data.frame(qualtrics.ind$coord[,c(1:3)])   # Coordinates
 deprivation$PROLIFIC_PID <- qualtrics.prepca$PROLIFIC_PID
 
-qualtrics <- qualtrics %>%
-  left_join(deprivation, by = "PROLIFIC_PID")
-
-qualtrics <- qualtrics %>%
-  select(PROLIFIC_PID, IPAddress, stai, income, education, age, Dim.1, Dim.2)
+joint_pilot <- joint_pilot %>%
+  left_join(deprivation, by = c("participant" = "PROLIFIC_PID")) %>%
+  select(participant, points, RT, round, block, i1, e1, i2, e2, u1, u2,
+         platform, education, income, stai, male, age, high_income, high_anxiety,
+         left_choice, right_choice, split, huli, luhi, Optimal, poverty_zip,
+         median_income_zip, Dim.1, Dim.2, Dim.3)
 
 ```
 
-The questions, detailed in @sec-questionnaires, were crafted to explore physical, mental, and monetary deprivation. The responses underwent PCA, resulting in a data matrix of 87 variables, each representing a distinct deprivation aspect. @fig-pcascree shows a Scree plot, a graphical representation of the eigenvalues, which guided the selection of the top two components, together explaining 30.08% of the total variance (Eigenvalues: 20.36 and 9.72).
+The questions, detailed in @sec-questionnaires, were crafted to explore physical, mental, and monetary deprivation. The responses underwent PCA, resulting in a data matrix of 87 variables, each representing a distinct deprivation aspect. @fig-pcascree shows a Scree plot, a graphical representation of the eigenvalues, which guided the selection of the top two components, together explaining 30.08% of the total variance.
 
 ##### Dimension 1: Depression
 
@@ -777,11 +775,6 @@ The second principal component, labeled "Concern for Mental Health," explained 9
 
 Interestingly, this dimension reflects a growing awareness and concern for mental health, a trend observed in previous studies (Patel et al., 2018).
 
-```{r data for pcacorrelations}
-#| eval: false
-write_csv(qualtrics, file = "data/Pilot/qualtrics.csv")
-```
-
 ```{r}
 #| label: fig-pcacorrelations
 #| layout-ncol: 2
@@ -803,7 +796,7 @@ create_plot <- function(x_var, y_var,
                   ifelse(spearman_cor$p.value < 0.1, "†", ""))))
   correlation_text <- paste("r(", length(na.omit(y_var)), ") =",
                             rd(spearman_cor$estimate, digits = 2), significance)
-  ggplot(qualtrics, aes(x = x_var, y = y_var)) +
+  ggplot(pca_plot_pilot, aes(x = x_var, y = y_var)) +
     geom_point(color = "steelblue", shape = 16, size = 3, fill = "white") +
     geom_smooth(method = "loess", se = TRUE, color = "red") +
     labs(x = x_label, y = y_label) +
@@ -828,13 +821,19 @@ income_labels <- c("Less than $10,000", "$10,000 to $19,999", "$20,000 to $39,99
                    "$100,000 to $149,999", "$150,000 or more")
 
 # Create plots
-create_plot(qualtrics$income, qualtrics$Dim.1, "Income", "Component 1",
+pca_plot_pilot <- joint_pilot %>%
+  mutate(income = as.numeric(income),
+         stai = as.numeric(stai)) %>%
+  group_by(participant) %>%
+  summarise(income = mean(income), stai = mean(stai), 
+            Dim.1 = mean(Dim.1), Dim.2 = mean(Dim.2))
+create_plot(pca_plot_pilot$income, pca_plot_pilot$Dim.1, "Income", "Component 1",
             income_breaks, income_labels, 4, -6, 45)
-create_plot(qualtrics$income, qualtrics$Dim.2, "Income", "Component 2",
+create_plot(pca_plot_pilot$income, pca_plot_pilot$Dim.2, "Income", "Component 2",
             income_breaks, income_labels, 4, -4, 45)
-create_plot(qualtrics$stai, qualtrics$Dim.1, "State Anxiety", "Component 1",
+create_plot(pca_plot_pilot$stai, pca_plot_pilot$Dim.1, "State Anxiety", "Component 1",
             waiver(), waiver(), 30, -4.5, 0)
-create_plot(qualtrics$stai, qualtrics$Dim.2, "State Anxiety", "Component 2",
+create_plot(pca_plot_pilot$stai, pca_plot_pilot$Dim.2, "State Anxiety", "Component 2",
             waiver(), waiver(), 30, -4.5, 0)
 
 ```
@@ -849,19 +848,19 @@ The dataset for our pilot experiment encompassed multiple choice variables, such
 
 ```{r data for totalpoints}
 #| eval: false
-write_csv(joint_pilot, file = "data/Pilot/joint_pilot.csv")
+write_csv(joint_pilot, file = "data/Pilot/df.csv")
 ```
 
 ```{r}
 #| label: task performance data prep
 
 joint_pilot <- joint_pilot %>%
-  mutate(chosen_i = ifelse(choice == "L", i1, i2) - 1,
-         chosen_e = ifelse(choice == "L", e1, e2) - 1,
-         chosen_u = ifelse(choice == "L", u1, u2) - 1,
-         not_chosen_i = ifelse(choice == "L", i2, i1) - 1,
-         not_chosen_e = ifelse(choice == "L", e2, e1) - 1,
-         not_chosen_u = ifelse(choice == "L", u2, u1) - 1)
+  mutate(chosen_i = if_else(left_choice, i1, i2) - 1,
+         chosen_e = if_else(left_choice, e1, e2) - 1,
+         chosen_u = if_else(left_choice, u1, u2) - 1,
+         not_chosen_i = if_else(left_choice, i2, i1) - 1,
+         not_chosen_e = if_else(left_choice, e2, e1) - 1,
+         not_chosen_u = if_else(left_choice, u2, u1) - 1)
 
 # Calculate total points per participant
 points_per_participant <- joint_pilot %>%
@@ -904,25 +903,20 @@ We also included demographic variables and participant characteristics (STAI sco
 
 The model accounted for approximately `r round(summary(regression_model)$r.squared*100, 2)`\% of the variance in total points (Adjusted R-squared = `r round(summary(regression_model)$adj.r.squared, 3)`), with an overall significant model fit (F(6,68) = 2.877, p \< .05).
 
-```{r, results='asis'}
+```{r}
 #| label: tbl-totalpoints
 #| tbl-cap: "Regression analysis of total points on participants' choice behavior and demographic variables"
 #| tbl-subcap: "The predictors include the percentage of choices where Important, Hard, and Urgent tasks were chosen, participants' STAI score, income level (High vs. Low), and the platform on which the experiment was conducted (Prolific vs. Mturk)."
 
-stargazer(regression_model, reduced_model, 
-          type = "latex", 
-          header = FALSE, 
-          align = TRUE,
-          covariate.labels = c("Percentage of Important task chosen",
-                               "Percentage of Hard task chosen",
-                               "Percentage of Urgent task chosen",
-                               "STAI Score",
-                               "Low Income",
-                               "Platform: Prolific (vs. Mturk)"),
-          dep.var.labels = c("Total Points"),
-          star.cutoffs = c(.05, .01, .001), 
-          star.char = c("*", "**", "***"),
-          column.sep.width = "10pt")
+knitreg(list(reduced_model, regression_model),
+       custom.coef.map = list("perc_important_chosen" = "Percentage of Important task chosen",
+                              "perc_effort_chosen" = "Percentage of Hard task chosen",
+                              "perc_urgent_chosen" = "Percentage of Urgent task chosen",
+                              "stai" = "Anxiety Score",
+                              "high_income.L" = "Low Income",
+                              "platformProlific" = "Platform: Prolific (vs. Mturk)"),
+       stars = c(0.05, 0.01, 0.001),
+       custom.header = list("Total Points" = 1:2))
 
 ```
 
@@ -950,7 +944,7 @@ joint_pilot %>%
          alpha = 0.7) + 
   geom_col(position = "dodge") +
   scale_fill_brewer() +
-  labs(x = NULL, y = NULL) +
+  labs(x = "Choice Proportion", y = NULL) +
   theme_minimal() +
   theme(legend.position = "bottom",
         legend.title = element_blank()) +
@@ -1049,79 +1043,94 @@ Individuals in the low income groups and in the high anxiety groups chose urgent
 
 2.  Multiple regression models to test the same hypotheses with different measures of income.
 
-```{r data for urgencypoverty}
-two_options <- joint_pilot %>%
-  filter(!is.na(participant), !is.na(round)) %>%
-  filter(!is.na(chosen_i), !is.na(chosen_e),
-         !is.na(not_chosen_i), !is.na(not_chosen_e), !is.na(not_chosen_u)) %>%
-  mutate(income = as.numeric(income),
-         logRT = log(as.numeric(RT))) %>%
-  filter(logRT != Inf & logRT != -Inf)
-
-# write_csv(two_options, file = "data/Pilot/two_options.csv")
-```
-
-```{r, results='asis'}
+```{r}
 #| label: tbl-urgencypoverty
 #| tbl-cap: "Urgency Bias Regression Models"
 #| tbl-subcap: "Controls include age, education, points, the effect of chosen and not chosen tasks, and round. Models explore the interaction between dimensions, income, ZIP poverty level, and median ZIP income."
 
-pglm(formula = chosen_u ~ Dim.1*Dim.2 +
-                          age + education + points +
-                          chosen_i + chosen_e + not_chosen_i + not_chosen_e + not_chosen_u,
-     data = two_options,
-     effect = "twoways",
-     index = c("participant", "round"),
-     model = "random",
-     family = binomial('logit')) -> urg_bias_pca
+two_options <- joint_pilot %>%
+  filter(!is.na(participant), !is.na(round), platform != "MTurk") %>%
+  mutate(income = as.numeric(income),
+         logRT = log(as.numeric(RT)),
+         platform = factor(platform)) %>%
+  filter(logRT != Inf & logRT != -Inf) %>%
+  group_by(participant, block) %>%
+  mutate(max_round_in_block = max(round)) %>% ungroup() %>%
+  group_by(participant) %>% arrange(block) %>%
+  mutate(first_block_rounds = first(max_round_in_block),
+         round = round + first_block_rounds * (block - 1)) %>% # Only works for 1 or 2 rounds
+  select(-max_round_in_block, -first_block_rounds)
+two_options <- pdata.frame(two_options, index = c("participant", "round"))
 
-pglm(formula = chosen_u ~ income*stai +
-                          age + education + points +
-                          chosen_i + chosen_e + not_chosen_i + not_chosen_e + not_chosen_u,
-     data = two_options,
-     effect = "twoways",
-     index = c("participant", "round"),
-     model = "random",
-     family = binomial('logit')) -> urg_bias_income
+# Function to fit the model
+fit_model <- function(formula, data) {
+  pglm(formula = formula,
+       data = data,
+       effect = "twoways",
+       family = binomial('logit'),
+       model = "random")
+}
+# Function to calculate observations
+get_gof_rows <- function(model) {
+  obs_trials <- model$model %>%
+    group_by(pick(2:5)) %>%
+    summarise(trials = n()) %>% ungroup() %>%
+    summarise(max = max(trials), min = min(trials), mean = mean(trials))
+   obs_participants <- model$model %>%
+    group_by(pick(2:5)) %>%
+    mutate(id = row_number()) %>% ungroup() %>%
+    summarise(N = max(id))
+  Participants <- obs_participants$N
+  Trials <- paste0(obs_trials$min, "-", obs_trials$max, " (M = ", round(obs_trials$mean,1),")")
+  BIC <- AIC(model, k = log(nrow(model$model)))
+  return(list(Participants = Participants, Trials = Trials, BIC = BIC))
+}
 
-pglm(formula = chosen_u ~ poverty_zip*stai +
-                          age + education + points +
-                          chosen_i + chosen_e + not_chosen_i + not_chosen_e + not_chosen_u,
-     data = two_options,
-     effect = "twoways",
-     index = c("participant", "round"),
-     model = "random",
-     family = binomial('logit')) -> urg_bias_zipdeprivation
+# Define formulas
+formulas <- list(
+  chosen_u ~ Dim.1*Dim.2 + age + male + points +
+    chosen_i + chosen_e + not_chosen_i + not_chosen_e + not_chosen_u,
+  
+  chosen_u ~ income*stai + age + male + points +
+    chosen_i + chosen_e + not_chosen_i + not_chosen_e + not_chosen_u,
+  
+  chosen_u ~ poverty_zip*stai + age + male + points +
+    chosen_i + chosen_e + not_chosen_i + not_chosen_e + not_chosen_u,
+  
+  chosen_u ~ median_income_zip*stai + age + male + points +
+    chosen_i + chosen_e + not_chosen_i + not_chosen_e + not_chosen_u
+)
 
-pglm(formula = chosen_u ~ median_income_zip*stai +
-                          age + education + points +
-                          chosen_i + chosen_e + not_chosen_i + not_chosen_e + not_chosen_u,
-     data = two_options,
-     effect = "twoways",
-     index = c("participant", "round"),
-     model = "random",
-     family = binomial('logit')) -> urg_bias_zipincome
+# Fit models
+models <- lapply(formulas, fit_model, data = two_options)
+
+# Generate the table
+gof_list <- lapply(models, get_gof_rows)
+final_gof_list <- list(
+  Participants = sapply(gof_list, `[[`, "Participants"),
+  Trials = sapply(gof_list, `[[`, "Trials"),
+  BIC = sapply(gof_list, `[[`, "BIC")
+)
 
 # Define custom coefficient names
-custom_coef <- list("Dim.1" = "Dimension 1",
-                    "Dim.2" = "Dimension 2",
+custom_coef <- list("Dim.1" = "PC 1",
+                    "Dim.2" = "PC 2",
                     "income" = "Income",
                     "stai" = "Anxiety",
                     "poverty_zip" = "ZIP Poverty Level",
-                    "median_income_zip" = "Median ZIP Income")
+                    "median_income_zip" = "ZIP Median Income",
+                    "income:stai" = "Anxiety Interaction",
+                    "poverty_zip:stai" = "Anxiety Interaction",
+                    "median_income_zip:stai" = "Anxiety Interaction")
 
-# Create the table
-texreg(list(urg_bias_pca, urg_bias_income, urg_bias_zipdeprivation, urg_bias_zipincome),
-       stars = c(0.001, 0.01, 0.05, 0.1),
-       custom.coef.map = custom_coef)
+knitreg(lapply(models, function(x) {texreg::extract(x, include.aic = FALSE, include.loglik = FALSE)}),
+        stars = c(0.001, 0.01, 0.05, 0.1),
+        custom.coef.map = custom_coef,
+        custom.gof.rows = final_gof_list)
 
 ```
 
 It seems that when controlling for Dim 1 and 2, some effects become significant. Multicollinearity might be a problem, although correlations between STAI and PCA components are not higher than 0.6 (see correlation plots above). These results might be a result of a separation between State and Trait Anxiety. Although we only included the State questions of STAI, state and trait scores are likely correlated. PCA dimensions 1 and 2 may control for this confounding effect.
-
-We review the Key Results from the first pages: urgent choices do seem to be above 50% for key groups, but the differences-in-differences across income and anxiety levels are not significant.
-
-Again, people might not mind leaving the High Importance task undone. This is what some friends have called the "insurance ice cream." That is, if I leave this High Importance task in my queue, I can use it when I get a task that is High Effort but Low Urgency.
 
 ### Reaction Time
 
@@ -1129,41 +1138,73 @@ Again, people might not mind leaving the High Importance task undone. This is wh
 #| label: tbl-reactiontime
 #| tbl-cap: "Regression analysis of reaction time (RT) on participants' PCs and anxiety measures."
 
-plm(formula = logRT ~ Dim.1*Dim.2 +
-                      age + education + points +
-                      chosen_i + chosen_e + chosen_u +
-                      not_chosen_i + not_chosen_e + not_chosen_u,
-     data = two_options,
-     effect = "twoways",
-     index = c("participant", "round"),
-     model = "random") -> rt_bias_pca
+# Function to fit the model
+fit_model <- function(formula, data) {
+  pglm(formula = formula,
+       data = data,
+       effect = "twoways",
+       family = gaussian,
+       model = "random")
+}
 
-plm(formula = logRT ~ income*stai +
-                      age + education + points +
-                      chosen_i + chosen_e + chosen_u +
-                      not_chosen_i + not_chosen_e + not_chosen_u,
-     data = two_options,
-     effect = "twoways",
-     index = c("participant", "round"),
-     model = "random") -> rt_bias_income
+# Function to calculate observations
+get_gof_rows <- function(model) {
+  obs_trials <- model$model %>%
+    group_by(pick(2:5)) %>%
+    summarise(trials = n()) %>% ungroup() %>%
+    summarise(max = max(trials), min = min(trials), mean = mean(trials))
+   obs_participants <- model$model %>%
+    group_by(pick(2:5)) %>%
+    mutate(id = row_number()) %>% ungroup() %>%
+    summarise(N = max(id))
+  Participants <- obs_participants$N
+  Trials <- paste0(obs_trials$min, "-", obs_trials$max, " (M = ", round(obs_trials$mean,1),")")
+  BIC <- AIC(model, k = log(nrow(model$model)))
+  return(list(Participants = Participants, Trials = Trials, BIC = BIC))
+}
 
-plm(formula = logRT ~ poverty_zip*stai +
-                      age + education + points +
-                      chosen_i + chosen_e + chosen_u +
-                      not_chosen_i + not_chosen_e + not_chosen_u,
-     data = two_options,
-     effect = "twoways",
-     index = c("participant", "round"),
-     model = "random") -> rt_bias_zipdeprivation
+# Define formulas
+formulas <- list(
+  logRT ~ Dim.1*Dim.2 + age + male + points +
+    chosen_i + chosen_e + chosen_u + not_chosen_i + not_chosen_e + not_chosen_u,
+  
+  logRT ~ income*stai + age + male + points +
+    chosen_i + chosen_e + chosen_u + not_chosen_i + not_chosen_e + not_chosen_u,
+  
+  logRT ~ poverty_zip*stai + age + male + points +
+    chosen_i + chosen_e + chosen_u + not_chosen_i + not_chosen_e + not_chosen_u,
+  
+  logRT ~ median_income_zip*stai + age + male + points +
+    chosen_i + chosen_e + chosen_u + not_chosen_i + not_chosen_e + not_chosen_u
+)
 
-plm(formula = logRT ~ median_income_zip*stai +
-                      age + education + points +
-                      chosen_i + chosen_e + chosen_u +
-                      not_chosen_i + not_chosen_e + not_chosen_u,
-     data = two_options,
-     effect = "twoways",
-     index = c("participant", "round"),
-     model = "random") -> rt_bias_zipincome
+# Fit models
+models <- lapply(formulas, fit_model, data = two_options)
+
+# Generate the table
+gof_list <- lapply(models, get_gof_rows)
+final_gof_list <- list(
+  Participants = sapply(gof_list, `[[`, "Participants"),
+  Trials = sapply(gof_list, `[[`, "Trials"),
+  BIC = sapply(gof_list, `[[`, "BIC")
+)
+
+# Define custom coefficient names
+custom_coef <- list("Dim.1" = "PC 1",
+                    "Dim.2" = "PC 2",
+                    "income" = "Income",
+                    "stai" = "Anxiety",
+                    "poverty_zip" = "ZIP Poverty Level",
+                    "median_income_zip" = "ZIP Median Income",
+                    "income:stai" = "Anxiety Interaction",
+                    "poverty_zip:stai" = "Anxiety Interaction",
+                    "median_income_zip:stai" = "Anxiety Interaction")
+
+knitreg(lapply(models, function(x) {texreg::extract(x, include.aic = FALSE, include.loglik = FALSE)}),
+        stars = c(0.001, 0.01, 0.05, 0.1),
+        custom.coef.map = custom_coef,
+        custom.gof.rows = final_gof_list)
+
 ```
 
 ### Accuracy
@@ -1182,26 +1223,6 @@ ggplot(dat, aes(x = dens, fill = lines)) +
 
 This score is calculated by first estimating the cost parameters for each participant and then using them with backwards induction to discover the optimal choice at each presented state.
 
-```{r data for accuracy}
-write_csv(Accuracy, file = "data/Pilot/Accuracy.csv")
-```
-
-```{r}
-#| label: fig-accuracy
-#| fig-cap: "Histogram of Accuracy Proportions"
-
-hist(Accuracy$Accuracy, breaks=10)
-
-```
-
-@fig-accuracy highlights how participants typically make optimal decisions (when given 'challenging' tasks) with a probability in between 0.5 and 0.6. This is generally what we expect to observe.
-
-#### Accuracy, Anxiety, and Income
-
-1.  Accuracy in trade-off decisions as a function of income and anxiety
-
-Finally, we compare for each participant, how many of their choices are identical to a model that observed the full horizon for the Markov decision process. Each participant is a dot, y axis is the percentage of correct choices in the experiment while x axis is the STAI (anxiety measure). Generally the results are very similar to figure 1.5.
-
 ```{r}
 #| label: fig-accuracy-results
 #| fig-cap: "Participant Accuracy by Income and Anxiety"
@@ -1210,21 +1231,52 @@ Finally, we compare for each participant, how many of their choices are identica
 #|   - "Prolific, Anxiety"
 #| layout-ncol: 2
 #| column: page-right
-ggplot(Accuracy, aes(x=income, y=Accuracy)) +
-  geom_point() +
-  stat_smooth(method=loess) +
-  geom_label(x=6, y=.8,
-             label=paste("Correlation:",
-                         round(cor(Accuracy$Accuracy, Accuracy$income), 2)))
 
-ggplot(Accuracy, aes(x=stai, y=Accuracy)) +
-  geom_point() +
-  stat_smooth(method=loess) +
-  geom_label(x=30, y=.8,
-             label=paste("Correlation:",
-                         round(cor(Accuracy$stai, Accuracy$Accuracy), 2)))
+# Create a custom theme for enhanced aesthetics
+custom_theme <- theme_minimal() +
+  theme(plot.title = element_text(size = 18, face = "bold", hjust = 0.5),
+        plot.subtitle = element_text(size = 14, face = "italic", hjust = 0.5),
+        axis.title.x = element_text(size = 12, face = "bold"),
+        axis.title.y = element_text(size = 12, face = "bold"),
+        axis.text = element_text(size = 10),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        panel.border = element_blank(),
+        legend.position = "none")
+
+# Plot no 1 : Participant Accuracy by Income
+ggplot(Accuracy, aes(x = income, y = Accuracy)) +
+  geom_point(color = "steelblue", size = 3) +
+  stat_smooth(method = loess, color = "red", size = 1) +
+  geom_label(x = 6, y = 0.8,
+             label = paste("Correlation:",
+                           round(cor(Accuracy$Accuracy, Accuracy$income), 2)),
+             fill = "white", color = "black", label.padding = unit(0.35, "lines")) +
+  labs(x = "Income", y = "Accuracy",
+       title = "Participant Accuracy by Income",
+       subtitle = "Prolific, Income") +
+  custom_theme
+
+# Plot no 2: Participant Accuracy by STAI (State-Trait Anxiety Inventory)
+ggplot(Accuracy, aes(x = stai, y = Accuracy)) +
+  geom_point(color = "steelblue", size = 3) +
+  stat_smooth(method = loess, color = "red", size = 1) +
+  geom_label(x = 30, y = 0.8,
+             label = paste("Correlation:",
+                           round(cor(Accuracy$stai, Accuracy$Accuracy), 2)),
+             fill = "white", color = "black", label.padding = unit(0.35, "lines")) +
+  labs(x = "SAI (State Anxiety Inventory)", y = "Accuracy",
+       title = "Participant Accuracy by State Anxiety",
+       subtitle = "Prolific, Anxiety") +
+  custom_theme
 
 ```
+
+#### Accuracy, Anxiety, and Income
+
+1.  Accuracy in trade-off decisions as a function of income and anxiety
+
+Finally, we compare for each participant, how many of their choices are identical to a model that observed the full horizon for the Markov decision process. Each participant is a dot, y axis is the percentage of correct choices in the experiment while x axis is the STAI (anxiety measure). Generally the results are very similar to figure 1.5.
 
 It appears that Accuracy does not vary across income and anxiety levels with these measures. Some possibilities of this fact might include that, since time discounting here is virtually 0, leaving the important task behind will not affect participants as much (depending, of course, of the estimated cost parameters).
 
@@ -1966,63 +2018,69 @@ In all models, we account for a variety of control variables, including the tota
 #| tbl-cap: "Urgency Bias Regression Models"
 #| tbl-subcap: "Controls include total approvals, sex, age, the effect of chosen and not chosen tasks, round left true, and sigma."
 
-# Random effects logistic regression with interaction term between FA dimensions
-pglm(formula = chosen_u ~ PA1 + PA2 + PA3 +
-                          Total_approvals + Sex + Age +
-                          chosen_i + chosen_e + RoundLeft +
-                          not_chosen_i + not_chosen_e + not_chosen_u,
-     data = df_combined,
-     effect = "twoways",
-     family = binomial('logit'),
-     model = "random",
-     index = c("participant", "round", "block")) -> urg_bias_PA
+# df_combined <- read_csv("data/Exp1/df.csv")
+df_combined <- df_combined %>%
+  mutate(round = round + 40 * (block - 1),
+         complete = if_else(is.na(SAI_post), 0, 1),
+         zip_income_log = log1p(zip_income))
+df_combined <- pdata.frame(df_combined, index = c("participant", "round"))
 
-pglm(formula = chosen_u ~ SAI_pre +
-                          Total_approvals + Sex + Age +
-                          chosen_i + chosen_e + RoundLeft + block +
-                          not_chosen_i + not_chosen_e + not_chosen_u,
-     data = df_combined,
-     effect = "twoways",
-     index = c("participant", "round", "block"),
-     model = "random",
-     family = binomial('logit')) -> urg_bias_SAI_pre
+# Function to fit the model
+fit_model <- function(formula, data) {
+  pglm(formula = formula,
+       data = data,
+       effect = "twoways",
+       family = binomial('logit'),
+       model = "random")
+}
+# Function to calculate observations
+get_gof_rows <- function(model) {
+  values <- model$model %>%
+    group_by(pick(2, Total_approvals)) %>%
+    summarise(blocks = max(block), total = n(), trials = n() / max(block)) %>%
+    ungroup() %>%
+    summarise(N = n(), max = max(trials), min = min(trials), mean = mean(trials))
+  Participants <- values$N
+  Trials <- paste0(values$min, "-", values$max, " (M = ", round(values$mean,1),")")
+  BIC <- AIC(model, k = log(nrow(model$model)))
+  return(list(Participants = Participants, Trials = Trials, BIC = BIC))
+}
 
-pglm(formula = chosen_u ~ SAI_post +
-                          Total_approvals + Sex + Age +
-                          chosen_i + chosen_e + RoundLeft + block +
-                          not_chosen_i + not_chosen_e + not_chosen_u,
-     data = df_combined,
-     effect = "twoways",
-     index = c("participant", "round", "block"),
-     model = "random",
-     family = binomial('logit')) -> urg_bias_SAI_post
-
-pglm(formula = chosen_u ~ zip_poverty_log +
-                          Total_approvals + Sex + Age +
-                          chosen_i + chosen_e + RoundLeft + block +
-                          not_chosen_i + not_chosen_e + not_chosen_u,
-     data = df_combined,
-     effect = "twoways",
-     index = c("participant", "round", "block"),
-     model = "random",
-     family = binomial('logit')) -> urg_bias_ZIP
+# Define formulas
+formulas <- list(
+  chosen_u ~ PA1 + PA2 + PA3 + block + complete +
+    Total_approvals + RoundLeft +
+    chosen_i + chosen_e + not_chosen_i + not_chosen_e + not_chosen_u,
+  chosen_u ~ zip_income_log + block + complete +
+    Total_approvals + RoundLeft +
+    chosen_i + chosen_e + not_chosen_i + not_chosen_e + not_chosen_u,
+  chosen_u ~ zip_poverty_log + block + complete +
+    Total_approvals + RoundLeft +
+    chosen_i + chosen_e + not_chosen_i + not_chosen_e + not_chosen_u,
+  chosen_u ~ SAI_pre + block + complete +
+    Total_approvals + RoundLeft +
+    chosen_i + chosen_e + not_chosen_i + not_chosen_e + not_chosen_u
+)
+# Fit models
+models <- lapply(formulas, fit_model, data = df_combined)
 
 # Generate the table
-## Specify the names for the variables
-custom_coef <- list("PA1" = "PA1 (Food Stability)",
-                 "PA2" = "PA2 (Job Stability)",
-                 "PA3" = "PA3 (Housing Stability)",
-                 "SAI_pre" = "Anxiety Pre",
-                 "SAI_post" = "Anxiety Post",
-                 "zip_poverty_log" = "ZIP poverty level")
-
-## Create the table
-texreg(list(urg_bias_PA,
-            urg_bias_SAI_pre,
-            urg_bias_SAI_post,
-            urg_bias_ZIP),
-       stars = c(0.001, 0.01, 0.05, 0.1),
-       custom.coef.map = custom_coef)
+gof_list <- lapply(models, get_gof_rows)
+final_gof_list <- list(
+  Participants = sapply(gof_list, `[[`, "Participants"),
+  Trials = sapply(gof_list, `[[`, "Trials"),
+  BIC = sapply(gof_list, `[[`, "BIC")
+)
+custom_coef <- list("PA1" = "Food Stability",
+                    "PA2" = "Job Stability",
+                    "PA3" = "Housing Stability",
+                    "zip_income_log" = "ZIP Median Income",
+                    "zip_poverty_log" = "ZIP poverty level",
+                    "SAI_pre" = "Anxiety")
+knitreg(lapply(models, function(x) {extract(x, include.aic = FALSE, include.loglik = FALSE)}),
+        stars = c(0.001, 0.01, 0.05, 0.1),
+        custom.coef.map = custom_coef,
+        custom.gof.rows = final_gof_list)
 
 ```
 
@@ -2053,8 +2111,6 @@ write_csv(Accuracy, file = "data/Pilot/Accuracy.csv")
 hist(Accuracy$Accuracy, breaks=10)
 
 ```
-
-@fig-accuracy highlights how participants typically make optimal decisions (when given 'challenging' tasks) with a probability in between 0.5 and 0.6. This is generally what we expect to observe.
 
 #### Accuracy, Anxiety, and Income
 
@@ -2139,6 +2195,10 @@ Our findings underscore the critical importance of prioritization strategies in 
 
 The trade-off decision analysis reveals a nuanced relationship between urgency, importance, income, and anxiety. The observed preference for urgent tasks among low-income and high-anxiety individuals adds a quantitative dimension to existing literature, offering insights into the underlying mechanisms that drive decision-making. The integration of graphical representations and statistical tests strengthens the validity of these findings, contributing to a deeper understanding of human behavior in task prioritization.
 
+We review the Key Results from the first pages: urgent choices do seem to be above 50% for key groups, but the differences-in-differences across income and anxiety levels are not significant.
+
+Again, people might not mind leaving the High Importance task undone. This is what some friends have called the "insurance ice cream." That is, if I leave this High Importance task in my queue, I can use it when I get a task that is High Effort but Low Urgency. Using multiple regression models, controlling for various factors adds robustness to our findings. It sets the stage for future research to delve deeper into the underlying mechanisms that drive urgency bias. The potential multicollinearity and the non-significance of some variables also highlight the phenomenon's complexity, suggesting that further studies with larger sample sizes and more refined measures may be warranted to unravel the intricacies of urgency bias.
+
 ### Intergenerational Poverty
 
 People likely learn how to estimate transition probabilities from parents and peers. If people in this support network are not themselves proficient in estimating, then the individual is left to their own devices. Further, affective states can be passed down generations (e.g., anxiety, stress, depression).
@@ -2174,6 +2234,25 @@ Revisit the experiment to address the range of urgent choices. One possibility i
 #### Flexible Queue Size
 
 ### Simulation
+
+## Population
+
+In Los Angeles, 18% of residents worry every day or almost every day about paying their bills, and 23% worry about job loss (Baldassare et al., 2021). This constant mindset of worry likely affects the livelihood of these citizens. In a recent PPIC survey, about "one in five Californians report that they or someone in their household has cut back on food (21%), put off seeing a doctor or purchasing medicine to save money (18%), been unable to pay a monthly bill (17%), or had difficulty paying the rent or mortgage (17%) in the last 12 months" (Baldassare et al., 2021).
+
+### Online Sample
+
+Pros and cons.
+
+### Homeless
+
+M: Look Sera's studies
+
+IRB: Justification
+
+### Other Low SES Cohorts
+
+M: Proposal
+
 
 ### Power Analysis
 
@@ -2275,25 +2354,9 @@ Stress has been suggested to increase perceived effort (e.g., the study will inv
 
 In our model, cost can include a subjective component. Instead of counting it as simply the number of clicks, we can assume that the agent may dread or fantasize about action $a$. As such, someone who likes the task might not be bothered by doing it so the cost may be very close to zero (or negative). And vice versa for someone who hates it. Similarly, we can account for substituting *subjective* probability for objective probability. That is, people might distort the actual probability of future events.
 
+
 ## Hypotheses
 
-## Population
-
-In Los Angeles, 18% of residents worry every day or almost every day about paying their bills, and 23% worry about job loss (Baldassare et al., 2021). This constant mindset of worry likely affects the livelihood of these citizens. In a recent PPIC survey, about "one in five Californians report that they or someone in their household has cut back on food (21%), put off seeing a doctor or purchasing medicine to save money (18%), been unable to pay a monthly bill (17%), or had difficulty paying the rent or mortgage (17%) in the last 12 months" (Baldassare et al., 2021).
-
-### Online Sample
-
-Pros and cons.
-
-### Homeless
-
-M: Look Sera's studies
-
-IRB: Justification
-
-### Other Low SES Cohorts
-
-M: Proposal
 
 # Conclusion
 
@@ -2309,7 +2372,7 @@ Further, with interevent times, we can calculate the burstiness and memory as a 
 #| label: fig-simmer-burstiness
 #| fig-cap: "Burstiness by Urgency Weight"
 
-urgency_burstiness_grid <- read_csv("data/Pilot/urgency-burstiness-grid.csv")
+urgency_burstiness_grid <- read_csv("Models/DES/urgency-burstiness-grid.csv")
 
 plt_bursty <-
   ggplot(urgency_burstiness_grid,
@@ -2326,7 +2389,7 @@ plt_bursty +
 
 ```
 
-@simmer-burstiness shows that the surviving tasks are indeed around the area of bursty phenomena as reported in the literature. However, there does not seem to be a relationship between urgency weighting and burstiness.
+@fig-simmer-burstiness shows that the surviving tasks are indeed around the area of bursty phenomena as reported in the literature. However, there does not seem to be a relationship between urgency weighting and burstiness.
 
 ## Fantasy and Dread Model
 
@@ -2358,7 +2421,6 @@ Example of Subjective Probabilities
 library(simmer)
 library(simmer.plot)
 library(latex2exp)
-#library(data.table)
 
 # Parameters
 lambda <- 5
@@ -2475,6 +2537,7 @@ burstiness <- data.frame(weights) %>%
   mutate(mu = unlist(mu_list)) %>%
   mutate(B = (sigma - mu) / (sigma + mu)) %>%
   mutate(M = unlist(memory))
+write_csv(burstiness, file = "Models/DES/urgency-burstiness-grid.csv")
 
 # Probability of Survival -------------------------------------------------
 prob_survival <- lapply(X = total,
@@ -2840,7 +2903,7 @@ ratios_grid <- matrix(ratios,
                                       cost2_grid))
 
 ### Export labels
-write.csv(ratios_grid,"./urgency-ratio-grid.csv")
+write.csv(ratios_grid,"./Models/pilot/pilot-simulation-grid.csv")
 
 ```
 
@@ -3195,6 +3258,20 @@ Prolific1_Stan_results <- sampling(object = my_model, data = model_data,
 
 ```
 
+## Principal Compoenent Analysis for Pilot Experiment
+
+```{r}
+#| label: fig-exp1-loadings
+#| fig-cap: "Heatmap of factor loadings for Experiment 1"
+#| fig-subcap: "Each row corresponds to a variable, and each column corresponds to a factor. The color of each cell indicates the loading of the variable on the factor, with red indicating high positive loadings, and white indicating negative loadings."
+
+# Extract the loadings
+loadings <- as.matrix(qualtrics.var)
+# Create the heatmap
+heatmap(loadings)
+
+```
+
 ## Factor Analysis for Experiment 1
 
 @fig-mice offers a visual representation of the imputation process. The intermingling of different imputation streams indicates a successful multiple imputation process, suggesting that the chains have converged. Additionally, we expect no visible trends in the later iterations, indicating that the imputations have reached a stable solution.
@@ -3231,6 +3308,130 @@ cor(df[c("PA1", "PA2", "PA3", "zip_income", "zip_poverty_log",
          "SAI_pre", "SAI_post", "TAI_post",
          "Total_approvals", "Age")],
     method = "spearman", use = "pairwise.complete.obs")
+
+```
+
+## Sensitivity Analyses
+
+### Pilot Urgency Regression
+
+```{r}
+
+two_options <- joint_pilot %>%
+  filter(!is.na(participant), !is.na(round)) %>%
+  mutate(income = as.numeric(income),
+         logRT = log(as.numeric(RT)),
+         platform = factor(platform)) %>%
+  filter(logRT != Inf & logRT != -Inf) %>%
+  group_by(participant, block) %>%
+  mutate(max_round_in_block = max(round)) %>% ungroup() %>%
+  group_by(participant) %>% arrange(block) %>%
+  mutate(first_block_rounds = first(max_round_in_block),
+         round = round + first_block_rounds * (block - 1)) %>% # Only works for 1 or 2 rounds
+  select(-max_round_in_block, -first_block_rounds)
+two_options <- pdata.frame(two_options, index = c("participant", "round"))
+
+formulas <- list(
+  chosen_u ~ Dim.1*Dim.2,
+  chosen_u ~ Dim.1*Dim.2 + age + male + points,
+  chosen_u ~ Dim.1*Dim.2 + age + male + points +
+    chosen_i + chosen_e + not_chosen_i + not_chosen_e + not_chosen_u,
+  chosen_u ~ age + male + points +
+    (Dim.1 + Dim.2)*(chosen_i + chosen_e + not_chosen_i + not_chosen_e + not_chosen_u),
+  
+  chosen_u ~ income*stai,
+  chosen_u ~ income*stai + age + male + points + platform,
+  chosen_u ~ income*stai + age + male + points + platform +
+    chosen_i + chosen_e + not_chosen_i + not_chosen_e + not_chosen_u,
+  chosen_u ~ age + male + points + platform +
+    (income + stai)*(chosen_i + chosen_e + not_chosen_i + not_chosen_e + not_chosen_u),
+  
+  chosen_u ~ poverty_zip*stai,
+  chosen_u ~ poverty_zip*stai + age + male + points,
+  chosen_u ~ poverty_zip*stai + age + male + points +
+    chosen_i + chosen_e + not_chosen_i + not_chosen_e + not_chosen_u,
+  chosen_u ~ age + male + points +
+    (poverty_zip + stai)*(chosen_i + chosen_e + not_chosen_i + not_chosen_e + not_chosen_u),
+  
+  chosen_u ~ median_income_zip*stai,
+  chosen_u ~ median_income_zip*stai + age + male + points,
+  chosen_u ~ median_income_zip*stai + age + male + points +
+    chosen_i + chosen_e + not_chosen_i + not_chosen_e + not_chosen_u,
+  chosen_u ~ age + male + points +
+    (median_income_zip + stai)*(chosen_i + chosen_e + not_chosen_i + not_chosen_e + not_chosen_u)
+)
+
+# Fit the models using your fit_model function
+models <- lapply(formulas, fit_model, data = two_options)
+
+# Initialize an empty data frame for results
+results_table <- data.frame(
+  Main_IV1 = character(),
+  BIC = numeric(),
+  Num_Variables = integer(),
+  Participants = integer(),
+  Trials = character(),
+  Demographic_Variables = character(),
+  Choice_Attributes = character(),
+  Interacted_With_Choice_Attributes = character(),
+  stringsAsFactors = FALSE
+)
+
+for (i in 1:length(models)) {
+  model <- models[[i]]
+  formula <- formulas[[i]]
+  bic <- AIC(model, k = log(nrow(model$model)))
+  num_variables <- length(all.vars(formula)) - 1 # Subtracting response variable
+  
+  # Check for types of variables
+  main_iv1 <- ifelse(any(grepl("Dim.1|Dim.2", deparse(formula))), "PCs 1 and 2", "")
+  main_iv1 <- ifelse(any(grepl("income", deparse(formula))), "Income and STAI", main_iv1)
+  main_iv1 <- ifelse(any(grepl("poverty_zip", deparse(formula))), "ZIP Poverty Level and STAI", main_iv1)
+  main_iv1 <- ifelse(any(grepl("median_income_zip", deparse(formula))), "ZIP Median Income and STAI", main_iv1)
+  
+  # Add to the results table
+  results_table <- rbind(results_table, data.frame(
+    Main_IV1 = main_iv1,
+    BIC = bic,
+    Num_Variables = num_variables,
+    Participants = final_gof_list$Participants[i],
+    Trials = final_gof_list$Trials[i],
+    Demographic_Variables = ifelse(any(grepl("age|male", deparse(formula))), "Yes", "No"),
+    Choice_Attributes = ifelse(any(grepl("chosen_i|chosen_e|not_chosen_i|not_chosen_e|not_chosen_u", deparse(formula))), "Yes", "No"),
+    Interacted_With_Choice_Attributes = ifelse(any(grepl("\\*\\(chosen_i", deparse(formula))), "Yes", "No"),
+    stringsAsFactors = FALSE
+  ))
+}
+
+# Define the row groups
+results_table$Row_Group <- rep(c("PCs 1 and 2",
+                                 "Income and STAI",
+                                 "ZIP Poverty Level and STAI",
+                                 "ZIP Median Income and STAI"), each = 4)
+# Convert logical columns to "Yes" and "No"
+results_table$Demographic_Variables <- ifelse(results_table$Demographic_Variables, "Yes", "No")
+results_table$Choice_Attributes <- ifelse(results_table$Choice_Attributes, "Yes", "No")
+results_table$Interacted_With_Choice_Attributes <- ifelse(results_table$Interacted_With_Choice_Attributes, "Yes", "No")
+
+gt_table <- results_table %>%
+  gt(rowname_col = NULL, groupname_col = "Row_Group") %>%
+  tab_header(
+    title = "Model Comparison",
+    subtitle = "Comparison of different models based on BIC, number of variables, and included attributes"
+  ) %>%
+  cols_label(
+    BIC = "BIC",
+    Num_Variables = "Regressors",
+    Participants = "Participants",
+    Trials = "Trials",
+    Demographic_Variables = "Demographic Variables",
+    Choice_Attributes = "Choice Attributes",
+    Interacted_With_Choice_Attributes = "Interacted with Attributes"
+  )
+
+# Print the table
+gt_table
+
 
 ```
 

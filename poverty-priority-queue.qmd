@@ -29,6 +29,7 @@ library(stargazer)
 library(texreg)
 library(gt)
 library(rstan)
+library(rhdf5)
 library(stringi)
 library(psych)
 library(pglm)
@@ -86,7 +87,7 @@ The Eisenhower Matrix (see @app-eisenhower for details), a simple tool for deter
 
 In this section, we present a novel decision-making model that underpins various real-life activities, from mundane daily choices to high-stakes strategic decisions. When individuals face multiple action options, they select the one that maximizes perceived value or utility. Our model integrates urgency, importance, and value, drawing on principles from decision theory, the Eisenhower matrix, and Markov Decision Processes (MDPs) (Puterman, 1994; Eisenhower, 1961).
 
-## **Conceptual Framework**
+## Conceptual Framework
 
 In our model, urgency refers to the time-sensitivity of a decision or the period until a choice is no longer viable. This concept captures the temporal aspect of decision-making, reflecting that opportunities for action often have a limited lifespan. For example, deciding to invest in a rapidly changing market or respond to a time-limited offer requires considering urgency. Importance is the value of a decision state, contingent on future states and transition probabilities. This concept captures the strategic aspect of decision-making, reflecting the reality that the consequences of a decision often depend on future events and conditions. For example, investing in education or training may be important because it affects future career opportunities and earning potential (Howard, 1960). Value is the present-discounted reward from choosing an action, incorporating the opportunity cost of a choice, which is the value of the best choice one must forego. This concept captures the economic aspect of decision-making, reflecting that resources such as time, money, and effort are limited and that choosing one action can often mean giving up the opportunity to choose another (Bellman, 1957). The optimal policy balances immediate rewards with future rewards, considering urgency, importance, and likelihood. It depends only on current, not past, states (Bellman, 1957).
 
@@ -375,7 +376,7 @@ V(s) &= \max\limits_{a}(r(s,a) + \gamma\sum\limits_{S}P(s,a, s')V(s'))\\
     R &= {r(HHU, HHV \times HHU) = 1 - c_H, …}\\
     V(s_{final}) &= \max\limits_{a}(r(s_{final}, a))
 \end{aligned}
-$$
+$$ {#eq-model}
 
 In @eq-model the agent calculates the value of state $s' \in S$ (which is the next state, i.e., next period). $i$ is the reward (in dollars) for completing a task, $c_i$ is the effort cost (estimated in dollar unites), and $r(a,s)$ is the net payoff of completing action $a$ at state $s$. $P$ is the probability of transitioning from state $s$ to another state $(s')$, given that our agents takes action $a$ in state $s$. $V(s')$ is the value of that new state. We subsequently sum these results over all the possible future states. Note we use $\gamma$ as our discount factor. In our normative model, we set the discounting factor to be 1, given the tasks are very close to each other in time. Note that this model only has two cost parameters $c=\{c_L, c_H\}$.
 
@@ -708,8 +709,8 @@ For a more detailed understanding of these measures, please refer to the ACS Sub
 Poverty, a complex and multifaceted phenomenon, extends beyond mere monetary deprivation, encompassing physical, mental, and emotional dimensions that intricately shape an individual's well-being (Sen, 1999). Due to this complexity, our study employs Principal Component Analysis (PCA) to distill a poverty construct from a series of questions probing various facets of deprivation. This multidimensional perspective on poverty illuminates the complex interplay between mental health, self-perception, and financial status, uncovering underlying patterns that resonate with broader socioeconomic trends and psychological insights.
 
 ```{r}
-#| label: fig-pcascree
-#| fig-cap: "Scree plot illustrating the explained variance of the principal components." 
+#| label: pcascree-code
+#| include: false
 
 library(sinkr)
 # Interpolating missing gaps using DINEOF
@@ -721,7 +722,13 @@ qualtrics.prepca <-
   add_column(PROLIFIC_PID = qualtrics$PROLIFIC_PID) %>%
   # filter(!is.na(PROLIFIC_PID)) %>%
   filter(rowSums(is.na(.)) < (ncol(.) - 1)) # Exclude PROLIFIC_PID column
-interpolated_data <- dineof(qualtrics.prepca %>% select(!"PROLIFIC_PID") %>% as.matrix)
+interpolated_data <- dineof(qualtrics.prepca %>%
+                              select(!"PROLIFIC_PID") %>% as.matrix)
+```
+
+```{r}
+#| label: fig-pcascree
+#| fig-cap: "Scree plot illustrating the explained variance of the principal components." 
   
 # Performing PCA
 qualtrics.pca <- prcomp(interpolated_data$Xa, center = TRUE, scale = TRUE)
@@ -903,12 +910,12 @@ We also included demographic variables and participant characteristics (STAI sco
 
 The model accounted for approximately `r round(summary(regression_model)$r.squared*100, 2)`\% of the variance in total points (Adjusted R-squared = `r round(summary(regression_model)$adj.r.squared, 3)`), with an overall significant model fit (F(6,68) = 2.877, p \< .05).
 
-```{r}
+```{r, results='asis'}
 #| label: tbl-totalpoints
 #| tbl-cap: "Regression analysis of total points on participants' choice behavior and demographic variables"
 #| tbl-subcap: "The predictors include the percentage of choices where Important, Hard, and Urgent tasks were chosen, participants' STAI score, income level (High vs. Low), and the platform on which the experiment was conducted (Prolific vs. Mturk)."
 
-knitreg(list(reduced_model, regression_model),
+texreg(list(reduced_model, regression_model),
        custom.coef.map = list("perc_important_chosen" = "Percentage of Important task chosen",
                               "perc_effort_chosen" = "Percentage of Hard task chosen",
                               "perc_urgent_chosen" = "Percentage of Urgent task chosen",
@@ -1043,7 +1050,7 @@ Individuals in the low income groups and in the high anxiety groups chose urgent
 
 2.  Multiple regression models to test the same hypotheses with different measures of income.
 
-```{r}
+```{r, results='asis'}
 #| label: tbl-urgencypoverty
 #| tbl-cap: "Urgency Bias Regression Models"
 #| tbl-subcap: "Controls include age, education, points, the effect of chosen and not chosen tasks, and round. Models explore the interaction between dimensions, income, ZIP poverty level, and median ZIP income."
@@ -1123,7 +1130,8 @@ custom_coef <- list("Dim.1" = "PC 1",
                     "poverty_zip:stai" = "Anxiety Interaction",
                     "median_income_zip:stai" = "Anxiety Interaction")
 
-knitreg(lapply(models, function(x) {texreg::extract(x, include.aic = FALSE, include.loglik = FALSE)}),
+texreg(lapply(models, function(x) {texreg::extract(x, include.aic = FALSE,
+                                                   include.loglik = FALSE)}),
         stars = c(0.001, 0.01, 0.05, 0.1),
         custom.coef.map = custom_coef,
         custom.gof.rows = final_gof_list)
@@ -1134,7 +1142,7 @@ It seems that when controlling for Dim 1 and 2, some effects become significant.
 
 ### Reaction Time
 
-```{r}
+```{r, results='asis'}
 #| label: tbl-reactiontime
 #| tbl-cap: "Regression analysis of reaction time (RT) on participants' PCs and anxiety measures."
 
@@ -1184,7 +1192,7 @@ custom_coef <- list("Dim.1" = "PC 1",
                     "poverty_zip:stai" = "Anxiety Interaction",
                     "median_income_zip:stai" = "Anxiety Interaction")
 
-knitreg(lapply(models, function(x) {texreg::extract(x, include.aic = FALSE, include.loglik = FALSE)}),
+texreg(lapply(models, function(x) {texreg::extract(x, include.aic = FALSE, include.loglik = FALSE)}),
         stars = c(0.001, 0.01, 0.05, 0.1),
         custom.coef.map = custom_coef,
         custom.gof.rows = final_gof_list)
@@ -1285,7 +1293,7 @@ It appears that Accuracy does not vary across income and anxiety levels with the
 
 #### General Linear Models of Accuracy
 
-```{r}
+```{r, results='asis'}
 #| label: tbl-accuracy
 #| tbl-cap: "Regression analysis of accuracy on participants' choice behavior and demographic variables"
 #| tbl-subcap: "The predictors include income, PCA components, ZIP deprivation, ZIP income, age, education, points, and task attributes."
@@ -1361,7 +1369,7 @@ custom_coef <- list("Dim.1" = "PC 1",
                     "poverty_zip:stai" = "Anxiety Interaction",
                     "median_income_zip:stai" = "Anxiety Interaction")
 
-knitreg(lapply(accuracy_models, function(x) {
+texreg(lapply(accuracy_models, function(x) {
   texreg::extract(x, include.aic = FALSE, include.loglik = FALSE)
   }),
   custom.model.names = c("(1)","(2)","(3)","(4)"),
@@ -2054,7 +2062,7 @@ Model 4 probes the impact of area-level poverty (as measured by ZIP poverty leve
 
 In all models, we account for a variety of control variables, including the total number of Prolific approvals (as a proxy for platform experience), gender, age, the perceived importance and effort of the chosen task, and the perceived urgency, importance, and effort of the unchosen task. A consistent pattern emerges across all models, accentuating the role of task attributes in shaping urgency bias. This observation underscores the dynamic nature of urgency bias, suggesting that it can change with the inherent characteristics of tasks in the queue, such as their perceived importance and urgency.
 
-```{r}
+```{r, results='asis'}
 #| label: tbl-exp1-urgencypoverty
 #| tbl-cap: "Urgency Bias Regression Models"
 #| tbl-subcap: "Controls include total approvals, sex, age, the effect of chosen and not chosen tasks, round left true, and sigma."
@@ -2118,7 +2126,7 @@ custom_coef <- list("PA1" = "Food Stability",
                     "zip_income_log" = "ZIP Median Income",
                     "zip_poverty_log" = "ZIP poverty level",
                     "SAI_pre" = "Anxiety")
-knitreg(lapply(models, function(x) {
+texreg(lapply(models, function(x) {
   texreg::extract(x, include.aic = FALSE, include.loglik = FALSE)
   }),
   stars = c(0.001, 0.01, 0.05, 0.1),
@@ -2205,18 +2213,19 @@ participant_mapping <- data.frame(participant = participant_ids,
 
 ```
 
-```{r, eval=FALSE}
+```{r}
 #| label: fig-exp1costs
-#| fig-cap: "Histogram of Means of Estimated Costs Parameters per Participant"
-#| fig-subcap: "Note that the lower cost was assumed to be 0."
+#| fig-cap: "Histogram of Means of Estimated Costs Parameters per Participant. Note that the lower cost was assumed to be 0."
 
 # Compute the mean of the hyperparameter (mu_cost)
 mean_hyper_cost <- params$mean[2]
 
 # Create a density plot for the individual participant parameters (cost)
-ggplot(final_df, aes(x = cost)) +
+ggplot(costH_values, aes(x = mean)) +
   geom_density(alpha = 0.5, fill = "steelblue") +
-  geom_segment(aes(x = mean_hyper_cost, y = 0, xend = mean_hyper_cost, yend = max(density(final_df$cost)$y)),
+  geom_segment(aes(x = mean_hyper_cost, y = 0,
+                   xend = mean_hyper_cost,
+                   yend = max(density(costH_values$mean)$y)),
                color = "black", linetype = "dashed", size = 0.5) +
   theme_minimal() +
   custom_theme +
@@ -2238,7 +2247,7 @@ This score is calculated by first estimating the cost parameters for each partic
 
 Finally, we compare for each participant, how many of their choices are identical to a model that observed the full horizon for the Markov decision process. Each participant is a dot, y axis is the percentage of correct choices in the experiment while x axis is the STAI (anxiety measure). Generally the results are very similar to figure 1.5.
 
-```{r, eval=FALSE}
+```{r}
 #| label: fig-exp1-accuracy-results
 #| fig-cap: "Participant Accuracy by Income and Anxiety"
 #| fig-subcap:
@@ -2408,7 +2417,7 @@ M: Proposal
 #### §Behavioral Measures
 
 ```{r}
-
+#| eval: false
 #### For Power Analysis
 trade_off_scaled <- trade_off_accuracy %>%
   ungroup() %>%
@@ -2478,7 +2487,7 @@ DV = HRV (Heart Rate Variability) reactivity differences between high vs. low cl
 Prior = Upper-class = -0.69, se = 0.31; Lower-class = 0.04, se = 0.31
 
 ```{r}
-
+#| eval: false
 # # HVC across SES
 # Estimated sample sizes for a two-sample means test
 # t test assuming sd1 = sd2 = sd
@@ -3410,9 +3419,10 @@ Prolific1_Stan_results <- sampling(object = my_model, data = model_data,
 ## Principal Compoenent Analysis for Pilot Experiment
 
 ```{r}
-#| label: fig-exp1-loadings
-#| fig-cap: "Heatmap of factor loadings for Experiment 1"
-#| fig-subcap: "Each row corresponds to a variable, and each column corresponds to a factor. The color of each cell indicates the loading of the variable on the factor, with red indicating high positive loadings, and white indicating negative loadings."
+#| label: fig-loadings
+#| eval: false
+#| fig-cap: "Heatmap of Component loadings for Pilot"
+#| fig-subcap: "Each row corresponds to a variable, and each column corresponds to a PC The color of each cell indicates the loading of the variable on the PC, with red indicating high positive loadings, and white indicating negative loadings."
 
 # Extract the loadings
 loadings <- as.matrix(qualtrics.var)
@@ -3439,8 +3449,7 @@ Next, we conducted Factor Analysis on the complete datasets generated by the MIC
 
 ```{r}
 #| label: fig-exp1-loadings
-#| fig-cap: "Heatmap of factor loadings for Experiment 1"
-#| fig-subcap: "Each row corresponds to a variable, and each column corresponds to a factor. The color of each cell indicates the loading of the variable on the factor, with red indicating high positive loadings, and white indicating negative loadings."
+#| fig-cap: "Heatmap of factor loadings for Experiment 1. Each row corresponds to a variable, and each column corresponds to a factor. The color of each cell indicates the loading of the variable on the factor, with red indicating high positive loadings, and white indicating negative loadings."
 
 # Extract the loadings
 loadings <- as.matrix(poverty3$loadings)
@@ -3464,10 +3473,9 @@ cor(df[c("PA1", "PA2", "PA3", "zip_income", "zip_poverty_log",
 
 ### Pilot Urgency Regression
 
-```{r}
+```{r, results='asis'}
 #| label: tbl-sensitivity
-#| tbl-cap: "Model Comparison"
-#| tbl-subcap: "Comparison of different models based on BIC, number of variables, and included attributes"
+#| tbl-cap: "Model Comparison based on BIC, number of variables, and included attributes"
 
 two_options <- joint_pilot %>%
   filter(!is.na(participant), !is.na(round)) %>%
@@ -3562,9 +3570,9 @@ results_table <- data.frame(
   Num_Variables = integer(),
   Participants = integer(),
   Trials = character(),
-  Demographic_Variables = character(),
-  Choice_Attributes = character(),
-  Interacted_With_Choice_Attributes = character(),
+  # Demographic_Variables = character(),
+  # Choice_Attributes = character(),
+  # Interacted_With_Choice_Attributes = character(),
   stringsAsFactors = FALSE
 )
 
@@ -3580,10 +3588,10 @@ for (i in 1:length(models)) {
     Num_Variables = num_variables,
     Participants = final_gof_list$Participants[i],
     Trials = final_gof_list$Trials[i],
-    Demographic_Variables = ifelse(any(grepl("age|male", deparse(formula))), "Yes", "No"),
-    Choice_Attributes = ifelse(any(grepl("chosen_i|chosen_e|not_chosen_i|not_chosen_e|not_chosen_u",
-                                         deparse(formula))), "Yes", "No"),
-    Interacted_With_Choice_Attributes = ifelse(any(grepl("\\* \\(chosen_i", deparse(formula))), "Yes", "No"),
+    # Demographic_Variables = ifelse(any(grepl("age|male", deparse(formula))), "Yes", "No"),
+    # Choice_Attributes = ifelse(any(grepl("chosen_i|chosen_e|not_chosen_i|not_chosen_e|not_chosen_u",
+    #                                      deparse(formula))), "Yes", "No"),
+    # Interacted_With_Choice_Attributes = ifelse(any(grepl("\\* \\(chosen_i", deparse(formula))), "Yes", "No"),
     stringsAsFactors = FALSE
   ))
 }
@@ -3594,8 +3602,9 @@ results_table$Row_Group <- rep(c("PCs 1 and 2",
                                  "ZIP Poverty Level and STAI",
                                  "ZIP Median Income and STAI"), each = 4)
 # Add a column for the row labels with the desired labels
-results_table$Row_Label <- rep(c("(a)", "(b)", "(c)", "(d)"), 4)
-
+results_table$Row_Label <- rep(c("(a) Base Model", "(b) + Demographics",
+                                 "(c) + Choice Attributes",
+                                 "(d) + Interaction with Anxiety"), 4)
 # Create the table using the gt package
 gt_table <- results_table %>%
   gt(rowname_col = "Row_Label", groupname_col = "Row_Group") %>%
@@ -3603,15 +3612,18 @@ gt_table <- results_table %>%
     BIC = "BIC",
     Num_Variables = "Regressors",
     Participants = "Participants",
-    Trials = "Trials",
-    Demographic_Variables = "Demographic Variables",
-    Choice_Attributes = "Choice Attributes",
-    Interacted_With_Choice_Attributes = "Interacted with Attributes"
+    Trials = "Trials"
   )
 
 # Print the table
-gt_table
-
+xtable::xtable(data.frame(
+  Model = results_table$Row_Label,
+  BIC = results_table$BIC,
+  Regressors = results_table$Num_Variables,
+  Participants = results_table$Participants,
+  Trials = results_table$Trials,
+  stringsAsFactors = FALSE
+))
 
 ```
 

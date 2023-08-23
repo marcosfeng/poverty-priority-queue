@@ -1685,7 +1685,7 @@ df <- df %>%
 
 ## Data
 
-Our experiment was conducted on the Prolific platform. In total, we acquired data from N = `r length(unique(df_combined$participant))` participants, each of whom completed the modified experimental paradigm and revised questionnaires designed to explore the relationships between financial status, anxiety, and decision-making under uncertainty. Note that due to an error with Qualtrics, `r length(unique(df_combined[is.na(df_combined$SAI_post),]$participant))` individuals did not complete the final STAI questionnaire, so analyses that are dependent on the post-experiment anxiety measures will not include these participants.
+Our experiment was conducted on the Prolific platform. In total, we acquired data from N = `r length(unique(df$participant))` participants, each of whom completed the modified experimental paradigm and revised questionnaires designed to explore the relationships between financial status, anxiety, and decision-making under uncertainty. Note that due to an error with Qualtrics, `r length(unique(df[is.na(df$SAI_post),]$participant))` individuals did not complete the final STAI questionnaire, so analyses that are dependent on the post-experiment anxiety measures will not include these participants.
 
 ### Demographics
 
@@ -1829,8 +1829,7 @@ Following this, we conducted a Factor Analysis on the complete datasets generate
 
 ```{r}
 #| label: fig-new-pov-scree
-#| fig-cap: "Scree Plot for Factor Analysis"
-#| fig-subcap: "The graph delineates the proportion of variance explained by factor analysis models with 1 to 5 factors. Each line represents a distinct model, with the number of factors on the x-axis and the proportion of explained variance on the y-axis. Notably, the variance explained tends to plateau as the number of factors increases. Data imputation and transformation were executed before the factor analysis to refine the dataset for optimal factor extraction."
+#| fig-cap: "Scree Plot for Factor Analysis. The graph delineates the proportion of variance explained by factor analysis models with 1 to 5 factors. Each line represents a distinct model, with the number of factors on the x-axis and the proportion of explained variance on the y-axis. Notably, the variance explained tends to plateau as the number of factors increases. Data imputation and transformation were executed before the factor analysis to refine the dataset for optimal factor extraction."
 
 # Create a data frame with the proportion explained variance for each model
 explained_variance <- data.frame(
@@ -1859,19 +1858,16 @@ More specifically, the two-factor model included "Financial Hardship" and "Emplo
 
 Our three-factor model fits our data moderately well. The root mean square of residuals (RMSR), which measures the average residual correlation among variables, was 0.08, indicating a moderate fit. The Tucker-Lewis Index (TLI) was 0.475, below the desired threshold of 0.90, also suggesting only a moderate model fit. The root mean square error of approximation (RMSEA), which measures the discrepancy between the observed covariance matrix and the model covariance matrix per degree of freedom, was 0.073, with 90% confidence intervals between 0.069 and 0.08. This value suggests a reasonable error of approximation.
 
-The derived factors, based on their highest loadings, represent the following constructs:
+@tbl-exp1-pca displays the derived factors and their highest loadings. We interpret each factor as the following constructs:
 
-1.  **Factor 1 (Factor 1)**: This factor had high loadings primarily on the 'Q48' series and 'Q50' questions, which indicate experiences of financial hardship and food insecurity within the past 12 months. We labeled Factor 1 as a "Food Deprivation" factor. This factor is moderately negatively correlated with Factor 3.
+1.  **Factor 1 (Factor 1)**: This factor had high loadings primarily on the 'Q48' series and 'Q50' questions, which indicate experiences of financial hardship and food insecurity within the past 12 months. We labeled Factor 1 as a "Food Deprivation" factor.
 
-2.  **Factor 2 (Factor 2)**: The highest loadings on this factor were hours worked weekly and the participant's annual salary, suggesting that this factor might be related to the work and economic conditions of the respondents. There was a slight positive correlation between this factor and Factor 3. Given the nature of the variables that load heavily on this factor, we interpreted it as an "Employment and Economic Stability" factor.
+2.  **Factor 2 (Factor 2)**: The highest loadings on this factor were hours worked weekly and the participant's annual salary, suggesting that this factor might be related to the work and economic conditions of the respondents. There was a slight positive correlation between this factor and Factor 1. Given the nature of the variables that load heavily on this factor, we interpreted it as an "Employment and Economic Stability" factor.
 
-3.  **Factor 3 (Factor 3)**: This factor had the highest loadings on questions related to home ownership. Thus, we interpret Factor 3 as a "Housing Deprivation" factor. This factor had a negative correlation with Factor  and a slight positive correlation with Factor 2.
-
-The correlation of the factor scores with the factors for Factor 1, Factor 2, and Factor 3 were 0.99, 0.94, and 0.91, respectively, indicating high accuracy of the factor scores. Similarly, the multiple R square of scores with factors for Factor 1, Factor 2, and Factor 3 were 0.98, 0.88, and 0.83, respectively, suggesting a strong relationship between the observed variables and the extracted factors. The minimum correlation of possible factor scores were 0.97, 0.77, and 0.67 for Factor 1, Factor 2, and Factor 3, respectively, further supporting the adequacy of the factor scores.
-
+3.  **Factor 3 (Factor 3)**: This factor had the highest loadings on questions related to home ownership. Thus, we interpret Factor 3 as a "Housing Deprivation" factor. This factor had a slight negative correlation with Factor 1.
 
 ```{r}
-#| label: tbl-pilot-pca
+#| label: tbl-exp1-pca
 #| tbl-cap: "Results from a Factor Analysis of our deprivation questionnaire"
 #| tbl-subcap: "The extraction method was principal axis factoring with an oblique rotation with a minimizing criterion. Answers are coded such that higher values signify higher agreement with the given statements."
 
@@ -2484,15 +2480,12 @@ ggplot(costH_values, aes(x = mean)) +
 
 ```
 
-We employ a hierarchical Bayesian model to estimate the cost parameter for each participant, as illustrated in @fig-costs. In contrast to the pilot experiment, we set the cost of low-effort tasks to zero. Once estimated, these individualized cost parameters allowed us to compute the optimal choices for every state through a backward induction process.
-
-@fig-exp1-accuracy-results offers a granular view of this alignment. A distinct dot represents each participant. The y-axis quantifies the accuracy of their choices, represented as the percentage of correct decisions made throughout the experiment. Simultaneously, the x-axes capture the scores for Factor 1 and the pre-experiment State Anxiety Index.
-
-A striking observation is the invariance of accuracy across varying income and anxiety levels. This result suggests that these socio-economic and psychological factors might not be pivotal in influencing task selection accuracy in this context. @tbl-exp1-accuracy displays four other models that further corroborate this observation. Four distinct random effects logistic regression models evaluate the optimality of each participant's choice. These models incorporate a range of regressors, including the derived factors, individual anxiety metrics, and area-level economic indicators such as ZIP code poverty and median income levels. None of the results from these models reached statistical significance.
-
 ```{r}
 #| label: fig-exp1-accuracy-results
 #| fig-cap: "Participant Accuracy by Factor 1 and Anxiety"
+#| fig-subcap:
+#|   - "Factor 1"
+#|   - "Anxiety"
 #| layout-ncol: 2
 
 # Join with the existing data frame
@@ -2537,7 +2530,7 @@ ggplot(Accuracy_exp1, aes(x = stai, y = Accuracy)) +
 
 ```
 
-```{r}
+```{r, results='asis'}
 #| label: tbl-exp1-accuracy
 #| tbl-cap: "Regression analysis of accuracy on participants' choice behavior and demographic variables"
 #| tbl-subcap: "Logistic regression models assessing the likelihood of selecting the optimal task, with individual and round-specific random effects. Covariates include age, education, points, and attributes of the chosen and unchosen tasks. Coefficients denote the log odds shift in opting for the optimal task corresponding to a unit alteration in the predictor. State Anxiety (SAI) data limited to pre-experiment questionnaire."
@@ -2627,6 +2620,12 @@ texreg(lapply(models, function(x) {
   custom.gof.rows = final_gof_list)
 
 ```
+
+We employ a hierarchical Bayesian model to estimate the cost parameter for each participant, as illustrated in @fig-costs. In contrast to the pilot experiment, we set the cost of low-effort tasks to zero. Once estimated, these individualized cost parameters allowed us to compute the optimal choices for every state through a backward induction process.
+
+@fig-exp1-accuracy-results offers a granular view of this alignment. A distinct dot represents each participant. The y-axis quantifies the accuracy of their choices, represented as the percentage of correct decisions made throughout the experiment. Simultaneously, the x-axes capture the scores for Factor 1 and the pre-experiment State Anxiety Index.
+
+A striking observation is the invariance of accuracy across varying income and anxiety levels. This result suggests that these socio-economic and psychological factors might not be pivotal in influencing task selection accuracy in this context. @tbl-exp1-accuracy displays four other models that further corroborate this observation. Four distinct random effects logistic regression models evaluate the optimality of each participant's choice. These models incorporate a range of regressors, including the derived factors, individual anxiety metrics, and area-level economic indicators such as ZIP code poverty and median income levels. None of the results from these models reached statistical significance.
 
 # Discussion
 
@@ -2859,7 +2858,7 @@ P() depends on whether unattended task "decays"
 Example of Subjective Probabilities
 :::
 
-## Priority Queuing Simulation
+<!-- ## Priority Queuing Simulation -->
 
 ```{r pri-q-simulation, eval=FALSE, include=TRUE}
 
@@ -3352,9 +3351,9 @@ write.csv(ratios_grid,"./Models/pilot/pilot-simulation-grid.csv")
 
 ```
 
-## Bayesian Model for Cost Estimation
+<!-- ## Bayesian Model for Cost Estimation -->
 
-### Model
+<!-- ### Model -->
 
 ```{stan cost-model, eval=FALSE, include=TRUE, output.var="my_model"}
 data {
@@ -3460,7 +3459,7 @@ model {
 }
 ```
 
-### Model Data
+<!-- ### Model Data -->
 
 ```{r cost-model-data, eval=FALSE, include=TRUE}
 # Data Wrangling ----------------------------------------------------------
@@ -3690,7 +3689,7 @@ model_data <- list( N = length(unique(data$participant)), #number of part
 
 ```
 
-### Estimation
+<!-- ### Estimation -->
 
 ```{r cost-model-estimation, eval=FALSE, include=TRUE}
 
@@ -3700,48 +3699,6 @@ Prolific1_Stan_results <- sampling(object = my_model, data = model_data,
                                    iter = 1000,
                                    chains = 1,
                                    cores = 3)
-
-```
-
-## Principal Component Analysis for Pilot Experiment
-
-```{r}
-#| label: fig-loadings
-#| eval: false
-#| fig-cap: "Heatmap of Component loadings for Pilot"
-#| fig-subcap: "Each row corresponds to a variable, and each column corresponds to a PC The color of each cell indicates the loading of the variable on the PC, with red indicating high positive loadings, and white indicating negative loadings."
-
-# Extract the loadings
-loadings <- as.matrix(qualtrics.var)
-# Create the heatmap
-heatmap(loadings)
-
-```
-
-## Factor Analysis for Experiment 1
-
-@fig-mice offers a visual representation of the imputation process. The intermingling of different imputation streams indicates a successful multiple imputation process, suggesting that the chains have converged. Additionally, we expect no visible trends in the later iterations, indicating that the imputations have reached a stable solution.
-
-```{r}
-#| label: fig-mice
-#| fig-cap: "Visual representation of the MICE imputation process"
-#| fig-subcap: "The left plot shows the mean of the imputed values across iterations, while the right plot displays the corresponding standard deviations. The intermingling of different imputation streams suggests successful convergence of the chains."
-#| layout-ncol: 3
-
-plot(imputed_data)
-
-```
-
-Next, we conducted Factor Analysis on the complete datasets generated by the MICE procedure. The output below shows the factor loadings, which represent the correlations between the observed variables and the factors. High absolute values indicate a strong relationship with the factor. Next, we will examine the factor loadings in a more interpretable format by creating a loading plot. @fig-exp1-loadings displays the loadings of each variable on each factor, facilitating the interpretation of the factors. Variables with high loadings on the same factor are likely to be related to each other and represent the same underlying construct.
-
-```{r}
-#| label: fig-exp1-loadings
-#| fig-cap: "Heatmap of factor loadings for Experiment 1. Each row corresponds to a variable, and each column corresponds to a factor. The color of each cell indicates the loading of the variable on the factor, with red indicating high positive loadings, and white indicating negative loadings."
-
-# Extract the loadings
-loadings <- as.matrix(poverty3$loadings)
-# Create the heatmap
-heatmap(loadings)
 
 ```
 
@@ -3923,16 +3880,66 @@ xtable::xtable(data.frame(
 \-\-- Dwight D. Eisenhower, 1961 address to the Century Association
 
 ![Source: https://todoist.com/productivity-methods/eisenhower-matrix](images/eisenhower-matrix.png){width="5.36in"}
+{{< pagebreak >}}
 
 ## Pilot Experiment Image
 
 ![Game interface for Pilot Experiment. Participants had a queue with two tasks on top of the screen and a series of icons they must press in order to complete a task. The clocks (hearts, in this version) and dollar signs on a task represent the urgency and importance of the task, respectively. The right side of the screen displays a rounds counter (top) and a points counter (bottom).](images/totalice.jpeg){#fig-pilot-exp}
+
+{{< pagebreak >}}
 
 ## Priority Queuing
 
 A list can contain an arbitrary number of tasks and the priority of each task is an integer drawn from some distribution. The tasks are set to arrive with the rate $\lambda$ following a Poisson dynamics with exponential arrival time distribution and they are executed with rate $\mu$ by always choosing the one with the highest priority.
 
 ![Sample Queue](images/prioq-illustration.png){width="3.2in"}
+
+{{< pagebreak >}}
+
+## Principal Component Analysis for Pilot Experiment
+
+```{r}
+#| label: fig-loadings
+#| eval: false
+#| fig-cap: "Heatmap of component loadings for the pilot experiment. Each row corresponds to a variable, and each column corresponds to a PC The color of each cell indicates the loading of the variable on the PC, with red indicating high positive loadings, and white indicating negative loadings."
+
+# Extract the loadings
+loadings <- as.matrix(qualtrics.var)
+# Create the heatmap
+heatmap(loadings)
+
+```
+
+{{< pagebreak >}}
+
+## Factor Analysis for Experiment 1
+
+@fig-mice offers a visual representation of the imputation process. The intermingling of different imputation streams indicates a successful multiple imputation process, suggesting that the chains have converged. Additionally, we expect no visible trends in the later iterations, indicating that the imputations have reached a stable solution.
+
+```{r}
+#| label: fig-mice
+#| fig-cap: "Visual representation of the MICE imputation process. The left plots show the mean of the imputed values across iterations, while the right plots display the corresponding standard deviations. The intermingling of different imputation streams suggests successful convergence of the chains."
+#| layout-nrow: 7
+#| fig-subcap:
+#|  - ""
+
+plot(imputed_data)
+
+```
+
+Next, we conducted Factor Analysis on the complete datasets generated by the MICE procedure. The output below shows the factor loadings, which represent the correlations between the observed variables and the factors. High absolute values indicate a strong relationship with the factor. Next, we will examine the factor loadings in a more interpretable format by creating a loading plot. @fig-exp1-loadings displays the loadings of each variable on each factor, facilitating the interpretation of the factors. Variables with high loadings on the same factor are likely to be related to each other and represent the same underlying construct.
+
+```{r}
+#| label: fig-exp1-loadings
+#| fig-cap: "Heatmap of factor loadings for Experiment 1. Each row corresponds to a variable, and each column corresponds to a factor. The color of each cell indicates the loading of the variable on the factor, with red indicating high positive loadings, and white indicating negative loadings."
+
+# Extract the loadings
+loadings <- as.matrix(poverty3$loadings)
+# Create the heatmap
+heatmap(loadings)
+
+```
+
 
 # Appendix: Documentation
 

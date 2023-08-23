@@ -65,7 +65,7 @@ get_regression_result <- function(model, coefficient_name) {
 
 # Introduction
 
-Poverty is a multi-dimensional problem, and behavioral scientists have focused on the effects of the environment on the decision-making process across socio-economic levels (Bertrand et al., 2004). Their underlying assumption is that humans share the same underlying biology and psychology, and that "poverty" causes significant changes in people's environments and, in turn, their decisions. For example, living in poverty often means having a limited set of options in life (from choosing what to have for dinner to which occupation to pursue), and it increases the number of demands in terms of time and mental resources (Banerjee & Duflo, 2012). This lack of control over choices leads to a chronic state of vigilance and stress (Chemin et al., 2013).
+Poverty is a multifaceted issue that behavioral scientists have extensively studied. Their research has examined how individuals' decision-making processes are influenced by their surroundings, irrespective of their socioeconomic standing (Bertrand et al., 2004). These scientists maintain that all humans share a shared biology and psychology and that poverty can significantly impact both factors. Essentially, poverty can precipitate changes in an individual's environment, subsequently affecting their choices. For example, living in poverty often means having a limited set of options in life (from choosing what to have for dinner to which occupation to pursue), and it increases the number of demands in terms of time and mental resources (Banerjee & Duflo, 2012). This lack of control over choices leads to a chronic state of vigilance and stress (Chemin et al., 2013).
 
 In this paper, we focus on the trade-offs between urgency and importance in day-to-day decisions. It is hypothesized that, in the mass of to-dos and responsibilities, those with limited resources have to leave specific tasks undone. Consequently, we argue that they may not have time to complete all tasks or the necessary money and, as a result, must decide what to prioritize in their lives. Although one could theoretically calculate the most optimal course of action, it is improbable that individuals would take this actuarial approach. Instead, we argue that they are more likely to use heuristics or intuition to decide what problem to address, where to spend money, and what to leave undone. Such heuristics, however, are prone to fail under particular circumstances.
 
@@ -73,15 +73,17 @@ We argue that, under the strain faced by the poor, a series of behaviors and phy
 
 ## Poverty Traps
 
-We argue that the poor are caught in an "urgency trap," where neglect of nonurgent tasks may cause an increase of urgency in the future. For example, not undergoing regular medical check-ups may increase susceptibility to unexpected illnesses.
+We argue that impoverished individuals are trapped in a cycle of urgency, neglecting non-urgent tasks, ultimately leading to increased urgency in the future. For example, not undergoing regular medical check-ups may increase susceptibility to unexpected illnesses. Our current discussion pertains to the theory of poverty traps and their implications on economies. This theory states that an economy can become entrenched in a self-perpetuating cycle of underdevelopment, resulting in a state of equilibrium where adverse outcomes prevail over repeated attempts at progress. Understanding the concept of poverty traps is crucial in comprehending the challenges developing economies face and devising effective strategies to overcome them.
 
-This phenomenon is closely related to the theory of poverty traps. This framework defines a self-perpetuating phenomena that arise when an economy is caught within a cycle that suffers from persistent undevelopment. In this paper, we model poverty traps as an equilibrium which favors disutility over iterative cycles. To determine causal relationships between such outcomes and the behavior of low SES (type 1) agents, we examine cases of suboptimality that are distinct from high SES (type 2) agents. To assess self-reinforcing behavior intrinsic to poverty traps, we classify and compare the choice behavior of type 1 agents in regards to their time allocation.
+Here, we analyze situations where low socioeconomic status (SES) individuals make suboptimal choices compared to high SES individuals to investigate the potential causal link between poverty trap outcomes and the behavior of low SES agents. Specifically, we compare the time allocation choices of low SES agents to understand the self-reinforcing nature of poverty traps better.
 
 ### Priority Queues, Urgency and Importance
 
-Although some scientists have proposed a "Scarcity" view of poverty (Mullainathan & Shafir, 2014), their conclusions have not withstood the scrutiny of science, leaving the causes and mechanisms of these phenomena largely unexplained (O'Donnell et al., 2021). We seek a more rigorous understanding of how relative-poverty can be self-perpetuating through poor time allocation. We explain prioritization of day-to-day tasks as an attempt to balance two requirements: (1) maximize life satisfaction given one's limited resources, and (2) minimize the potentially harmful effects of leaving tasks undone change with time. We call the former requirement "importance" and the latter "urgency" (Bratterud et al., 2020).
+Some scientists have proposed a "Scarcity" view of poverty (Mullainathan & Shafir, 2014), but their conclusions have not withstood the scrutiny of science, leaving the causes and mechanisms of these phenomena largely unexplained (O'Donnell et al., 2021). We seek a more rigorous understanding of how relative-poverty can be self-perpetuating through poor time allocation. We explain prioritization of day-to-day tasks as an attempt to balance two requirements: (1) maximize life satisfaction given one's limited resources, and (2) minimize the potentially harmful effects of leaving tasks undone change with time. We call the former requirement "importance" and the latter "urgency" (Bratterud et al., 2020).
 
-The Eisenhower Matrix (see @app-eisenhower for details), a simple tool for determining optimal long-term decisions, is a simplification of how individuals determine their queue for attending to daily tasks. This framework uses dimensions of urgency (time scarcity) and importance (expected value maximization) as primary motivations for which tasks require completion. We intend to characterize the mapping between urgency $U$ and importance $I$ , namely $\{ U,I \} \mapsto \mathbb{R}$. As discussed in @sec-poverty, the literature speculates the influence of effort costs in decision-making - thereby suggesting Eisenhower Matrices should be modified to account for the added parameter.
+<!-- Forest plot here  -->
+
+The Eisenhower Matrix (see @sec-eisenhower for details), a simple tool for determining optimal long-term decisions, is a simplification of how individuals determine their queue for attending to daily tasks. This framework uses dimensions of urgency (time scarcity) and importance (expected value maximization) as primary motivations for which tasks require completion. We intend to characterize the mapping between urgency $U$ and importance $I$ , namely $\{ U,I \} \mapsto \mathbb{R}$. As discussed in @sec-poverty, the literature speculates the influence of effort costs in decision-making - thereby suggesting Eisenhower Matrices should be modified to account for the added parameter.
 
 # Theory
 
@@ -135,7 +137,7 @@ flowchart TD
 
 In our two-step task example, we observed how the unchosen task was "transferred" to the next state. This characteristic is a crucial feature of a priority queueing model, which we will delve into to enrich our understanding of decision-making dynamics further.
 
-Priority queueing models often represent ordinal choices of tasks attended to based on some subjective value or utility function. These models are prevalent in various real-world scenarios, such as triaging bays, which treat queues as a function of urgency and order of arrival, and donor matching programs, which facilitate queues based on a point system that weights time, severity, and likelihood of survival.
+Priority queueing models often represent ordinal choices of tasks attended to based on some subjective value or utility function. These models are prevalent in various real-world scenarios, such as triaging bays, which treat queues as a function of urgency and order of arrival, and donor matching programs, which facilitate queues based on a point system that weights time, severity, and likelihood of survival (CITE).
 
 Cobham and Barabasi have developed two critical priority queueing models. Cobham's model treats a queue as an infinite list of tasks with varying task arrival times and execution rates. On the other hand, the Barabasi model treats the queue as a finite size list with waiting times ($\tau_w$). The mathematical expression for the waiting time distribution in the Barabasi model is as follows:
 
@@ -276,6 +278,8 @@ Inefficient time allocation of daily tasks is another factor that can contribute
 
 A recent study by Jachimowicz et al. (2022) provides a compelling illustration of this phenomenon. The authors found that financial scarcity is associated with greater distress intensity in everyday life. They propose that financial resources allow individuals to reduce the distressing impact of everyday hassles, increasing one's life satisfaction. This research suggests that financial scarcity shrinks the sense that one can use economic resources to reduce the adverse impact of daily hassles. While money may not necessarily buy happiness, it reduces the intensity of stressors experienced in daily life---and thereby increases life satisfaction.
 
+<!-- Add scatter plot from Jachimowicz -->
+
 In the context of our model, suboptimal time allocation can exacerbate the effects of poverty, leading to a cycle of immediate-reward task selection and persistent financial scarcity. The immediate reward of completing a task and reducing the day's demands can outweigh the potential future benefits of tasks that require more time and effort. This feature is particularly true for individuals facing financial scarcity who may not have the luxury of investing time in tasks with delayed rewards.
 
 The ability to delegate tasks significantly alleviates this burden. Delegation allows individuals to offload tasks to others, freeing up their time and mental resources. This advantage is especially beneficial for urgent tasks, which can consume a disproportionate amount of time and attention. However, the ability to delegate is often a privilege reserved for those with sufficient financial resources. For individuals facing financial scarcity, the cost of delegation may be prohibitive.
@@ -338,11 +342,11 @@ flowchart LR
 
 ## Research Questions
 
-1.  How do urgency and importance shape task selection, and what are the underlying cognitive processes that drive these effects?
+1.  How do urgency and importance influence task selection, and which cognitive processes predominantly drive these effects?
 
-2.  To what extent does Socioeconomic Status influence task prioritization, and what is the mediating role of role strain in this process?
+2.  How does Socioeconomic Status (SES) affect task prioritization, and how does role strain mediate this relationship?
 
-3.  What are the key affective mechanisms that contribute to suboptimal time allocation, and how do they interact with cognitive and environmental factors?
+3.  Which primary affective mechanisms lead to inefficient time allocation, and how do these mechanisms interplay with cognitive and external factors?
 
 # Pilot Experiment
 
@@ -362,7 +366,9 @@ In the game interface, participants saw a queue of tasks representing ice cream 
 
 3\. Urgency: We used clock icons on each image to convey the degree of urgency of a task. Two clock icons denoted a high-urgency order, while one clock icon represented a low-urgency order. High-urgency tasks lost value (dollar signs) if participants did not complete them in a given round (e.g., an urgent task worth 2 points would become an urgent task worth 1 point in the next round, and an urgent task worth 1 point would lose all of its value). If a high-urgency task lost all its value, it would disappear from the queue, and the participant was "punished" by having only one order in the queue for the following two rounds. Conversely, low-urgency tasks stayed in the queue until selected and completed.
 
-In each round, participants saw the screen shown in @fig-pilot-exp. They were instructed to select a task from the queue (left or right) and click on the matching ice cream icons in the center of the screen to complete it. If they made a mistake, they could use the trash can icon to discard the current order and start over. The game continued for a total of 20 orders. Participants were not restricted to a specific order of task completion; they could choose any task from the queue at any time. This open-choice design allowed us to observe and analyze the decision-making and prioritization strategies employed by the participants. Note that we incentivized players in the game by offering a prize of up to $\$1.00$ , contingent on the total number of points players accumulated throughout the game.
+In each round, participants saw the screen shown in @fig-pilot-exp. They were instructed to select a task from the queue (left or right) and click on the matching ice cream icons in the center of the screen to complete it. If they made a mistake, they could use the trash can icon to discard the current order and start over. The game continued for a total of 20 orders. Participants were not restricted to a specific order of task completion; they could choose any task from the queue at any time. This open-choice design allowed us to observe and analyze the decision-making and prioritization strategies employed by the participants. Note that we incentivized players in the game by offering a prize of up to $\$1.00$, contingent on the total number of points players accumulated throughout the game.
+
+<!-- Add Fiver image of the experiment progress -->
 
 ### Simulation
 
@@ -403,13 +409,18 @@ levelplot(urgent ~ cost * gamma, urgency_ratio_grid,
 
 ## Hypotheses
 
-We hypothesize that many participants may rush their decisions due to the induced scarcity, which could lead to stress and potentially affect their performance. To gather data on participants' socioeconomic status and anxiety levels, we administered pre- and post-experiment surveys.
-
-While certain task scenarios in the game require minimal cognition (e.g., a high value, high urgency task will always be prioritized), other scenarios present more complex decisions. For instance, when presented with a high importance, low urgency task and a high urgency, low importance task, the optimal course of action may not be immediately clear. We analyze the choices made by participants under these circumstances to gain insight into their prioritization strategies.
+1.  Urgency Bias in Decision-Making:
+    -   **H1**: A pronounced urgency bias will manifest predominantly among individuals from socioeconomically disadvantaged backgrounds and those exhibiting elevated anxiety metrics in task selection paradigms. This bias will accompany a discernible inclination towards tasks labeled as "urgent" over those deemed "important."
+2.  Influence of Urgency Bias on Performance Outcomes:
+    -   **H2**: An overemphasis on urgent tasks, as opposed to tasks of inherent importance, will correlate with suboptimal performance outcomes, suggesting a potential cognitive cost associated with such prioritization.
+3.  Temporal Dynamics of Decision-Making:
+    -   **H3**: A heightened selection frequency of urgent tasks will be concomitant with expedited reaction times, potentially indicative of decision-making under perceived scarcity or stress conditions.
+4.  Socioeconomic and Psychological Modulators of Decision Accuracy:
+    -   **H4**: Individuals with lower socioeconomic status or heightened anxiety will exhibit differential accuracy profiles in trade-off decisions, particularly when navigating the dichotomy between tasks of high urgency but low importance and those of low urgency but high importance. This pattern may underscore a heightened susceptibility to urgency-driven decision-making biases within these cohorts.
 
 ## Data
 
-We administered our experiment over both Mturk and Prolific. In our MTurk administration, we acquired N = 22 participants, and via Prolific, N = 53. Here, we treat these samples as independent replications.
+We conducted our experiment separately on MTurk and Prolific, acquiring N = 22 and N = 53 participants, respectively. We treated these samples as independent replications in some sections while pooling the results in others.
 
 ```{r load-pilot}
 joint_pilot <- read_csv(file = "data/Pilot/joint_pilot.csv")
@@ -646,6 +657,26 @@ joint_pilot <- demograph %>%
   mutate(poverty_zip = as.vector(scale(as.numeric(S1701_C03_001E))),
          median_income_zip = log(as.numeric(S1903_C03_001E)))
 
+joint_pilot$income <- factor(joint_pilot$income, 
+                            levels = c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12),
+                            labels = c("< $10,000", "$10,000 to $19,999", "$20,000 to $29,999", 
+                                       "$30,000 to $39,999", "$40,000 to $49,999", "$50,000 to $59,999", 
+                                       "$60,000 to $69,999", "$70,000 to $79,999", "$80,000 to $89,999", 
+                                       "$90,000 to $99,999", "$100,000 to $149,999", "> $150,000"),
+                            ordered = TRUE)
+joint_pilot$education <- factor(joint_pilot$education, 
+                               levels = c(1, 2, 3, 4, 5, 6, 7, 8),
+                               labels = c("Less than high school degree", 
+                                          "High school graduate", 
+                                          "Some college but no degree", 
+                                          "Associate degree", 
+                                          "Bachelor's degree", 
+                                          "Master's degree", 
+                                          "Doctoral degree", 
+                                          "Professional degree (JD, MD)"),
+                               ordered = TRUE)
+
+
 trade_off_accuracy <- joint_pilot %>%
   group_by(participant) %>% 
   filter(length(RT) >= 10) %>%
@@ -658,33 +689,81 @@ trade_off_accuracy <- joint_pilot %>%
 
 For both Mturk and Prolific, we distinguish high-low income and high-low anxiety by a median split. The high income mean is about 70k, while the low income mean is around 30k $(p<0.001)$. Likewise, the high anxiety mean score is 56.29, while low anxiety mean score is 37.17 $(p<0.001)$.
 
-+------------------+------------+----------------------+----------------------+----------------------+
-| MTurk\           | Mean       | Median               | Min                  | Max                  |
-| N=22 x 20 trials |            |                      |                      |                      |
-+:=================+:===========+:=====================+:=====================+:=====================+
-| Age              | 34.53      | 33                   | 19                   | 50                   |
-+------------------+------------+----------------------+----------------------+----------------------+
-| Income           |            | \$40,000 to \$49,999 | Less than \$10,000   | \$90,000 to \$99,999 |
-+------------------+------------+----------------------+----------------------+----------------------+
-| Education        |            | Bachelor's degree    | High school graduate | Master's degree      |
-+------------------+------------+----------------------+----------------------+----------------------+
-| STAI             | 44.21      | 47                   | 20                   | 67                   |
-+------------------+------------+----------------------+----------------------+----------------------+
+```{r}
+#| label: tbl-pilot-demographics
+#| tbl-cap: "Demographic and Psychological Characteristics of Participants from MTurk and Prolific Platforms"
 
-+------------------+------------+----------------------+----------------------+----------------------+
-| Prolific\        | Mean       | Median               | Min                  | Max                  |
-| N=53 x 20 trials |            |                      |                      |                      |
-+:=================+:===========+:=====================+:=====================+:=====================+
-| Age              | 30.13      | 28                   | 18                   | 75                   |
-+------------------+------------+----------------------+----------------------+----------------------+
-| Income           |            | \$40,000 to \$49,999 | Less than \$10,000   | \$90,000 to \$99,999 |
-+------------------+------------+----------------------+----------------------+----------------------+
-| Education        |            | Bachelor's degree    | High school graduate | Master's degree      |
-+------------------+------------+----------------------+----------------------+----------------------+
-| STAI             | 45.04      | 45                   | 20                   | 68                   |
-+------------------+------------+----------------------+----------------------+----------------------+
+# Function to aggregate data for a given platform
+get_platform_data <- function(data, platform_name) {
+  data %>%
+    filter(platform == platform_name) %>%
+    summarise(
+      Age_Min = min(age, na.rm = TRUE),
+      Age_25th = quantile(age, 0.25, na.rm = TRUE),
+      Age_Median = median(age, na.rm = TRUE),
+      Age_Mean = round(mean(age, na.rm = TRUE), 1),
+      Age_75th = quantile(age, 0.75, na.rm = TRUE),
+      Age_Max = max(age, na.rm = TRUE),
+      Income_Min = levels(income)[min(as.numeric(income), na.rm = TRUE)],
+      Income_25th = levels(income)[quantile(as.numeric(income), 0.25, na.rm = TRUE)],
+      Income_Median = levels(income)[median(as.numeric(income), na.rm = TRUE)],
+      Income_75th = levels(income)[quantile(as.numeric(income), 0.75, na.rm = TRUE)],
+      Income_Max = levels(income)[max(as.numeric(income), na.rm = TRUE)],
+      Education_Min = levels(education)[min(as.numeric(education), na.rm = TRUE)],
+      Education_25th = levels(education)[quantile(as.numeric(education), 0.25, na.rm = TRUE)],
+      Education_Median = levels(education)[median(as.numeric(education), na.rm = TRUE)],
+      Education_75th = levels(education)[quantile(as.numeric(education), 0.75, na.rm = TRUE)],
+      Education_Max = levels(education)[max(as.numeric(education), na.rm = TRUE)],
+      STAI_Min = min(stai, na.rm = TRUE),
+      STAI_25th = quantile(stai, 0.25, na.rm = TRUE),
+      STAI_Median = median(stai, na.rm = TRUE),
+      STAI_Mean = round(mean(stai, na.rm = TRUE), 1),
+      STAI_75th = quantile(stai, 0.75, na.rm = TRUE),
+      STAI_Max = max(stai, na.rm = TRUE)
+    ) %>%
+    gather(key = "Variable", value = "Value") %>%
+    separate(Variable, into = c("Variable", "Statistic"), sep = "_") %>%
+    spread(key = "Statistic", value = "Value")
+}
 
-: The two samples display similar demographics
+# Calculate unique participants for each platform
+mturk_n <- length(unique(joint_pilot$participant[joint_pilot$platform == "MTurk"]))
+prolific_n <- length(unique(joint_pilot$participant[joint_pilot$platform == "Prolific"]))
+
+# Get data for both platforms
+mturk_data <- get_platform_data(joint_pilot, "MTurk")
+prolific_data <- get_platform_data(joint_pilot, "Prolific")
+
+# Combine the two data frames for the table
+combined_data <- bind_rows(mturk_data, prolific_data)
+
+# Add a new column for Platform with the sample size
+combined_data$Platform <- c(rep(paste0("MTurk (N = ", mturk_n, ")"), 4),
+                            rep(paste0("Prolific (N = ", prolific_n, ")"),4))
+
+# Replace NAs with empty values
+combined_data[is.na(combined_data)] <- ""
+
+# Create the table using the gt package
+gt_table <- combined_data %>%
+  gt(rowname_col = "Variable", groupname_col = "Platform") %>%
+  tab_header(
+    title = "Demographics"
+  ) %>%
+  cols_label(
+    Min = "Min",
+    `25th` = "1st Qu.",
+    Median = "Median",
+    Mean = "Mean",
+    `75th` = "3rd Qu.",
+    Max = "Max"
+  ) %>%
+  cols_move_to_start(columns = c("Min", "25th", "Median", "Mean", "75th", "Max"))
+
+# Print the table
+gt_table
+
+```
 
 ### Measures of Poverty
 
@@ -751,36 +830,65 @@ joint_pilot <- joint_pilot %>%
 
 ```
 
-The questions, detailed in @sec-questionnaires, were crafted to explore physical, mental, and monetary deprivation. The responses underwent PCA, resulting in a data matrix of 87 variables, each representing a distinct deprivation aspect. @fig-pcascree shows a Scree plot, a graphical representation of the eigenvalues, which guided the selection of the top two components, together explaining 30.08% of the total variance.
+The questions, detailed in @sec-questionnaires, were crafted to explore physical, mental, and monetary deprivation. The responses underwent PCA, resulting in a data matrix of 87 variables, each representing a distinct deprivation aspect. @fig-pcascree shows a Scree plot, a graphical representation of the eigenvalues, which guided the selection of the top two components, together explaining `r round(get_eig(qualtrics.pca)[2,3],2)`% of the total variance.
 
-##### Dimension 1: Depression
+```{r}
+#| label: tbl-pilot-pca
+#| tbl-cap: "Results From a Principal Component Analysis of the Questionnaire"
 
-The first principal component, which we termed "Depression," accounted for 20.36% of the total variance. It was a combination of high loadings on questions related to mental health and feelings of depression and hopelessness. The top five contributors to this dimension were (higher dimension values = higher "depression"):
+# 1. Identify top 5 questions for each of the first two PCs based on magnitude
+top_questions_PC1 <- order(abs(qualtrics.var$coord[, 1]), decreasing = TRUE)[1:5]
+top_questions_PC2 <- order(abs(qualtrics.var$coord[, 2]), decreasing = TRUE)[1:5]
 
-1.  How would you rate your mental health over the past 4 weeks? (1-5)
-2.  Please select Yes or No for each of the following questions (YES = 1, NO = 2).
-    a.  I am happy about achieving something good in the last 4 weeks.
-    b.  Depressed and unhappy.
-3.  Over the past 2 weeks, how often have you felt down, depressed, or hopeless?
-4.  Over the past 2 weeks, how often have you felt little interest or pleasure in doing things?
+# names(qualtrics.prepca)[top_questions_PC1]
+# names(qualtrics.prepca)[top_questions_PC2]
+# From codebook:
+top_questions <- c("How would you rate your mental health over the past 4 weeks?",
+                   "Over the past 2 weeks, how often have you felt little interest or pleasure in doing things?",
+                   "Over the past 2 weeks, how often have you felt down, depressed, or hopeless?",
+                   "I am not happy about achieving something good in the last 4 weeks.",
+                   "I am happy with the house I live in.",
+                   "How important are the following aspects of your life? [I need to be mentally healthy]",
+                   "How important are the following: [How you feel about yourself]",
+                   "How important are the following: [Your mental state of being]",
+                   "How important are the following aspects of your life? [Having a good house to stay in]",
+                   "How important are the following: [Your physical state of being]")
 
-This dimension aligns with existing literature emphasizing the mental health aspect of poverty, linking financial deprivation to feelings of depression and hopelessness (Lund et al., 2010).
+# 2. Extract the loadings for these questions for both PCs
+table_data <- data.frame(
+  QuestionText = top_questions,
+  `PC1` = qualtrics.var$coord[c(top_questions_PC1, top_questions_PC2), 1],
+  `PC2` = qualtrics.var$coord[c(top_questions_PC1, top_questions_PC2), 2]
+)
 
-##### Dimension 2: Concern for Mental Health
+# 3. Build the table
+# Create the table with row groups and additional column header
+# Add a grouping column for row groups
+table_data$Group <- c(rep("Component 1: Depression", 5),
+                      rep("Component 2: Concern for Mental Health", 5))
 
-The second principal component, labeled "Concern for Mental Health," explained 9.72% of the total variance. It consisted mainly of questions about the importance of mental and physical well-being. The top contributors included (higher dim. values = higher "concern for mental health"):
+# Create the table
+table_output <- gt(table_data, groupname_col = "Group") %>%
+  cols_label(
+    QuestionText = "",
+    `PC1` = "PC 1",
+    `PC2` = "PC 2"
+  ) %>%
+  fmt_number(
+    columns = 2:3,
+    decimals = 2
+  ) %>%
+  tab_spanner(
+    label = "Loadings",
+    columns = 2:3
+  )
 
-(Higher dim. values = higher "concern for mental health")
 
-1.  How important are the following:
-    a.  How you feel about yourself
-    b.  Your mental state of being
-    c.  Your physical state of being
-2.  How important are the following aspects of your life?
-    a.  I need to be mentally healthy
-    b.  Having a good house to stay in
+table_output
 
-Interestingly, this dimension reflects a growing awareness and concern for mental health, a trend observed in previous studies (Patel et al., 2018).
+```
+
+@tbl-pilot-pca shows the first principal component, which we termed "Depression," accounting for `r round(get_eig(qualtrics.pca)[1,2],2)`% of the total variance. It was a combination of high loadings on questions related to mental health and feelings of depression and hopelessness. This dimension aligns with existing literature emphasizing the mental health aspect of poverty, linking financial deprivation to feelings of depression and hopelessness (Lund et al., 2010). The second principal component, labeled "Concern for Mental Health," explained `r round(get_eig(qualtrics.pca)[2,2],2)`% of the total variance. It consisted mainly of questions about the importance of mental and physical well-being. Interestingly, this dimension reflects a growing awareness and concern for mental health, a trend observed in previous studies (Patel et al., 2018).
 
 ```{r}
 #| label: fig-pcacorrelations
@@ -823,14 +931,15 @@ create_plot <- function(x_var, y_var,
 
 # Define breaks and labels for income
 income_breaks <- c(1, 2, seq(3.5, 10.5, by = 2), 11, 12)
-income_labels <- c("Less than $10,000", "$10,000 to $19,999", "$20,000 to $39,999",
+income_labels <- c("< $10,000", "$10,000 to $19,999", "$20,000 to $39,999",
                    "$40,000 to $59,999", "$60,000 to $79,999", "$80,000 to $99,999",
-                   "$100,000 to $149,999", "$150,000 or more")
+                   "$100,000 to $149,999", "> $150,000")
 
 # Create plots
 pca_plot_pilot <- joint_pilot %>%
   mutate(income = as.numeric(income),
          stai = as.numeric(stai)) %>%
+  filter(!is.na(Dim.1)) %>%
   group_by(participant) %>%
   summarise(income = mean(income), stai = mean(stai), 
             Dim.1 = mean(Dim.1), Dim.2 = mean(Dim.2))
@@ -908,7 +1017,7 @@ We compiled data on each participant's selection and non-selection of each type 
 
 We also included demographic variables and participant characteristics (STAI score, income level, and platform) as control variables in the regression model, but none showed a significant relationship with total points.
 
-The model accounted for approximately `r round(summary(regression_model)$r.squared*100, 2)`\% of the variance in total points (Adjusted R-squared = `r round(summary(regression_model)$adj.r.squared, 3)`), with an overall significant model fit (F(6,68) = 2.877, p \< .05).
+The model accounted for approximately `r round(summary(regression_model)$r.squared*100, 2)`% of the variance in total points (Adjusted R-squared = `r round(summary(regression_model)$adj.r.squared, 3)`), with an overall significant model fit (F(6,68) = 2.877, p \< .05).
 
 ```{r, results='asis'}
 #| label: tbl-totalpoints
@@ -1038,22 +1147,22 @@ joint_pilot %>%
 
 The graphs in @fig-tradeoff-results illustrate the choice frequency of urgent versus non-urgent tasks across different platforms, segmented by income and anxiety levels. The error bars denote the standard error of the mean.
 
-1. **Income Graph**: Individuals with low income tend to opt for urgent tasks more frequently than those with high income. The choice frequency is on the y-axis, and the platforms are on the x-axis. The dashed line at y=0.5 symbolizes an equal preference for urgent and non-urgent tasks. A pooled income test, employing a chi-squared proportion test with both Mturk and Prolific participants, assessed the differences in urgency preference between low- and high-income groups. The result was not statistically significant (`r get_p_text(pooled_income_test$p_value)`). However, a specific test for low-income individuals, using a one-sample proportion test, revealed a significant preference for high-urgency, low-importance tasks (`r get_p_text(low_income_test$p_value)`).
+1.  **Income Graph**: Individuals with low income tend to opt for urgent tasks more frequently than those with high income. The choice frequency is on the y-axis, and the platforms are on the x-axis. The dashed line at y=0.5 symbolizes an equal preference for urgent and non-urgent tasks. A pooled income test, employing a chi-squared proportion test with both Mturk and Prolific participants, assessed the differences in urgency preference between low- and high-income groups. The result was not statistically significant (`r get_p_text(pooled_income_test$p_value)`). However, a specific test for low-income individuals, using a one-sample proportion test, revealed a significant preference for high-urgency, low-importance tasks (`r get_p_text(low_income_test$p_value)`).
 
-2. **Anxiety Graph**: Individuals with high anxiety levels are more inclined to choose urgent tasks. The layout and interpretation are analogous to the income graph. The pooled anxiety test, also utilizing a chi-squared proportion test, did not detect a significant difference between low- and high-anxiety groups (`r get_p_text(pooled_anxiety_test$p_value)`). However, a specific test for high-anxiety individuals, employing the same one-sample proportion test as income, significantly demonstrated a preference for high-urgency, low-importance tasks (`r get_p_text(high_anxiety_test$p_value)`).
+2.  **Anxiety Graph**: Individuals with high anxiety levels are more inclined to choose urgent tasks. The layout and interpretation are analogous to the income graph. The pooled anxiety test, also utilizing a chi-squared proportion test, did not detect a significant difference between low- and high-anxiety groups (`r get_p_text(pooled_anxiety_test$p_value)`). However, a specific test for high-anxiety individuals, employing the same one-sample proportion test as income, significantly demonstrated a preference for high-urgency, low-importance tasks (`r get_p_text(high_anxiety_test$p_value)`).
 
 ### General Urgency Bias
 
-Individuals in the low income groups and in the high anxiety groups chose urgent tasks more often than important tasks. This result is not consistent for high income or low anxiety groups. Future graphs in this document will show that the difference-in-difference is not as clear.
+We also explore a more comprehensive urgency bias spanning various decision types and demographic groups. As delineated in @tbl-urgencypoverty, a notable pattern emerges: individuals within the low-income brackets and those with smaller state anxiety scores exhibited an increased propensity to opt for urgent tasks. This finding contrasts the trends in @fig-tradeoff-results, where neither income nor state anxiety significantly influenced the task preferences of Prolific participants. 
 
-1.  
+Furthermore, our regression analyses unveil a subtle dynamic between state anxiety and self-reported income. This interaction, albeit modest in magnitude, wields a discernible influence on the proclivity to prioritize an urgent task. In other words, transitioning from one income bracket to the next diminishes the odds of selecting an urgent task by roughly a quarter. An increase of the State Anxiety Score by 10 points (equivalent to approximately one standard deviation) correlates with a 40% decrease in the odds. When we factor in the interaction between these variables, a combined shift in income bracket and a 10-point surge in anxiety culminates in a 50% reduction in the odds, as opposed to the anticipated 55% when disregarding the interaction.
 
-2.  Multiple regression models to test the same hypotheses with different measures of income.
+Beyond these primary determinants, other indicators, including ZIP poverty, ZIP income levels, and our principal components, did not significantly explain the probability of opting for an urgent task. This result underscores the importance of leveraging reliable data when delving into the subtleties of such biases.
 
 ```{r, results='asis'}
 #| label: tbl-urgencypoverty
 #| tbl-cap: "Urgency Bias Regression Models"
-#| tbl-subcap: "Controls include age, education, points, the effect of chosen and not chosen tasks, and round. Models explore the interaction between dimensions, income, ZIP poverty level, and median ZIP income."
+#| tbl-subcap: "Logistic regression models assessing the likelihood of selecting an urgent task, with individual and round-specific random effects. Covariates include age, education, points, attributes of the chosen and unchosen tasks, and the round number. Coefficients denote the log odds shift in opting for an urgent task corresponding to a unit alteration in the predictor. Analysis data confined to Prolific participants."
 
 two_options <- joint_pilot %>%
   filter(!is.na(participant), !is.na(round), platform != "MTurk") %>%
@@ -1132,17 +1241,18 @@ custom_coef <- list("Dim.1" = "PC 1",
 
 texreg(lapply(models, function(x) {texreg::extract(x, include.aic = FALSE,
                                                    include.loglik = FALSE)}),
-        stars = c(0.001, 0.01, 0.05, 0.1),
-        custom.coef.map = custom_coef,
-        custom.gof.rows = final_gof_list)
+       custom.model.names = c("(1)","(2)","(3)","(4)"),
+       custom.header = list("Prob(Chosen Task Urgency = High)" = 1:4),
+       stars = c(0.001, 0.01, 0.05, 0.1),
+       custom.coef.map = custom_coef,
+       custom.gof.rows = final_gof_list)
 
 ```
 
-It seems that when controlling for Dim 1 and 2, some effects become significant. Multicollinearity might be a problem, although correlations between STAI and PCA components are not higher than 0.6 (see correlation plots above). These results might be a result of a separation between State and Trait Anxiety. Although we only included the State questions of STAI, state and trait scores are likely correlated. PCA dimensions 1 and 2 may control for this confounding effect.
-
-### Reaction Time
+<!-- ### Reaction Time -->
 
 ```{r, results='asis'}
+#| eval: false
 #| label: tbl-reactiontime
 #| tbl-cap: "Regression analysis of reaction time (RT) on participants' PCs and anxiety measures."
 
@@ -1193,15 +1303,21 @@ custom_coef <- list("Dim.1" = "PC 1",
                     "median_income_zip:stai" = "Anxiety Interaction")
 
 texreg(lapply(models, function(x) {texreg::extract(x, include.aic = FALSE, include.loglik = FALSE)}),
-        stars = c(0.001, 0.01, 0.05, 0.1),
-        custom.coef.map = custom_coef,
-        custom.gof.rows = final_gof_list)
+       custom.model.names = c("(1)","(2)","(3)","(4)"),
+       custom.header = list("Reaction Time" = 1:4),
+       stars = c(0.001, 0.01, 0.05, 0.1),
+       custom.coef.map = custom_coef,
+       custom.gof.rows = final_gof_list)
 
 ```
 
-### Accuracy
+### Accuracy {#sec-pilotaccuracy}
 
-We also obtain a comparison of the choices participants make and the optimal, or rational, protocol we generated. This is done by estimating a hierarchical Bayesian model...
+The alignment of individual choices with an optimal or rational protocol offers a compelling lens through which to gauge the efficacy of those decisions. In this section, we compare participants' choices against a benchmark: an optimal protocol derived using a hierarchical Bayesian model of a dynamic programming strategy.
+
+To achieve this, we first constructed a hierarchical Bayesian model that captures individual and group-level decision-making variability. The hierarchical structure allows for the pooling of information across participants, thereby enhancing the robustness of our inferences. Within this model, the dynamic programming strategy is the mathematical tool determining the optimal decision sequence that maximizes expected utility over time. In this framework, we deduced each participant's cost parameters, operating under the premise of a known reward structure and transition probabilities. The histogram in @fig-costs graphically delineates the inferred costs for each participant. These costs, categorized as 'low' or 'high,' quantify the equivalent exertion in point units for tasks demanding varying effort levels. The derived parameters correspond to the values that maximize the likelihood of the observed data on the postulated dynamic programming model.
+
+Following the estimation of the parameters, we employed a backward induction approach to identify the optimal selection for each state based on the inferred costs. We aimed to assess the accuracy of the participants' decisions by comparing them with the anticipated outcomes predicted by the optimal protocol from the dynamic programming model.
 
 ```{r}
 #| label: fig-costs
@@ -1232,8 +1348,6 @@ ggplot(dat, aes(x = dens, fill = lines)) +
 
 ```
 
-This score is calculated by first estimating the cost parameters for each participant and then using them with backwards induction to discover the optimal choice at each presented state.
-
 ```{r}
 #| label: fig-accuracy-results
 #| fig-cap: "Participant Accuracy by Income and Anxiety"
@@ -1241,7 +1355,6 @@ This score is calculated by first estimating the cost parameters for each partic
 #|   - "Prolific, Income"
 #|   - "Prolific, Anxiety"
 #| layout-ncol: 2
-#| column: page-right
 
 # Create a custom theme for enhanced aesthetics
 custom_theme <- theme_minimal() +
@@ -1283,20 +1396,14 @@ ggplot(Accuracy, aes(x = stai, y = Accuracy)) +
 
 ```
 
-#### Accuracy, Anxiety, and Income
+@fig-accuracy-results offers a granular view of participant accuracy, segmented by income and anxiety levels. Each data point, represented as a dot, encapsulates a participant's performance, with the y-axis signifying the percentage of correct choices made during the experiment.
 
-1.  Accuracy in trade-off decisions as a function of income and anxiety
-
-Finally, we compare for each participant, how many of their choices are identical to a model that observed the full horizon for the Markov decision process. Each participant is a dot, y axis is the percentage of correct choices in the experiment while x axis is the STAI (anxiety measure). Generally the results are very similar to figure 1.5.
-
-It appears that Accuracy does not vary across income and anxiety levels with these measures. Some possibilities of this fact might include that, since time discounting here is virtually 0, leaving the important task behind will not affect participants as much (depending, of course, of the estimated cost parameters).
-
-#### General Linear Models of Accuracy
+@tbl-accuracy presents the regression analyses of accuracy on potentially influential variables such as income and anxiety. The State Anxiety Score emerges as a significant influencer among many predictors. Specifically, a surge of 10 points in this score is associated with a 40% decrease in the odds of opting for the optimal task.
 
 ```{r, results='asis'}
 #| label: tbl-accuracy
 #| tbl-cap: "Regression analysis of accuracy on participants' choice behavior and demographic variables"
-#| tbl-subcap: "The predictors include income, PCA components, ZIP deprivation, ZIP income, age, education, points, and task attributes."
+#| tbl-subcap: "Logistic regression models assessing the likelihood of selecting the optimal task, with individual and round-specific random effects. Covariates include age, education, points, attributes of the chosen and unchosen tasks, and the round number. Coefficients denote the log odds shift in opting for the optimal task corresponding to a unit alteration in the predictor. Analysis data confined to Prolific participants."
 
 # Fit the models
 accuracy_models <- list(
@@ -1380,6 +1487,8 @@ texreg(lapply(accuracy_models, function(x) {
 
 ```
 
+## Summary
+
 # Experiment 1
 
 ## Methodology
@@ -1411,10 +1520,6 @@ Experiment 1 addressed this limitation by adjusting the task queue logic. Specif
 <!-- ### Perceived Effort -->
 
 ## Hypotheses
-
-## Data
-
-Our experiment was conducted on the Prolific platform. In total, we acquired data from N = 92 participants, each of whom completed the modified experimental paradigm and revised questionnaires designed to explore the relationships between financial status, anxiety, and decision-making under uncertainty.
 
 ```{r load-data-and-analysis, message=FALSE, warning=FALSE}
 library(mice)
@@ -1578,9 +1683,74 @@ df <- df %>%
 
 ```
 
+## Data
+
+Our experiment was conducted on the Prolific platform. In total, we acquired data from N = `r length(unique(df_combined$participant))` participants, each of whom completed the modified experimental paradigm and revised questionnaires designed to explore the relationships between financial status, anxiety, and decision-making under uncertainty. Note that due to an error with Qualtrics, `r length(unique(df_combined[is.na(df_combined$SAI_post),]$participant))` individuals did not complete the final STAI questionnaire, so analyses that are dependent on the post-experiment anxiety measures will not include these participants.
+
 ### Demographics
 
-Our experiment involved participants with various income levels and anxiety scores. @tbl-exp1-demo summarizes the demographics of the participants. Regarding income, we observed a significant difference between high-income and low-income participants (p = 0.05). The mean income for the high-income group was approximately \$146,012.57, while for the low-income group, it was around \$17,571.42. This substantial income disparity within our sample reflects the economic diversity of the participants, ranging from those experiencing financial hardship to those with more substantial financial resources. For anxiety scores, as measured by the State-Trait Anxiety Inventory (STAI), we observed stark differences between the high- and low-anxiety groups, both pre- and post-experiment. Before the experiment, the mean State Anxiety score for the high-anxiety group was 48.38, compared to 39.97 for the low-anxiety group (p \< 0.001). Similar patterns were observed post-experiment, with a mean State Anxiety score of 48.81 for the high anxiety group and 38.23 for the low anxiety group (p \< 0.001). The Trait Anxiety scores followed a similar pattern, with a mean of 48.65 for the high-anxiety group and 39.43 for the low-anxiety group (p \< 0.001).
+Our experiment involved participants with various income levels and anxiety scores. @tbl-exp1-demographics displays the summary statistics for the available demographic variables for this cohort.
+
+```{r}
+#| label: tbl-exp1-demographics
+#| tbl-cap: "Demographic and Psychological Characteristics of Prolific Participants from Experiment 1. SAI refers to the State Anxiety Index administered before the game."
+
+# Function to aggregate data for a given platform
+get_platform_data <- function(data) {
+  data %>%
+    summarise(
+      Age_Min = min(Age, na.rm = TRUE),
+      Age_25th = quantile(Age, 0.25, na.rm = TRUE),
+      Age_Median = median(Age, na.rm = TRUE),
+      Age_Mean = round(mean(Age, na.rm = TRUE), 1),
+      Age_75th = quantile(Age, 0.75, na.rm = TRUE),
+      Age_Max = max(Age, na.rm = TRUE),
+      Income_Min = min(AnnualSalary, na.rm = TRUE),
+      Income_25th = quantile(AnnualSalary, 0.25, na.rm = TRUE),
+      Income_Median = median(AnnualSalary, na.rm = TRUE),
+      Income_Mean = round(mean(AnnualSalary, na.rm = TRUE), 1),
+      Income_75th = quantile(AnnualSalary, 0.75, na.rm = TRUE),
+      Income_Max = max(AnnualSalary, na.rm = TRUE),
+      SAI_Min = min(SAI_pre, na.rm = TRUE),
+      SAI_25th = quantile(SAI_pre, 0.25, na.rm = TRUE),
+      SAI_Median = median(SAI_pre, na.rm = TRUE),
+      SAI_Mean = round(mean(SAI_pre, na.rm = TRUE), 1),
+      SAI_75th = quantile(SAI_pre, 0.75, na.rm = TRUE),
+      SAI_Max = max(SAI_pre, na.rm = TRUE)
+    ) %>%
+    gather(key = "Variable", value = "Value") %>%
+    separate(Variable, into = c("Variable", "Statistic"), sep = "_") %>%
+    spread(key = "Statistic", value = "Value")
+}
+
+
+combined_data <- get_platform_data(df)
+# Replace NAs with empty values
+combined_data[is.na(combined_data)] <- ""
+
+# Create the table using the gt package
+gt_table <- combined_data %>%
+  gt(rowname_col = "Variable") %>%
+  tab_header(
+    title = "Demographics"
+  ) %>%
+  cols_label(
+    Min = "Min",
+    `25th` = "1st Qu.",
+    Median = "Median",
+    Mean = "Mean",
+    `75th` = "3rd Qu.",
+    Max = "Max"
+  ) %>%
+  fmt_number(rows = 2, decimals = 2) %>% 
+  cols_move_to_start(columns = c("Min", "25th", "Median", "Mean", "75th", "Max"))
+
+# Print the table
+gt_table
+
+```
+
+@tbl-exp1-demo summarizes the demographics of the participants across the median-split groups. Regarding income, we observed a significant difference between high-income and low-income participants (p = 0.05). The mean income for the high-income group was approximately \$146,012.57, while for the low-income group, it was around \$17,571.42. This substantial income disparity within our sample reflects the economic diversity of the participants, ranging from those experiencing financial hardship to those with more substantial financial resources. For anxiety scores, as measured by the State-Trait Anxiety Inventory (STAI), we observed stark differences between the high- and low-anxiety groups, both pre- and post-experiment. Before the experiment, the mean State Anxiety score for the high-anxiety group was 48.38, compared to 39.97 for the low-anxiety group (p \< 0.001). Similar patterns were observed post-experiment, with a mean State Anxiety score of 48.81 for the high anxiety group and 38.23 for the low anxiety group (p \< 0.001). The Trait Anxiety scores followed a similar pattern, with a mean of 48.65 for the high-anxiety group and 39.43 for the low-anxiety group (p \< 0.001).
 
 ```{r}
 #| label: tbl-exp1-demo
@@ -1647,7 +1817,7 @@ gt(results_reshaped) %>%
 
 ### Comprehensive Poverty Measures
 
-To develop a more nuanced measure of poverty, we revisited our questionnaire to address variance issues (@pca-measure). We contemplated expanding our sample to include more lower-income individuals or introducing new questions to elicit more variance. Our current iteration of comprehensive measurements is available in @sec-questionnaires.
+To develop a more nuanced measure of poverty, we revisited our questionnaire to address variance issues. We contemplated expanding our sample to include more lower-income individuals or introducing new questions to elicit more variance. Our current iteration of comprehensive measurements is available in @sec-questionnaires.
 
 We employed Factor Analysis, a statistical technique widely used to identify underlying relationships between measured variables. This method is particularly advantageous when dealing with scale compatibility issues, reducing many variables into fewer factors, and assisting in data interpretation, especially in large datasets.
 
@@ -1659,7 +1829,8 @@ Following this, we conducted a Factor Analysis on the complete datasets generate
 
 ```{r}
 #| label: fig-new-pov-scree
-#| fig-cap: ""
+#| fig-cap: "Scree Plot for Factor Analysis"
+#| fig-subcap: "The graph delineates the proportion of variance explained by factor analysis models with 1 to 5 factors. Each line represents a distinct model, with the number of factors on the x-axis and the proportion of explained variance on the y-axis. Notably, the variance explained tends to plateau as the number of factors increases. Data imputation and transformation were executed before the factor analysis to refine the dataset for optimal factor extraction."
 
 # Create a data frame with the proportion explained variance for each model
 explained_variance <- data.frame(
@@ -1686,17 +1857,85 @@ ggplot(explained_variance_long, aes(x = Factor, y = Variance, color = Model)) +
 
 More specifically, the two-factor model included "Financial Hardship" and "Employment and Economic Status" factors, which, while simpler, did not capture the full complexity of our data. The four-factor model added two additional factors. The third factor was a "Housing Status" factor, and the fourth was the "physical condition of the home ."It included variables related to a leaking roof, broken windows, exposed electrical wires, and a malfunctioning stove or refrigerator. However, the four-factor model did not significantly improve model fit. After careful consideration and analysis, we have opted for the three-factor model as the most appropriate means of capturing the complexity of poverty in our data. This model balances complexity and interpretability, allowing for a comprehensive understanding of poverty's main dimensions while remaining concise and comprehensible. The three distinct factors that comprise this model---financial hardship, employment and economic status, and housing status---align with the multidimensional nature of poverty, which extends beyond mere income deprivation to encompass various other aspects of life.
 
-Our three-factor model fits our data moderately well. The root mean square of residuals (RMSR), which measures the average residual correlation among variables, was 0.08, indicating a moderate fit. However, the Tucker-Lewis Index (TLI) was 0.475, below the desired threshold of 0.90, also suggesting only a moderate model fit. The root mean square error of approximation (RMSEA), which measures the discrepancy between the observed covariance matrix and the model covariance matrix per degree of freedom, was 0.073, with 90% confidence intervals between 0.069 and 0.08. This value suggests a reasonable error of approximation.
+Our three-factor model fits our data moderately well. The root mean square of residuals (RMSR), which measures the average residual correlation among variables, was 0.08, indicating a moderate fit. The Tucker-Lewis Index (TLI) was 0.475, below the desired threshold of 0.90, also suggesting only a moderate model fit. The root mean square error of approximation (RMSEA), which measures the discrepancy between the observed covariance matrix and the model covariance matrix per degree of freedom, was 0.073, with 90% confidence intervals between 0.069 and 0.08. This value suggests a reasonable error of approximation.
 
 The derived factors, based on their highest loadings, represent the following constructs:
 
-1.  **Factor 1 (PA1)**: This factor had high loadings primarily on the 'Q48' series and 'Q50' questions, which indicate experiences of financial hardship and food insecurity within the past 12 months. We labeled Factor 1 as a "Financial Hardship" factor. This factor is moderately negatively correlated with Factor 3 (PA3).
+1.  **Factor 1 (Factor 1)**: This factor had high loadings primarily on the 'Q48' series and 'Q50' questions, which indicate experiences of financial hardship and food insecurity within the past 12 months. We labeled Factor 1 as a "Food Deprivation" factor. This factor is moderately negatively correlated with Factor 3.
 
-2.  **Factor 2 (PA2)**: The highest loadings on this factor were hours worked weekly and the participant's annual salary, suggesting that this factor might be related to the work and economic conditions of the respondents. There was a slight positive correlation between this factor and Factor 3 (PA3). Given the nature of the variables that load heavily on this factor, we interpreted it as an "Employment and Economic Status" factor.
+2.  **Factor 2 (Factor 2)**: The highest loadings on this factor were hours worked weekly and the participant's annual salary, suggesting that this factor might be related to the work and economic conditions of the respondents. There was a slight positive correlation between this factor and Factor 3. Given the nature of the variables that load heavily on this factor, we interpreted it as an "Employment and Economic Stability" factor.
 
-3.  **Factor 3 (PA3)**: This factor had the highest loadings on questions related to home ownership. Thus, we interpret Factor 3 as a "Housing Status" factor. This factor had a negative correlation with Factor 1 (PA1) and a slight positive correlation with Factor 2 (PA2).
+3.  **Factor 3 (Factor 3)**: This factor had the highest loadings on questions related to home ownership. Thus, we interpret Factor 3 as a "Housing Deprivation" factor. This factor had a negative correlation with Factor  and a slight positive correlation with Factor 2.
 
-The correlation of the factor scores with the factors for PA1, PA2, and PA3 were 0.99, 0.94, and 0.91, respectively, indicating high accuracy of the factor scores. Similarly, the multiple R square of scores with factors for PA1, PA2, and PA3 were 0.98, 0.88, and 0.83, respectively, suggesting a strong relationship between the observed variables and the extracted factors. The minimum correlation of possible factor scores were 0.97, 0.77, and 0.67 for PA1, PA2, and PA3, respectively, further supporting the adequacy of the factor scores.
+The correlation of the factor scores with the factors for Factor 1, Factor 2, and Factor 3 were 0.99, 0.94, and 0.91, respectively, indicating high accuracy of the factor scores. Similarly, the multiple R square of scores with factors for Factor 1, Factor 2, and Factor 3 were 0.98, 0.88, and 0.83, respectively, suggesting a strong relationship between the observed variables and the extracted factors. The minimum correlation of possible factor scores were 0.97, 0.77, and 0.67 for Factor 1, Factor 2, and Factor 3, respectively, further supporting the adequacy of the factor scores.
+
+
+```{r}
+#| label: tbl-pilot-pca
+#| tbl-cap: "Results from a Factor Analysis of our deprivation questionnaire"
+#| tbl-subcap: "The extraction method was principal axis factoring with an oblique rotation with a minimizing criterion. Answers are coded such that higher values signify higher agreement with the given statements."
+
+# 1. Identify top 5 questions for each of the first two PCs based on magnitude
+top_questions_factor1 <- order(abs(poverty3$loadings[, 1]), decreasing = TRUE)[1:4]
+top_questions_factor2 <- order(abs(poverty3$loadings[, 2]), decreasing = TRUE)[1:4]
+top_questions_factor3 <- order(abs(poverty3$loadings[, 3]), decreasing = TRUE)[1:4]
+
+# rownames(poverty3$loadings)[top_questions_factor1]
+# rownames(poverty3$loadings)[top_questions_factor2]
+# rownames(poverty3$loadings)[top_questions_factor3]
+# From codebook:
+top_questions <- c("In the last 12 months, were you ever hungry, but didn't eat, because there wasn't enough money for food?",
+                   "In the last 12 months, how often did you or other adults in the household ever cut the size of your 
+meals or skip meals because there wasn't enough food?",
+                   "In the last 12 months, did you need food but couldn't afford to buy it or couldn't afford to go out to get it?",
+                   "In the last 12 months, did you ever eat less than you felt you should because there wasn't 
+enough money for food?",
+                   "What was your approximate total family income last year?",
+                   "Do you have a car, truck or other vehicle?",
+                   "Are you neither salaried on your job nor paid by the hour?",
+                   "Do you have a loan from a bank/credit union, such as for a car?",
+                   "Are any of the following conditions present in your home? [A toilet, hot water heater, or other plumbing that doesn't work?]",
+                   "Are any of the following conditions present in your home? [Exposed electrical wires?]",
+                   "Are any of the following conditions present in your home? [Broken windows?]",
+                   "Are any of the following conditions present in your home? [A furnace, boiler, or heating system that you can't count on?]")
+
+# 2. Extract the loadings for these questions for both PCs
+table_data <- data.frame(
+  QuestionText = top_questions,
+  `Factor1` = poverty3$loadings[c(top_questions_factor1, top_questions_factor2, top_questions_factor3), 1],
+  `Factor2` = poverty3$loadings[c(top_questions_factor1, top_questions_factor2, top_questions_factor3), 2],
+  `Factor3` = poverty3$loadings[c(top_questions_factor1, top_questions_factor2, top_questions_factor3), 3]
+)
+
+# 3. Build the table
+# Create the table with row groups and additional column header
+# Add a grouping column for row groups
+table_data$Group <- c(rep("Factor 1: Food Deprivation", 4),
+                      rep("Factor 2: Employment and Economic Stability", 4),
+                      rep("Factor 3: Housing Deprivation", 4))
+
+# Create the table
+table_output <- gt(table_data, groupname_col = "Group") %>%
+  cols_label(
+    QuestionText = "",
+    `Factor1` = "Factor 1",
+    `Factor2` = "Factor 2",
+    `Factor3` = "Factor 3"
+  ) %>%
+  fmt_number(
+    columns = 2:4,
+    decimals = 2
+  ) %>%
+  tab_spanner(
+    label = "Loadings",
+    columns = 2:4
+  )
+
+
+table_output
+
+```
+
 
 ### Zip Code Poverty Measures
 
@@ -1781,21 +2020,18 @@ ggplot() +
         # Move the legends to the bottom
         legend.position = "bottom") +
   # Remove the axis labels
-  labs(x = "", y = "")
+  labs(x = "", y = "") +
+  # Adjust the legends
+  guides(color = guide_colorbar(title.position = "top", title.hjust = 0.5),
+         size = guide_legend(title.position = "top", title.hjust = 0.5))
 
 ```
 
 ## Results
 
-### Choice
-
 ### Task Performance
 
-We compiled data on each participant's selection and non-selection of each type of task (Important, Hard, and Urgent), then computed the frequency with which each participant picked a particular task type when given an option. @tbl-exp1-totalpoints indicates that the decision to complete Important tasks significantly affected the total points a participant amassed (Estimate = 16.098, p \< .001). Specifically, a ten percentage point rise in the ratio of selected Important tasks (two points, as opposed to one point) resulted in an increase of 1.6 points in the overall score. However, the percentage of times a participant chose Hard or Urgent tasks did not significantly explain the total points accumulated (Estimate = -7.563, p = .371 for Hard tasks; Estimate = 6.539, p = .142 for Urgent tasks).
-
-We also included demographic variables and participant characteristics (STAI score, income level, and platform) as control variables in the regression model, but none showed a significant relationship with total points.
-
-The model accounted for approximately 20.24% of the variance in total points (Adjusted R-squared = 0.132), with an overall significant model fit (F(6,68) = 2.877, p \< .05).
+We analyzed participants' task selection patterns, focusing on Important, Hard, and Urgent tasks, and computed the frequency of each task type selection for every participant. As shown in @tbl-exp1-totalpoints, the proportion of Important tasks selected had a significant positive association with the total points accrued by participants. Specifically, for every ten percentage point increase in the selection of Important tasks, participants' total scores increased by approximately 1.6 points (Estimate = 18.086, p \< .01). In contrast, the selection frequencies of Hard and Urgent tasks did not significantly predict the total points (Estimate for Hard tasks = 7.442, p \> .05; Estimate for Urgent tasks = -20.245, p \< .001). Control variables, including demographic factors, STAI scores, income levels, and platform, were incorporated into the regression model. However, none of these variables significantly correlated with the total points. The regression model explained about 20.24% of the variance in total points, with an Adjusted R-squared value of 0.448 in the primary model. The model's overall fit was statistically significant (F(4,85) = 19.047, p \< .001).
 
 ```{r, results='asis'}
 #| label: tbl-exp1-totalpoints
@@ -1867,36 +2103,37 @@ performance <- inner_join(total_points_df %>% ungroup(),
 df <- inner_join(df, performance, by = c("PROLIFIC_PID" = "participant"))
 
 # Run regression
-reg_total1 <- lm(total_points ~ perc_important_chosen + 
-                         perc_effort_chosen + perc_urgent_chosen,
+# reg_total1 <- lm(total_points ~ perc_important_chosen + 
+#                          perc_effort_chosen + perc_urgent_chosen,
+#                        data = df)
+reg_total1 <- lm(total_points ~ SAI_pre +
+                   perc_important_chosen + 
+                   perc_effort_chosen +
+                   perc_urgent_chosen,
                        data = df)
-reg_total2 <- lm(total_points ~ perc_important_chosen + 
-                         perc_effort_chosen + perc_urgent_chosen +
-                         SAI_pre + SAI_post + TAI_post,
+reg_total2 <- lm(total_points ~ PA1 + PA2 + PA3 +
+                   perc_important_chosen + 
+                   perc_effort_chosen +
+                   perc_urgent_chosen,
                        data = df)
-reg_total3 <- lm(total_points ~ perc_important_chosen + 
-                         perc_effort_chosen + perc_urgent_chosen +
-                         PA1 + PA2 + PA3,
-                       data = df)
-reg_total4 <- lm(total_points ~ perc_important_chosen + 
-                         perc_effort_chosen + perc_urgent_chosen +
-                         SAI_pre + SAI_post + TAI_post +
-                         PA1 + PA2 + PA3,
+reg_total3 <- lm(total_points ~ SAI_pre +
+                         PA1 + PA2 + PA3 +
+                   perc_important_chosen + 
+                   perc_effort_chosen +
+                   perc_urgent_chosen,
                        data = df)
 
-stargazer(reg_total1, reg_total2, reg_total3, reg_total4,
+stargazer(reg_total1, reg_total2, reg_total3,
           type = "latex", 
           header = FALSE, 
           align = TRUE,
-          covariate.labels = c("Important task chosen",
-                               "Hard task chosen",
-                               "Urgent task chosen",
-                               "SAI (Pre)",
-                               "SAI (Post)",
-                               "TAI (Post)",
+          covariate.labels = c("SAI (Pre)",
                                "Factor 1",
                                "Factor 2",
-                               "Factor 3"),
+                               "Factor 3",
+                               "Important tasks chosen",
+                               "Hard tasks chosen",
+                               "Urgent tasks chosen"),
           dep.var.labels = c("Total Points"),
           star.cutoffs = c(.05, .01, .001), 
           star.char = c("*", "**", "***"),
@@ -1906,7 +2143,11 @@ stargazer(reg_total1, reg_total2, reg_total3, reg_total4,
 
 ### Trade-off Decisions
 
-When we compare an individual's choice of "challenging" tasks: decisions between high urgency - low importance or low importance - high urgency tasks, we observe that high anxiety and low income individuals more often choose high urgency tasks over high value tasks, which corroborates the current non-quantitative literature as can be observed in the plots below.
+We subsequently examined participants' task selection during trade-off scenarios, as delineated in the pilot experiment. We aimed to identify potential behavioral variances driven by socioeconomic and psychological determinants by evaluating these averages. @fig-exp1-tradeoff delineates the choice proportions influenced by income and anxiety levels.
+
+In Panel (a), participants were categorized into either High or Low factor groups. Factor 1's choice proportions stood at 55.8% for the High group and 54.4% for the Low group. Factor 2 exhibited proportions of 54.7% (High) and 55.5% (Low), while for Factor 3, the figures were 55.3% (High) and 54.9% (Low). Notably, the disparities in choice proportions across these categories were marginal and lacked statistical significance, implying that income tiers had a limited impact on task selection behaviors.
+
+Panel (b) delves into participants' anxiety levels pre and post the experiment. For post-experiment state anxiety, the High group manifested a choice proportion of 57.6%, in contrast to the Low group's 54.1%. Pre-experiment state anxiety revealed 56.7% (High) and 53.5% (Low). Meanwhile, trait anxiety evaluations yielded 56.3% (High) and 55.1% (Low). These distinctions, too, were statistically non-significant.
 
 ```{r}
 #| label: fig-exp1-tradeoff
@@ -1954,9 +2195,9 @@ median_PA1 <- median(df$PA1, na.rm = TRUE)
 median_PA2 <- median(df$PA2, na.rm = TRUE)
 median_PA3 <- median(df$PA3, na.rm = TRUE)
 # Create two new columns to distinguish high-low income and high-low anxiety
-df$PAGroup1 <- ifelse(df$PA1 > median_PA1, 'High', 'Low')
+df$PAGroup1 <- ifelse(df$PA1 < median_PA1, 'High', 'Low')
 df$PAGroup2 <- ifelse(df$PA2 > median_PA2, 'High', 'Low')
-df$PAGroup3 <- ifelse(df$PA3 > median_PA3, 'High', 'Low')
+df$PAGroup3 <- ifelse(df$PA3 < median_PA3, 'High', 'Low')
 
 # Pivot the data to longer format
 df_long <- df %>%
@@ -2052,20 +2293,20 @@ df_combined <- bind_rows(df_list) %>%
 
 ```
 
-In this section, we delve into the urgency bias, or the tendency for individuals to prioritize urgent tasks over others. @tbl-exp1-urgencypoverty displays our analysis of the interplay between this bias and various socio-economic parameters to elucidate their contributory roles.
+This section investigates the urgency bias or the tendency for individuals to prioritize urgent tasks over others. @tbl-exp1-urgencypoverty displays our analysis of the interplay between this bias and various socioeconomic parameters to elucidate their contributory roles.
 
-Model 1 takes into account the role of stability in three fundamental life domains: food security (PA1), job security (PA2), and housing stability (PA3). Our findings reveal a marginally significant negative influence of job security on urgency bias, suggesting that a stable job situation may attenuate the propensity towards urgency bias. However, food supply and housing stability do not significantly sway urgency bias.
+Model 1 assesses the influence of deprivation across three critical life domains. The data reveals a significant negative relationship between food deprivation and urgency bias, suggesting that individuals facing food scarcity may be less likely to prioritize urgent tasks. However, neither job stability nor housing deprivation significantly impacted this bias.
 
-Models 2 and 3 explore the potential relationship between urgency bias and pre- and post-experiment anxiety levels. Our results do not yield a significant correlation, suggesting that the state of anxiety, either before or after the experiment, does not hold significant sway over urgency bias.
+Models 2 and 3 explore the associations between area-level median income and poverty levels with urgency bias, respectively. The results indicate a marginally significant positive relationship between median income and urgency bias. Conversely, a notable negative correlation between area-level poverty and the bias arises, suggesting that individuals from higher poverty regions may exhibit a reduced urgency bias.
 
-Model 4 probes the impact of area-level poverty (as measured by ZIP poverty level) on urgency bias. Interestingly, the results indicate a marginally significant negative relationship, hinting that individuals residing in areas with higher poverty levels may exhibit a slightly reduced tendency towards urgency bias.
+Model 4 delves into the potential influence of pre-experiment anxiety levels on the urgency bias. The findings do not establish a significant relationship, suggesting pre-experiment anxiety levels do not significantly sway an individual's urgency bias.
 
-In all models, we account for a variety of control variables, including the total number of Prolific approvals (as a proxy for platform experience), gender, age, the perceived importance and effort of the chosen task, and the perceived urgency, importance, and effort of the unchosen task. A consistent pattern emerges across all models, accentuating the role of task attributes in shaping urgency bias. This observation underscores the dynamic nature of urgency bias, suggesting that it can change with the inherent characteristics of tasks in the queue, such as their perceived importance and urgency.
+We accounted for control variables in all models, including the total number of Prolific approvals (reflecting platform experience), gender, age, and attributes related to the selected and unselected tasks.
 
 ```{r, results='asis'}
 #| label: tbl-exp1-urgencypoverty
 #| tbl-cap: "Urgency Bias Regression Models"
-#| tbl-subcap: "Controls include total approvals, sex, age, the effect of chosen and not chosen tasks, round left true, and sigma."
+#| tbl-subcap: "Logistic regression models assessing the likelihood of selecting an urgent task, with individual and round-specific random effects. Covariates include age, education, points, attributes of the chosen and unchosen tasks, and the round number. Coefficients denote the log odds shift in opting for an urgent task corresponding to a unit alteration in the predictor. State Anxiety (SAI) data limited to pre-experiment questionnaire."
 
 # df_combined <- read_csv("data/Exp1/df.csv")
 df_combined <- df_combined %>%
@@ -2098,16 +2339,16 @@ get_gof_rows <- function(model) {
 # Define formulas
 formulas <- list(
   chosen_u ~ PA1 + PA2 + PA3 + block + complete +
-    Total_approvals + RoundLeft +
+    Total_approvals + RoundLeft + Age + Sex + points +
     chosen_i + chosen_e + not_chosen_i + not_chosen_e + not_chosen_u,
   chosen_u ~ zip_income_log + block + complete +
-    Total_approvals + RoundLeft +
+    Total_approvals + RoundLeft + Age + Sex + points +
     chosen_i + chosen_e + not_chosen_i + not_chosen_e + not_chosen_u,
-  chosen_u ~ zip_poverty_log + block + complete +
-    Total_approvals + RoundLeft +
+  chosen_u ~ zip_poverty + block + complete +
+    Total_approvals + RoundLeft + Age + Sex + points +
     chosen_i + chosen_e + not_chosen_i + not_chosen_e + not_chosen_u,
   chosen_u ~ SAI_pre + block + complete +
-    Total_approvals + RoundLeft +
+    Total_approvals + RoundLeft + Age + Sex + points +
     chosen_i + chosen_e + not_chosen_i + not_chosen_e + not_chosen_u
 )
 # Fit models
@@ -2120,15 +2361,17 @@ final_gof_list <- list(
   Trials = sapply(gof_list, `[[`, "Trials"),
   BIC = sapply(gof_list, `[[`, "BIC")
 )
-custom_coef <- list("PA1" = "Food Stability",
+custom_coef <- list("PA1" = "Food Deprivation",
                     "PA2" = "Job Stability",
-                    "PA3" = "Housing Stability",
-                    "zip_income_log" = "ZIP Median Income",
-                    "zip_poverty_log" = "ZIP poverty level",
-                    "SAI_pre" = "Anxiety")
+                    "PA3" = "Housing Deprivation",
+                    "zip_income_log" = "Log(ZIP Median Income)",
+                    "zip_poverty" = "ZIP Poverty Level",
+                    "SAI_pre" = "State Anxiety")
 texreg(lapply(models, function(x) {
   texreg::extract(x, include.aic = FALSE, include.loglik = FALSE)
   }),
+  custom.model.names = c("(1)","(2)","(3)","(4)"),
+  custom.header = list("Prob(Chosen Task Urgency = High)" = 1:4),
   stars = c(0.001, 0.01, 0.05, 0.1),
   custom.coef.map = custom_coef,
   custom.gof.rows = final_gof_list)
@@ -2137,7 +2380,7 @@ texreg(lapply(models, function(x) {
 
 ### Accuracy
 
-We also obtain a comparison of the choices participants make and the optimal, or rational, protocol we generated. This is done by estimating a hierarchical Bayesian model...
+In this section, we extend the methodology introduced in @sec-pilotaccuracy to evaluate how closely participants' task choices align with the optimal decision-making protocol we previously established.
 
 ```{r}
 #| label: exp1-accuracy-code
@@ -2192,12 +2435,14 @@ for (i in c(1:data_list$N)) {
     ev2 <- EVs[2, t, s] # EV for choice 2
     
     # Determine the best choice
-    choice_best[i, t] <- ifelse(ev1 >= ev2, 1, 2)
+    choice_best[i, t] <- ifelse(ev1 > ev2, 1,
+                                ifelse(ev1 < ev2, 2,
+                                       ifelse(ev1 == ev2, 0, NA)))
   }
 }
 
 #####  Accuracy of all trials
-comparison <- (data_list$choice == choice_best)
+comparison <- (data_list$choice == choice_best | choice_best == 0)
 Accuracy <- as.data.frame(rowMeans(comparison, na.rm=T))
 Accuracy <- cbind(Accuracy, data_list$participants)
 ## Get participant ID
@@ -2215,7 +2460,7 @@ participant_mapping <- data.frame(participant = participant_ids,
 
 ```{r}
 #| label: fig-exp1costs
-#| fig-cap: "Histogram of Means of Estimated Costs Parameters per Participant. Note that the lower cost was assumed to be 0."
+#| fig-cap: "Histogram of Means of Estimated Costs Parameters per Participant, with the mean of the hyperparameter  depicted. Note that the lower cost was assumed to be 0."
 
 # Compute the mean of the hyperparameter (mu_cost)
 mean_hyper_cost <- params$mean[2]
@@ -2239,22 +2484,16 @@ ggplot(costH_values, aes(x = mean)) +
 
 ```
 
-This score is calculated by first estimating the cost parameters for each participant and then using them with backwards induction to discover the optimal choice at each presented state.
+We employ a hierarchical Bayesian model to estimate the cost parameter for each participant, as illustrated in @fig-costs. In contrast to the pilot experiment, we set the cost of low-effort tasks to zero. Once estimated, these individualized cost parameters allowed us to compute the optimal choices for every state through a backward induction process.
 
-#### Accuracy, Anxiety, and Income
+@fig-exp1-accuracy-results offers a granular view of this alignment. A distinct dot represents each participant. The y-axis quantifies the accuracy of their choices, represented as the percentage of correct decisions made throughout the experiment. Simultaneously, the x-axes capture the scores for Factor 1 and the pre-experiment State Anxiety Index.
 
-1.  Accuracy in trade-off decisions as a function of income and anxiety
-
-Finally, we compare for each participant, how many of their choices are identical to a model that observed the full horizon for the Markov decision process. Each participant is a dot, y axis is the percentage of correct choices in the experiment while x axis is the STAI (anxiety measure). Generally the results are very similar to figure 1.5.
+A striking observation is the invariance of accuracy across varying income and anxiety levels. This result suggests that these socio-economic and psychological factors might not be pivotal in influencing task selection accuracy in this context. @tbl-exp1-accuracy displays four other models that further corroborate this observation. Four distinct random effects logistic regression models evaluate the optimality of each participant's choice. These models incorporate a range of regressors, including the derived factors, individual anxiety metrics, and area-level economic indicators such as ZIP code poverty and median income levels. None of the results from these models reached statistical significance.
 
 ```{r}
 #| label: fig-exp1-accuracy-results
-#| fig-cap: "Participant Accuracy by Income and Anxiety"
-#| fig-subcap:
-#|   - "Income"
-#|   - "Anxiety"
+#| fig-cap: "Participant Accuracy by Factor 1 and Anxiety"
 #| layout-ncol: 2
-#| column: page-right
 
 # Join with the existing data frame
 Accuracy_exp1 <- Accuracy %>%
@@ -2265,22 +2504,21 @@ Accuracy_exp1 <- Accuracy %>%
   rename(Accuracy = `rowMeans(comparison, na.rm = T)`) %>%
   left_join(df_combined %>%
               group_by(participant) %>%
-              summarise(job = first(PA2),
+              summarise(food = first(PA1),
                         stai = first(SAI_pre)), by = "participant")
 
 # Plot no 1 : Participant Accuracy by Income
-ggplot(Accuracy_exp1, aes(x = job, y = Accuracy)) +
+ggplot(Accuracy_exp1, aes(x = food, y = Accuracy)) +
   geom_point(color = "steelblue", size = 3) +
   stat_smooth(method = loess, color = "red", size = 1) +
   geom_label(x = 1, y = 0.75,
              label = paste("Correlation:",
-                           rd(cor.test(Accuracy_exp1$job,
+                           rd(cor.test(Accuracy_exp1$food,
                                        Accuracy_exp1$Accuracy,
                                        method = "spearman")$estimate, 2)),
              fill = "white", color = "black", label.padding = unit(0.35, "lines")) +
-  labs(x = "Job Stability", y = "Accuracy",
-       title = "Participant Accuracy by Job Stability",
-       subtitle = "Prolific, Income") +
+  labs(x = "Food Deprivation", y = "Accuracy",
+       title = "Participant Accuracy by Food Deprivation") +
   custom_theme
 
 # Plot no 2: Participant Accuracy by STAI (State-Trait Anxiety Inventory)
@@ -2294,57 +2532,100 @@ ggplot(Accuracy_exp1, aes(x = stai, y = Accuracy)) +
                                        method = "spearman")$estimate, 2)),
              fill = "white", color = "black", label.padding = unit(0.35, "lines")) +
   labs(x = "SAI (State Anxiety Inventory)", y = "Accuracy",
-       title = "Participant Accuracy by State Anxiety",
-       subtitle = "Prolific, Anxiety") +
+       title = "Participant Accuracy by State Anxiety") +
   custom_theme
 
 ```
 
-It appears that Accuracy does not vary across income and anxiety levels with these measures. Some possibilities of this fact might include that, since time discounting here is virtually 0, leaving the important task behind will not affect participants as much (depending, of course, of the estimated cost parameters).
-
-<!-- #### General Linear Models of Accuracy -->
-
-```{r, eval=FALSE}
+```{r}
 #| label: tbl-exp1-accuracy
-pglm(formula = Optimal ~ income*stai +
-                         age + education + points +
-                         chosen_i + chosen_e + chosen_u +
-                         not_chosen_i + not_chosen_e + not_chosen_u,
-             data = two_options,
-             effect = "twoways",
-             index = c("participant", "round"),
-             model = "random",
-             family = binomial('logit')) -> accuracy_income
+#| tbl-cap: "Regression analysis of accuracy on participants' choice behavior and demographic variables"
+#| tbl-subcap: "Logistic regression models assessing the likelihood of selecting the optimal task, with individual and round-specific random effects. Covariates include age, education, points, and attributes of the chosen and unchosen tasks. Coefficients denote the log odds shift in opting for the optimal task corresponding to a unit alteration in the predictor. State Anxiety (SAI) data limited to pre-experiment questionnaire."
 
-pglm(formula = Optimal ~ Dim.1*Dim.2  +
-                      age + education + points +
-                      chosen_i + chosen_e + chosen_u +
-                      not_chosen_i + not_chosen_e + not_chosen_u,
-             data = two_options,
-             effect = "twoways",
-             index = c("participant", "round"),
-             model = "random",
-             family = binomial('logit')) -> accuracy_pca
+# Instead of computing the row means, we'll melt the comparison matrix to long format
+long_comparison <- reshape2::melt(comparison %>%
+                                    bind_cols(index = data_list$participants) %>%
+                                    group_by(index) %>%
+                                    mutate(block = row_number()) %>%
+                                    ungroup(),
+                                  id.vars = c("index", "block"),
+                                  variable.name = "Trial",
+                                  value.name = "Accuracy") %>%
+  left_join(participant_mapping, by = c('index')) %>%
+  select(participant, block, Trial, Accuracy) %>%
+  mutate(Trial = as.numeric(Trial))
 
-pglm(formula = Optimal ~ poverty_zip*stai +
-                      age + education + points +
-                      chosen_i + chosen_e + chosen_u +
-                      not_chosen_i + not_chosen_e + not_chosen_u,
-             data = two_options,
-             effect = "twoways",
-             index = c("participant", "round"),
-             model = "random",
-             family = binomial('logit')) -> accuracy_zipdeprivation
+# The resulting df_combined dataframe will now have an Accuracy column that indicates 
+# whether the choice made in each trial was optimal (1) or not (0).
+df_accuracy <- df_combined %>%
+  mutate(Trial = as.numeric(round)) %>%
+  left_join(long_comparison, by = c("participant", "block", "Trial"))
 
-pglm(formula = Optimal ~ median_income_zip*stai  +
-                      age + education + points +
-                      chosen_i + chosen_e + chosen_u +
-                      not_chosen_i + not_chosen_e + not_chosen_u,
-             data = two_options,
-             effect = "twoways",
-             index = c("participant", "round"),
-             model = "random",
-             family = binomial('logit')) -> accuracy_zipincome
+# Function to fit the model
+fit_model <- function(formula, data) {
+  pglm(formula = formula,
+       data = data,
+       effect = "twoways",
+       family = binomial('logit'),
+       model = "random")
+}
+
+get_gof_rows <- function(model) {
+  values <- model$model %>%
+    group_by(pick(2, Age, Sex, Total_approvals)) %>%
+    summarise(blocks = ceiling(n() / 40), total = n(), trials = n() / ceiling(n() / 40)) %>%
+    ungroup() %>%
+    summarise(N = n(), max = max(trials), min = min(trials), mean = mean(trials))
+  Participants <- values$N
+  Trials <- paste0(values$min, "-", values$max, " (M = ", round(values$mean,1),")")
+  BIC <- AIC(model, k = log(nrow(model$model)))
+  return(list(Participants = Participants, Trials = Trials, BIC = BIC))
+}
+
+# Define formulas
+formulas <- list(
+  Accuracy ~ PA1 + PA2 + PA3 + Age + Sex +
+    Total_approvals + RoundLeft + complete + points +
+    chosen_i + chosen_e + chosen_u +
+    not_chosen_i + not_chosen_e + not_chosen_u,
+  Accuracy ~ zip_income_log + Age + Sex +
+    Total_approvals + RoundLeft + complete + points +
+    chosen_i + chosen_e + chosen_u +
+    not_chosen_i + not_chosen_e + not_chosen_u,
+  Accuracy ~ zip_poverty + Age + Sex +
+    Total_approvals + RoundLeft + complete + points +
+    chosen_i + chosen_e + chosen_u +
+    not_chosen_i + not_chosen_e + not_chosen_u,
+  Accuracy ~ SAI_pre + Age + Sex +
+    Total_approvals + RoundLeft + complete + points +
+    chosen_i + chosen_e + chosen_u +
+    not_chosen_i + not_chosen_e + not_chosen_u
+)
+# Fit models
+models <- lapply(formulas, fit_model, data = df_accuracy)
+
+# Generate the table
+gof_list <- lapply(models, get_gof_rows)
+final_gof_list <- list(
+  Participants = sapply(gof_list, `[[`, "Participants"),
+  Trials = sapply(gof_list, `[[`, "Trials"),
+  BIC = sapply(gof_list, `[[`, "BIC")
+)
+custom_coef <- list("PA1" = "Food Deprivation",
+                    "PA2" = "Job Stability",
+                    "PA3" = "Housing Deprivation",
+                    "zip_income_log" = "Log(ZIP Median Income)",
+                    "zip_poverty" = "ZIP Poverty Level",
+                    "SAI_pre" = "State Anxiety")
+texreg(lapply(models, function(x) {
+  texreg::extract(x, include.aic = FALSE, include.loglik = FALSE)
+  }),
+  custom.model.names = c("(1)","(2)","(3)","(4)"),
+  custom.header = list("Prob(Chosen Task is Optimal)" = 1:4),
+  stars = c(0.001, 0.01, 0.05, 0.1),
+  custom.coef.map = custom_coef,
+  custom.gof.rows = final_gof_list)
+
 ```
 
 # Discussion
@@ -2356,6 +2637,8 @@ The trade-off decision analysis reveals a nuanced relationship between urgency, 
 We review the Key Results from the first pages: urgent choices do seem to be above 50% for key groups, but the differences-in-differences across income and anxiety levels are not significant.
 
 Again, people might not mind leaving the High Importance task undone. This is what some friends have called the "insurance ice cream." That is, if I leave this High Importance task in my queue, I can use it when I get a task that is High Effort but Low Urgency. Using multiple regression models, controlling for various factors adds robustness to our findings. It sets the stage for future research to delve deeper into the underlying mechanisms that drive urgency bias. The potential multicollinearity and the non-significance of some variables also highlight the phenomenon's complexity, suggesting that further studies with larger sample sizes and more refined measures may be warranted to unravel the intricacies of urgency bias.
+
+It is worth noting that this approach, while rigorous, makes certain assumptions about the nature of the decision-making process. For instance, it assumes that individuals are utility maximizers and have perfect knowledge of the task structure. While these assumptions are standard in the decision-making literature, they may not hold in all contexts.
 
 ### Intergenerational Poverty
 
@@ -2410,7 +2693,6 @@ IRB: Justification
 ### Other Low SES Cohorts
 
 M: Proposal
-
 
 ### Power Analysis
 
@@ -2512,9 +2794,14 @@ Stress has been suggested to increase perceived effort (e.g., the study will inv
 
 In our model, cost can include a subjective component. Instead of counting it as simply the number of clicks, we can assume that the agent may dread or fantasize about action $a$. As such, someone who likes the task might not be bothered by doing it so the cost may be very close to zero (or negative). And vice versa for someone who hates it. Similarly, we can account for substituting *subjective* probability for objective probability. That is, people might distort the actual probability of future events.
 
-
 ## Hypotheses
 
+1.  **H1:** Participants will prioritize tasks with imminent (urgent) deadlines over tasks deemed more important but with less immediate deadlines.
+2.  **H2:** The introduction of monetary shocks in the first round will lead to a heightened sense of urgency, causing participants to prioritize tasks differently compared to the second round, where the rate of order arrivals is twice as big.
+3.  **H3:** The variability in queue length will influence participants' task prioritization strategies, with longer queues leading to a greater focus on urgent tasks.
+4.  **H4:** Participants' accuracy in trade-off decisions will vary as a function of their income and anxiety levels. Specifically, those with lower income or higher anxiety might demonstrate different task prioritization strategies than their counterparts.
+5.  **H5:** Participants' choices often align with an optimal or rational protocol, as determined by a hierarchical Bayesian model, suggesting that, despite external pressures, their decision-making process has an underlying rationality.
+6.  **H6:** The urgency bias will manifest differently across various demographic variables, such as income, anxiety, and ZIP code-related poverty measures.
 
 # Conclusion
 
@@ -3416,7 +3703,7 @@ Prolific1_Stan_results <- sampling(object = my_model, data = model_data,
 
 ```
 
-## Principal Compoenent Analysis for Pilot Experiment
+## Principal Component Analysis for Pilot Experiment
 
 ```{r}
 #| label: fig-loadings
@@ -3629,7 +3916,7 @@ xtable::xtable(data.frame(
 
 # Appendix: Images
 
-## The Eisenhower Matrix {#app-eisenhower}
+## The Eisenhower Matrix {#sec-eisenhower}
 
 "Who can define for us with accuracy the difference between the long and short term! Especially whenever our affairs seem to be in crisis, we are almost compelled to give our first attention to the urgent present rather than to the important future."
 

@@ -4,7 +4,7 @@
 \PassOptionsToPackage{dvipsnames,svgnames,x11names}{xcolor}
 %
 \documentclass[
-]{report}
+]{article}
 
 \usepackage{amsmath,amssymb}
 \usepackage{iftex}
@@ -167,16 +167,16 @@ urgency and value. Observations suggest that individuals from low SES
 groups prioritize urgent tasks while agents from high SES groups
 prioritize high value tasks.
 \end{abstract}
-\ifdefined\Shaded\renewenvironment{Shaded}{\begin{tcolorbox}[sharp corners, interior hidden, breakable, enhanced, boxrule=0pt, borderline west={3pt}{0pt}{shadecolor}, frame hidden]}{\end{tcolorbox}}\fi
+\ifdefined\Shaded\renewenvironment{Shaded}{\begin{tcolorbox}[interior hidden, borderline west={3pt}{0pt}{shadecolor}, sharp corners, frame hidden, enhanced, boxrule=0pt, breakable]}{\end{tcolorbox}}\fi
 
 \renewcommand*\contentsname{Table of contents}
 {
 \hypersetup{linkcolor=}
-\setcounter{tocdepth}{2}
+\setcounter{tocdepth}{3}
 \tableofcontents
 }
 \hypertarget{introduction}{%
-\chapter{Introduction}\label{introduction}}
+\section{Introduction}\label{introduction}}
 
 Poverty is a multifaceted issue that behavioral scientists have
 extensively studied. Their research has examined how individuals'
@@ -222,7 +222,7 @@ interest rates (Banerjee \& Duflo, 2007; Skiba \& Tobacman, 2008), and
 limit preventive healthcare services (Lusardi et al., 2010).
 
 \hypertarget{poverty-traps}{%
-\section{Poverty Traps}\label{poverty-traps}}
+\subsection{Poverty Traps}\label{poverty-traps}}
 
 We argue that impoverished individuals are trapped in a cycle of
 urgency, neglecting non-urgent tasks, ultimately leading to increased
@@ -244,7 +244,7 @@ allocation choices of low SES agents to understand the self-reinforcing
 nature of poverty traps better.
 
 \hypertarget{priority-queues-urgency-and-importance}{%
-\subsection{Priority Queues, Urgency and
+\subsubsection{Priority Queues, Urgency and
 Importance}\label{priority-queues-urgency-and-importance}}
 
 Some scientists have proposed a ``Scarcity'' view of poverty
@@ -272,7 +272,7 @@ effort costs in decision-making - thereby suggesting Eisenhower Matrices
 should be modified to account for the added parameter.
 
 \hypertarget{theory}{%
-\chapter{Theory}\label{theory}}
+\section{Theory}\label{theory}}
 
 In this section, we present a novel decision-making model that underpins
 various real-life activities, from mundane daily choices to high-stakes
@@ -283,7 +283,7 @@ decision theory, the Eisenhower matrix, and Markov Decision Processes
 (MDPs) (Puterman, 1994; Eisenhower, 1961).
 
 \hypertarget{conceptual-framework}{%
-\section{Conceptual Framework}\label{conceptual-framework}}
+\subsection{Conceptual Framework}\label{conceptual-framework}}
 
 In our model, urgency refers to the time-sensitivity of a decision or
 the period until a choice is no longer viable. This concept captures the
@@ -307,7 +307,7 @@ future rewards, considering urgency, importance, and likelihood. It
 depends only on current, not past, states (Bellman, 1957).
 
 \hypertarget{model-components}{%
-\subsection{Model Components}\label{model-components}}
+\subsubsection{Model Components}\label{model-components}}
 
 The model comprises several components inspired by the structure of
 MDPs, a mathematical framework for modeling decision-making in
@@ -357,7 +357,7 @@ aspect of decision-making, reflecting that decisions often involve a
 sequence of actions over time (Puterman, 1994).
 
 \hypertarget{comparison-to-the-two-step-task}{%
-\subsection{Comparison to the Two-Step
+\subsubsection{Comparison to the Two-Step
 Task}\label{comparison-to-the-two-step-task}}
 
 The two-step task is a well-established paradigm in cognitive
@@ -417,7 +417,7 @@ highly than the potential future benefit of a promotion (Daw et al.,
 \end{figure}
 
 \hypertarget{priority-queuing}{%
-\subsection{Priority Queuing}\label{priority-queuing}}
+\subsubsection{Priority Queuing}\label{priority-queuing}}
 
 In our two-step task example, we observed how the unchosen task was
 ``transferred'' to the next state. This characteristic is a crucial
@@ -483,7 +483,7 @@ decision-making process, particularly in the context of individuals from
 low SES.
 
 \hypertarget{simulation}{%
-\section{Simulation}\label{simulation}}
+\subsection{Simulation}\label{simulation}}
 
 Priority queue models offer a tangible mechanism for capturing the
 choices and inter-event times that agents require when making decisions
@@ -569,7 +569,7 @@ where survival rates are critical, such as in decision-making scenarios
 faced by individuals living in poverty.
 
 \hypertarget{sec-poverty}{%
-\section{Integrating Our Model with Poverty}\label{sec-poverty}}
+\subsection{Integrating Our Model with Poverty}\label{sec-poverty}}
 
 Integrating our model with poverty is crucial in understanding its
 complex dynamics and effects on various aspects of life. Poverty is not
@@ -592,7 +592,7 @@ phenomena, we offer a novel integration of these physical, mental,
 social, and temporal determinants into our priority queueing model.
 
 \hypertarget{temporal-discounting}{%
-\subsection{Temporal Discounting}\label{temporal-discounting}}
+\subsubsection{Temporal Discounting}\label{temporal-discounting}}
 
 Temporal discounting, as a behavioral economic concept, plays a pivotal
 role in our model, particularly in poverty. It refers to the
@@ -633,7 +633,8 @@ extra shift. This ability to foresee or predict future states is central
 to our model, and the following section will address it.
 
 \hypertarget{foreseeing-future-states}{%
-\subsection{Foreseeing Future States}\label{foreseeing-future-states}}
+\subsubsection{Foreseeing Future
+States}\label{foreseeing-future-states}}
 
 Individuals with lower SES often face uncertainty and instability, which
 can cloud the decision-making process, making it difficult to foresee
@@ -667,7 +668,8 @@ ability to visualize and predict future states (McIvor and Paton, 2007,
 Preparing for natural hazards: normative and attitudinal influences).
 
 \hypertarget{transition-probabilities}{%
-\subsection{Transition Probabilities}\label{transition-probabilities}}
+\subsubsection{Transition
+Probabilities}\label{transition-probabilities}}
 
 Transition probabilities, which determine the likelihood of moving from
 one state to another, play a crucial role in our model. These
@@ -702,7 +704,7 @@ strategy use in the Iowa gambling task: A comparison of
 win-stay/lose-shift and reinforcement learning models).
 
 \hypertarget{urgency}{%
-\subsection{Urgency}\label{urgency}}
+\subsubsection{Urgency}\label{urgency}}
 
 Our model is beneficial for analyzing the decisions of individuals in
 low-SES (Socioeconomic Status) environments. Here, we build on the
@@ -807,7 +809,7 @@ capture the temporal dynamics of real-life decisions and provide a more
 accurate representation of the decision-making process.
 
 \hypertarget{suboptimal-time-allocation}{%
-\subsection{Suboptimal Time
+\subsubsection{Suboptimal Time
 Allocation}\label{suboptimal-time-allocation}}
 
 Inefficient time allocation of daily tasks is another factor that can
@@ -853,7 +855,7 @@ the decision-making processes of individuals in different socioeconomic
 circumstances.
 
 \hypertarget{role-strain}{%
-\subsection{Role Strain}\label{role-strain}}
+\subsubsection{Role Strain}\label{role-strain}}
 
 Introduced by sociologist William Goode in 1960, the concept of role
 strain motivates our theoretical framework. Goode proposed that
@@ -900,7 +902,7 @@ decision-making processes and outcomes, contributing to our
 understanding of poverty dynamics.
 
 \hypertarget{scarcity}{%
-\subsection{Scarcity}\label{scarcity}}
+\subsubsection{Scarcity}\label{scarcity}}
 
 The intricate interplay between poverty and cognitive function is
 critical to socioeconomic studies. Individuals from lower socioeconomic
@@ -961,7 +963,7 @@ As such, we seek to understand the mechanisms underlying these effects
 and how they may perpetuate poverty.
 
 \hypertarget{affective-states}{%
-\section{Affective States}\label{affective-states}}
+\subsection{Affective States}\label{affective-states}}
 
 The present study proposes that the behavioral deviations observed in
 individuals living in poverty, specifically the overweighting of
@@ -1022,7 +1024,7 @@ can also lead to an urgency bias.
 \end{figure}
 
 \hypertarget{research-questions}{%
-\section{Research Questions}\label{research-questions}}
+\subsection{Research Questions}\label{research-questions}}
 
 \begin{enumerate}
 \def\labelenumi{\arabic{enumi}.}
@@ -1039,10 +1041,10 @@ can also lead to an urgency bias.
 \end{enumerate}
 
 \hypertarget{pilot-experiment}{%
-\chapter{Pilot Experiment}\label{pilot-experiment}}
+\section{Pilot Experiment}\label{pilot-experiment}}
 
 \hypertarget{methodology}{%
-\section{Methodology}\label{methodology}}
+\subsection{Methodology}\label{methodology}}
 
 Our experimental design simulates the environment of an ice cream parlor
 using an interactive online game. The game was developed in PsychoPy
@@ -1051,7 +1053,7 @@ played the role of ice cream parlor owners whose goal was to maximize
 profit by completing tasks with varying characteristics.
 
 \hypertarget{structure}{%
-\subsection{Structure}\label{structure}}
+\subsubsection{Structure}\label{structure}}
 
 In the game interface, participants saw a queue of tasks representing
 ice cream orders on the sides of the screen. Each task varied according
@@ -1111,7 +1113,7 @@ game by offering a prize of up to \(\$1.00\), contingent on the total
 number of points players accumulated throughout the game.
 
 \hypertarget{simulation-1}{%
-\subsection{Simulation}\label{simulation-1}}
+\subsubsection{Simulation}\label{simulation-1}}
 
 We devised a theoretical model for how we expect rational
 decision-making to manifest in our priority queuing experiment such that
@@ -1170,7 +1172,7 @@ of urgent choices varies by around 0.10, with lower probabilities
 centered around low cost parameters and high discount factors.
 
 \hypertarget{hypotheses}{%
-\section{Hypotheses}\label{hypotheses}}
+\subsection{Hypotheses}\label{hypotheses}}
 
 \begin{enumerate}
 \def\labelenumi{\arabic{enumi}.}
@@ -1225,7 +1227,7 @@ centered around low cost parameters and high discount factors.
 \end{enumerate}
 
 \hypertarget{data}{%
-\section{Data}\label{data}}
+\subsection{Data}\label{data}}
 
 We conducted our experiment separately on MTurk and Prolific, acquiring
 N = 22 and N = 53 participants, respectively. We treated these samples
@@ -1233,7 +1235,7 @@ as independent replications in some sections while pooling the results
 in others.
 
 \hypertarget{demographics}{%
-\subsection{Demographics}\label{demographics}}
+\subsubsection{Demographics}\label{demographics}}
 
 For both Mturk and Prolific, we distinguish high-low income and high-low
 anxiety by a median split. The high income mean is about 70k, while the
@@ -1269,7 +1271,7 @@ STAI & 20 & 38 & 47 & 45 & 54 & 64 \\
 \end{longtable}
 
 \hypertarget{measures-of-poverty}{%
-\subsection{Measures of Poverty}\label{measures-of-poverty}}
+\subsubsection{Measures of Poverty}\label{measures-of-poverty}}
 
 Although income-based measures have long been the standard for assessing
 poverty, studies have since determined that purchasing power and
@@ -1279,7 +1281,7 @@ more accurate empirical measurements of an individual's socioeconomic
 status (SES).
 
 \hypertarget{self-reported-income}{%
-\subsubsection{Self-Reported Income}\label{self-reported-income}}
+\paragraph{Self-Reported Income}\label{self-reported-income}}
 
 Though the simplest measure to collect, self-reported incomes has a
 number of limitations. Participants may have the incentive not to
@@ -1292,7 +1294,7 @@ elicit income brackets (vs.~absolute income levels). This limitation may
 also reduce power and granularity in the our analysis.
 
 \hypertarget{zip-code-measures}{%
-\subsubsection{ZIP code Measures}\label{zip-code-measures}}
+\paragraph{ZIP code Measures}\label{zip-code-measures}}
 
 To supplement the self-reported income data and account for any
 potential measurement errors, we employed additional economic indicators
@@ -1322,7 +1324,7 @@ ACS Subject Definitions document available at
 link}.
 
 \hypertarget{composite-measure-pca}{%
-\subsubsection{Composite Measure (PCA)}\label{composite-measure-pca}}
+\paragraph{Composite Measure (PCA)}\label{composite-measure-pca}}
 
 Poverty, a complex and multifaceted phenomenon, extends beyond mere
 monetary deprivation, encompassing physical, mental, and emotional
@@ -1477,7 +1479,7 @@ noting that physical and monetary deprivation questions did not yield
 sufficient variance in this analysis.
 
 \hypertarget{results}{%
-\section{Results}\label{results}}
+\subsection{Results}\label{results}}
 
 The dataset for our pilot experiment encompassed multiple choice
 variables, such as ``Important,'' ``Hard,'' and ``Urgent'' tasks, as
@@ -1491,7 +1493,7 @@ socioeconomic and psychological factors may influence task
 prioritization.
 
 \hypertarget{task-performance}{%
-\subsection{Task Performance}\label{task-performance}}
+\subsubsection{Task Performance}\label{task-performance}}
 
 We compiled data on each participant's selection and non-selection of
 each type of task (Important, Hard, and Urgent), then computed the
@@ -1564,7 +1566,7 @@ Num. obs.                           & $74$     & $69$       \\
 \end{table}
 
 \hypertarget{trade-off-decisions}{%
-\subsection{Trade-off Decisions}\label{trade-off-decisions}}
+\subsubsection{Trade-off Decisions}\label{trade-off-decisions}}
 
 Trade-off decisions, particularly those involving urgency and
 importance, are pivotal in understanding human behavior in task
@@ -1644,7 +1646,7 @@ standard error of the mean.
 \end{enumerate}
 
 \hypertarget{general-urgency-bias}{%
-\subsection{General Urgency Bias}\label{general-urgency-bias}}
+\subsubsection{General Urgency Bias}\label{general-urgency-bias}}
 
 We also explore a more comprehensive urgency bias spanning various
 decision types and demographic groups. As delineated in
@@ -1729,7 +1731,7 @@ BIC                 & $1094.87$       & $1090.04$       & $1046.88$       & $104
 \end{table}
 
 \hypertarget{sec-pilotaccuracy}{%
-\subsection{Accuracy}\label{sec-pilotaccuracy}}
+\subsubsection{Accuracy}\label{sec-pilotaccuracy}}
 
 The alignment of individual choices with an optimal or rational protocol
 offers a compelling lens through which to gauge the efficacy of those
@@ -1870,19 +1872,33 @@ BIC                 & $912.87$        & $907.55$        & $875.65$        & $877
 \end{table}
 
 \hypertarget{summary}{%
-\section{Summary}\label{summary}}
+\subsection{Summary}\label{summary}}
+
+The pilot experiment explored the impact of socioeconomic and
+psychological variables on task prioritization, specifically focusing on
+the selection among ``Important,'' ``Hard,'' and ``Urgent'' tasks. Here,
+we elucidate the findings and evaluate the validity of our hypotheses.
+The data presents a nuanced picture concerning urgency bias. In states
+categorized as ``difficult,'' there is a discernible trend toward an
+urgency bias, particularly among individuals from socioeconomically
+disadvantaged backgrounds and those with elevated levels of anxiety.
+Contrarily, a broader examination of the propensity to opt for urgent
+tasks reveals that anxiety and income levels are inversely correlated
+with this bias. Our analysis indicates that participants with higher
+anxiety scores exhibited decision-making patterns more congruent with an
+optimal strategy formulated through a dynamic programming approach.
 
 \hypertarget{experiment-1}{%
-\chapter{Experiment 1}\label{experiment-1}}
+\section{Experiment 1}\label{experiment-1}}
 
 \hypertarget{methodology-1}{%
-\section{Methodology}\label{methodology-1}}
+\subsection{Methodology}\label{methodology-1}}
 
 Experiment 1 was developed in PsychoPy version 2023.1.3 and hosted on
 the Pavlovia platform.
 
 \hypertarget{structure-1}{%
-\subsection{Structure}\label{structure-1}}
+\subsubsection{Structure}\label{structure-1}}
 
 In line with the pilot study, the game interface for Experiment 1
 presented participants with a queue of tasks, each varying in effort,
@@ -1956,11 +1972,8 @@ of the screen displays a points counter and a rounds counter.}
 
 \end{figure}
 
-\hypertarget{hypotheses-1}{%
-\section{Hypotheses}\label{hypotheses-1}}
-
 \hypertarget{data-1}{%
-\section{Data}\label{data-1}}
+\subsection{Data}\label{data-1}}
 
 Our experiment was conducted on the Prolific platform. In total, we
 acquired data from N = 0 participants, each of whom completed the
@@ -1972,7 +1985,7 @@ so analyses that are dependent on the post-experiment anxiety measures
 will not include these participants.
 
 \hypertarget{demographics-1}{%
-\subsection{Demographics}\label{demographics-1}}
+\subsubsection{Demographics}\label{demographics-1}}
 
 Our experiment involved participants with various income levels and
 anxiety scores. Table~\ref{tbl-exp1-demographics} displays the summary
@@ -2045,7 +2058,7 @@ Trait Anxiety & $48.65$ & $39.57$ & $3.851 \times 10^{-10}$ \\
 \end{table}
 
 \hypertarget{comprehensive-poverty-measures}{%
-\subsection{Comprehensive Poverty
+\subsubsection{Comprehensive Poverty
 Measures}\label{comprehensive-poverty-measures}}
 
 To develop a more nuanced measure of poverty, we revisited our
@@ -2225,7 +2238,8 @@ Are any of the following conditions present in your home? [A furnace, boiler, or
 \end{table}
 
 \hypertarget{zip-code-poverty-measures}{%
-\subsection{Zip Code Poverty Measures}\label{zip-code-poverty-measures}}
+\subsubsection{Zip Code Poverty
+Measures}\label{zip-code-poverty-measures}}
 
 Similar to our pilot study, we validated participants' income reports by
 analyzing economic data from their ZIP codes. We used the American
@@ -2245,10 +2259,10 @@ Code}
 \end{figure}
 
 \hypertarget{results-1}{%
-\section{Results}\label{results-1}}
+\subsection{Results}\label{results-1}}
 
 \hypertarget{task-performance-1}{%
-\subsection{Task Performance}\label{task-performance-1}}
+\subsubsection{Task Performance}\label{task-performance-1}}
 
 We analyzed participants' task selection patterns, focusing on
 Important, Hard, and Urgent tasks, and computed the frequency of each
@@ -2332,7 +2346,7 @@ F Statistic & \multicolumn{1}{c}{19.047$^{***}$ (df = 4; 85)} & \multicolumn{1}{
 \end{table}
 
 \hypertarget{trade-off-decisions-1}{%
-\subsection{Trade-off Decisions}\label{trade-off-decisions-1}}
+\subsubsection{Trade-off Decisions}\label{trade-off-decisions-1}}
 
 We subsequently examined participants' task selection during trade-off
 scenarios, as delineated in the pilot experiment. We aimed to identify
@@ -2395,7 +2409,7 @@ anxiety}
 \end{figure}
 
 \hypertarget{general-urgency-bias-1}{%
-\subsection{General Urgency Bias}\label{general-urgency-bias-1}}
+\subsubsection{General Urgency Bias}\label{general-urgency-bias-1}}
 
 This section investigates the urgency bias or the tendency for
 individuals to prioritize urgent tasks over others.
@@ -2477,7 +2491,7 @@ BIC                    & $3874.54$        & $3484.76$        & $3481.25$        
 \end{table}
 
 \hypertarget{accuracy}{%
-\subsection{Accuracy}\label{accuracy}}
+\subsubsection{Accuracy}\label{accuracy}}
 
 In this section, we extend the methodology introduced in
 Section~\ref{sec-pilotaccuracy} to evaluate how closely participants'
@@ -2609,8 +2623,21 @@ factors, individual anxiety metrics, and area-level economic indicators
 such as ZIP code poverty and median income levels. None of the results
 from these models reached statistical significance.
 
+\hypertarget{summary-1}{%
+\subsection{Summary}\label{summary-1}}
+
+Expanding upon the pilot study, Experiment 1 incorporated a more
+comprehensive and diverse participant pool to test hypotheses analogous
+to those in the pilot. The results offer several intriguing insights.
+Contrary to expectations, the data did not reveal significant
+disparities in task performance based on socioeconomic or psychological
+variables. Interestingly, we observed a modest yet statistically
+significant urgency bias as a function of food deprivation and ZIP code
+poverty levels. Notably, these biases did not manifest in any
+significant impact on task accuracy.
+
 \hypertarget{discussion}{%
-\chapter{Discussion}\label{discussion}}
+\section{Discussion}\label{discussion}}
 
 Our findings underscore the critical importance of prioritization
 strategies in task performance. Despite the intuitive appeal of tending
@@ -2650,7 +2677,8 @@ standard in the decision-making literature, they may not hold in all
 contexts.
 
 \hypertarget{intergenerational-poverty}{%
-\subsection{Intergenerational Poverty}\label{intergenerational-poverty}}
+\subsubsection{Intergenerational
+Poverty}\label{intergenerational-poverty}}
 
 People likely learn how to estimate transition probabilities from
 parents and peers. If people in this support network are not themselves
@@ -2659,14 +2687,14 @@ devices. Further, affective states can be passed down generations (e.g.,
 anxiety, stress, depression).
 
 \hypertarget{future-directions-experiment-2}{%
-\chapter{Future Directions: Experiment
+\section{Future Directions: Experiment
 2}\label{future-directions-experiment-2}}
 
 \hypertarget{methodology-2}{%
-\section{Methodology}\label{methodology-2}}
+\subsection{Methodology}\label{methodology-2}}
 
 \hypertarget{poverty-measurements}{%
-\subsection{Poverty Measurements}\label{poverty-measurements}}
+\subsubsection{Poverty Measurements}\label{poverty-measurements}}
 
 Future research could explore additional dimensions and employ other
 statistical methods, such as fuzzy set theory, which has been shown to
@@ -2675,7 +2703,7 @@ produce reliable results in poverty analysis
 of weighted and unweighted methods of wealth indices, 2021}).
 
 \hypertarget{structure-2}{%
-\subsection{Structure}\label{structure-2}}
+\subsubsection{Structure}\label{structure-2}}
 
 \begin{enumerate}
 \def\labelenumi{\arabic{enumi}.}
@@ -2699,7 +2727,7 @@ of weighted and unweighted methods of wealth indices, 2021}).
 - Skin conductance, Cortisol, Eye tracking
 
 \hypertarget{probabilistic-choice}{%
-\subsubsection{§Probabilistic Choice}\label{probabilistic-choice}}
+\paragraph{§Probabilistic Choice}\label{probabilistic-choice}}
 
 As seen in @accuracy-results,
 
@@ -2709,13 +2737,13 @@ is to explore non-deterministic choices (that is, urgency does not mean
 certain decay of value from one state to another, but a probable decay).
 
 \hypertarget{flexible-queue-size}{%
-\subsubsection{Flexible Queue Size}\label{flexible-queue-size}}
+\paragraph{Flexible Queue Size}\label{flexible-queue-size}}
 
 \hypertarget{simulation-2}{%
-\subsection{Simulation}\label{simulation-2}}
+\subsubsection{Simulation}\label{simulation-2}}
 
 \hypertarget{population}{%
-\section{Population}\label{population}}
+\subsection{Population}\label{population}}
 
 In Los Angeles, 18\% of residents worry every day or almost every day
 about paying their bills, and 23\% worry about job loss (Baldassare et
@@ -2728,30 +2756,30 @@ difficulty paying the rent or mortgage (17\%) in the last 12 months''
 (Baldassare et al., 2021).
 
 \hypertarget{online-sample}{%
-\subsection{Online Sample}\label{online-sample}}
+\subsubsection{Online Sample}\label{online-sample}}
 
 Pros and cons.
 
 \hypertarget{homeless}{%
-\subsection{Homeless}\label{homeless}}
+\subsubsection{Homeless}\label{homeless}}
 
 M: Look Sera's studies
 
 IRB: Justification
 
 \hypertarget{other-low-ses-cohorts}{%
-\subsection{Other Low SES Cohorts}\label{other-low-ses-cohorts}}
+\subsubsection{Other Low SES Cohorts}\label{other-low-ses-cohorts}}
 
 M: Proposal
 
 \hypertarget{power-analysis}{%
-\subsection{Power Analysis}\label{power-analysis}}
+\subsubsection{Power Analysis}\label{power-analysis}}
 
 \hypertarget{behavioral-measures}{%
-\subsubsection{§Behavioral Measures}\label{behavioral-measures}}
+\paragraph{§Behavioral Measures}\label{behavioral-measures}}
 
 \hypertarget{physiological-measures}{%
-\subsubsection{¶Physiological Measures}\label{physiological-measures}}
+\paragraph{¶Physiological Measures}\label{physiological-measures}}
 
 ``Sartorial Symbols of Social Class Elicit Class-Consistent Behavioral
 and Physiological Responses: A Dyadic Approach'' (Kraus et al 2014)
@@ -2767,7 +2795,7 @@ vs.~low class
 Prior = Upper-class = -0.69, se = 0.31; Lower-class = 0.04, se = 0.31
 
 \hypertarget{perceived-effort}{%
-\subsubsection{Perceived Effort}\label{perceived-effort}}
+\paragraph{Perceived Effort}\label{perceived-effort}}
 
 Stress has been suggested to increase perceived effort (e.g., the study
 will investigate whether it's more tiring to complete a task when
@@ -2784,8 +2812,8 @@ Similarly, we can account for substituting \emph{subjective} probability
 for objective probability. That is, people might distort the actual
 probability of future events.
 
-\hypertarget{hypotheses-2}{%
-\section{Hypotheses}\label{hypotheses-2}}
+\hypertarget{hypotheses-1}{%
+\subsection{Hypotheses}\label{hypotheses-1}}
 
 \begin{enumerate}
 \def\labelenumi{\arabic{enumi}.}
@@ -2820,17 +2848,17 @@ probability of future events.
 \end{enumerate}
 
 \hypertarget{conclusion}{%
-\chapter{Conclusion}\label{conclusion}}
+\section{Conclusion}\label{conclusion}}
 
 \hypertarget{references}{%
-\chapter{References}\label{references}}
+\section{References}\label{references}}
 
 \hypertarget{appendix-supplementary-models-and-analyses}{%
-\chapter{Appendix: Supplementary Models and
+\section{Appendix: Supplementary Models and
 Analyses}\label{appendix-supplementary-models-and-analyses}}
 
 \hypertarget{burstiness-and-memory-in-discreet-event-simulation}{%
-\section{Burstiness and Memory in Discreet Event
+\subsection{Burstiness and Memory in Discreet Event
 Simulation}\label{burstiness-and-memory-in-discreet-event-simulation}}
 
 Further, with interevent times, we can calculate the burstiness and
@@ -2852,7 +2880,7 @@ literature. However, there does not seem to be a relationship between
 urgency weighting and burstiness.
 
 \hypertarget{fantasy-and-dread-model}{%
-\section{Fantasy and Dread Model}\label{fantasy-and-dread-model}}
+\subsection{Fantasy and Dread Model}\label{fantasy-and-dread-model}}
 
 \[
 \begin{aligned}
@@ -2905,7 +2933,7 @@ P() depends on whether unattended task ``decays''
 \end{figure}
 
 \hypertarget{dynamic-programming-simulation}{%
-\section{Dynamic Programming
+\subsection{Dynamic Programming
 Simulation}\label{dynamic-programming-simulation}}
 
 In this analysis, we constructed a Markov Decision Process (MDP) model
@@ -2986,7 +3014,7 @@ approximation methods such as function approximation or reinforcement
 learning techniques are necessary.
 
 \hypertarget{correlations-in-experiment-1-variables}{%
-\section{Correlations in Experiment 1
+\subsection{Correlations in Experiment 1
 Variables}\label{correlations-in-experiment-1-variables}}
 
 \begin{verbatim}
@@ -3026,13 +3054,14 @@ Age                  0.28478859  1.000000000
 \end{verbatim}
 
 \hypertarget{sensitivity-analyses}{%
-\section{Sensitivity Analyses}\label{sensitivity-analyses}}
+\subsection{Sensitivity Analyses}\label{sensitivity-analyses}}
 
 \hypertarget{pilot-urgency-regression}{%
-\subsection{Pilot Urgency Regression}\label{pilot-urgency-regression}}
+\subsubsection{Pilot Urgency
+Regression}\label{pilot-urgency-regression}}
 
-\% latex table generated in R 4.3.1 by xtable 1.8-4 package \% Wed Aug
-23 23:19:34 2023
+\% latex table generated in R 4.3.1 by xtable 1.8-4 package \% Thu Aug
+24 01:16:22 2023
 
 \hypertarget{tbl-sensitivity}{}
 \begin{table}[ht]
@@ -3065,10 +3094,10 @@ attributes }\tabularnewline
 \end{table}
 
 \hypertarget{appendix-images}{%
-\chapter{Appendix: Images}\label{appendix-images}}
+\section{Appendix: Images}\label{appendix-images}}
 
 \hypertarget{sec-eisenhower}{%
-\section{The Eisenhower Matrix}\label{sec-eisenhower}}
+\subsection{The Eisenhower Matrix}\label{sec-eisenhower}}
 
 ``Who can define for us with accuracy the difference between the long
 and short term! Especially whenever our affairs seem to be in crisis, we
@@ -3091,7 +3120,7 @@ https://todoist.com/productivity-methods/eisenhower-matrix}
 \newpage{}
 
 \hypertarget{pilot-experiment-image}{%
-\section{Pilot Experiment Image}\label{pilot-experiment-image}}
+\subsection{Pilot Experiment Image}\label{pilot-experiment-image}}
 
 \begin{figure}
 
@@ -3111,7 +3140,7 @@ screen displays a rounds counter (top) and a points counter (bottom).}
 \newpage{}
 
 \hypertarget{priority-queuing-1}{%
-\section{Priority Queuing}\label{priority-queuing-1}}
+\subsection{Priority Queuing}\label{priority-queuing-1}}
 
 A list can contain an arbitrary number of tasks and the priority of each
 task is an integer drawn from some distribution. The tasks are set to
@@ -3132,13 +3161,13 @@ exponential arrival time distribution and they are executed with rate
 \newpage{}
 
 \hypertarget{principal-component-analysis-for-pilot-experiment}{%
-\section{Principal Component Analysis for Pilot
+\subsection{Principal Component Analysis for Pilot
 Experiment}\label{principal-component-analysis-for-pilot-experiment}}
 
 \newpage{}
 
 \hypertarget{factor-analysis-for-experiment-1}{%
-\section{Factor Analysis for Experiment
+\subsection{Factor Analysis for Experiment
 1}\label{factor-analysis-for-experiment-1}}
 
 Figure~\ref{fig-mice} offers a visual representation of the imputation
@@ -3379,10 +3408,10 @@ and white indicating negative loadings.}
 \end{figure}
 
 \hypertarget{appendix-documentation}{%
-\chapter{Appendix: Documentation}\label{appendix-documentation}}
+\section{Appendix: Documentation}\label{appendix-documentation}}
 
 \hypertarget{sec-questionnaires}{%
-\section{Questionnaires}\label{sec-questionnaires}}
+\subsection{Questionnaires}\label{sec-questionnaires}}
 
 
 

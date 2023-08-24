@@ -9,7 +9,7 @@ execute:
   warning: false
 format: 
   pdf: 
-    documentclass: report
+    documentclass: article
     toc: true
     number-sections: true
     colorlinks: true
@@ -1489,6 +1489,8 @@ texreg(lapply(accuracy_models, function(x) {
 
 ## Summary
 
+The pilot experiment explored the impact of socioeconomic and psychological variables on task prioritization, specifically focusing on the selection among "Important," "Hard," and "Urgent" tasks. Here, we elucidate the findings and evaluate the validity of our hypotheses. The data presents a nuanced picture concerning urgency bias. In states categorized as "difficult," there is a discernible trend toward an urgency bias, particularly among individuals from socioeconomically disadvantaged backgrounds and those with elevated levels of anxiety. Contrarily, a broader examination of the propensity to opt for urgent tasks reveals that anxiety and income levels are inversely correlated with this bias. Our analysis indicates that participants with higher anxiety scores exhibited decision-making patterns more congruent with an optimal strategy formulated through a dynamic programming approach.
+
 # Experiment 1
 
 ## Methodology
@@ -1518,8 +1520,6 @@ Experiment 1 addressed this limitation by adjusting the task queue logic. Specif
 <!-- ### Behavioral Measures -->
 
 <!-- ### Perceived Effort -->
-
-## Hypotheses
 
 ```{r load-data-and-analysis, message=FALSE, warning=FALSE}
 library(mice)
@@ -2626,6 +2626,10 @@ We employ a hierarchical Bayesian model to estimate the cost parameter for each 
 @fig-exp1-accuracy-results offers a granular view of this alignment. A distinct dot represents each participant. The y-axis quantifies the accuracy of their choices, represented as the percentage of correct decisions made throughout the experiment. Simultaneously, the x-axes capture the scores for Factor 1 and the pre-experiment State Anxiety Index.
 
 A striking observation is the invariance of accuracy across varying income and anxiety levels. This result suggests that these socio-economic and psychological factors might not be pivotal in influencing task selection accuracy in this context. @tbl-exp1-accuracy displays four other models that further corroborate this observation. Four distinct random effects logistic regression models evaluate the optimality of each participant's choice. These models incorporate a range of regressors, including the derived factors, individual anxiety metrics, and area-level economic indicators such as ZIP code poverty and median income levels. None of the results from these models reached statistical significance.
+
+## Summary
+
+Expanding upon the pilot study, Experiment 1 incorporated a more comprehensive and diverse participant pool to test hypotheses analogous to those in the pilot. The results offer several intriguing insights. Contrary to expectations, the data did not reveal significant disparities in task performance based on socioeconomic or psychological variables. Interestingly, we observed a modest yet statistically significant urgency bias as a function of food deprivation and ZIP code poverty levels. Notably, these biases did not manifest in any significant impact on task accuracy.
 
 # Discussion
 
